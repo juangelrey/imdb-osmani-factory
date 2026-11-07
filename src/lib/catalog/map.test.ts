@@ -120,6 +120,8 @@ describe("toPerson", () => {
       knownFor: "Acting",
       born: "May 31, 1930 (age 96)",
       birthplace: "San Francisco, California, USA",
+      biography:
+        "Clinton Eastwood Jr. is an American actor and film director.\n\nHe rose to fame playing the Man with No Name in Sergio Leone's Dollars trilogy.",
       career: toCareer(clint.movie_credits, TODAY),
     });
   });
@@ -130,6 +132,11 @@ describe("toPerson", () => {
     expect(mara.born).toBeUndefined();
     expect(mara.died).toBeUndefined();
     expect(mara.birthplace).toBeUndefined();
+    expect(mara.biography).toBeUndefined();
+  });
+
+  it("treats a whitespace-only biography as absent", () => {
+    expect(toPerson({ ...(person as TmdbPersonDetails), biography: " \n " }, TODAY).biography).toBeUndefined();
   });
 
   it("gives a living person's age today", () => {

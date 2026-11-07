@@ -1,4 +1,5 @@
 import type { Person } from "@/lib/catalog/types";
+import { Biography } from "./biography";
 import { CareerTimeline } from "./career-timeline";
 import { Poster } from "./poster";
 
@@ -40,6 +41,14 @@ export function PersonDetails({ person }: PersonDetailsProps) {
             </dl>
           )}
         </header>
+        {person.biography && (
+          <section aria-labelledby="biography-heading" className="space-y-2">
+            <h2 id="biography-heading" className="text-xl font-semibold">
+              Biography
+            </h2>
+            <Biography text={person.biography} />
+          </section>
+        )}
         <CareerTimeline career={person.career} />
       </div>
     </article>

@@ -38,4 +38,15 @@ describe("PersonDetails", () => {
     const { container } = render(<PersonDetails person={{ id: 1, slug: "x", name: "X", career: [] }} />);
     expect(container.querySelector("dl")).toBeNull();
   });
+
+  it("shows the biography under its heading", () => {
+    render(<PersonDetails person={{ ...person, biography: "An American actor and director." }} />);
+    expect(screen.getByRole("heading", { name: "Biography" })).toBeInTheDocument();
+    expect(screen.getByText("An American actor and director.")).toBeInTheDocument();
+  });
+
+  it("hides the biography section when there is no biography", () => {
+    render(<PersonDetails person={person} />);
+    expect(screen.queryByRole("heading", { name: "Biography" })).not.toBeInTheDocument();
+  });
 });

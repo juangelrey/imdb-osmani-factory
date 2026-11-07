@@ -61,6 +61,8 @@ export interface Person extends PersonLink {
   /** Death date, plus the age at death when the birthday is known: "November 5, 2020 (aged 90)". */
   died?: string;
   birthplace?: string;
+  /** TMDB's biography, with its paragraph breaks ("\n\n") kept. */
+  biography?: string;
   /** Movie credits, one entry per film, grouped by year. */
   career: CareerYear[];
 }

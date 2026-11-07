@@ -119,6 +119,7 @@ export function toPerson(person: TmdbPersonDetails, today: string): Person {
     born: dateWithAge(formatDate(birthday), ageToday === undefined ? undefined : `age ${ageToday}`),
     died: dateWithAge(died, ageAtDeath === undefined ? undefined : `aged ${ageAtDeath}`),
     birthplace: person.place_of_birth?.trim() || undefined,
+    biography: person.biography?.trim() || undefined,
     career: toCareer(person.movie_credits, today),
   };
 }
