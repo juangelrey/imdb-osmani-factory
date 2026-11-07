@@ -1,43 +1,44 @@
-export const GENRES = [
-  "Action",
-  "Adventure",
-  "Animation",
-  "Comedy",
-  "Crime",
-  "Documentary",
-  "Drama",
-  "Fantasy",
-  "Horror",
-  "Mystery",
-  "Romance",
-  "Sci-Fi",
-  "Thriller",
-  "Western",
-] as const;
+export interface Genre {
+  id: number;
+  name: string;
+}
 
-export type Genre = (typeof GENRES)[number];
-
+/** A movie as the title page shows it. Fields TMDB may omit are optional. */
 export interface Title {
+  id: number;
   slug: string;
   name: string;
-  year: number;
+  year?: number;
   /** Runtime in minutes. */
-  runtime: number;
+  runtime?: number;
   genres: Genre[];
   /** Average rating from 0 to 10. */
   rating: number;
-  synopsis: string;
-  director: string;
+  synopsis?: string;
+  /** Detail-size poster URL. */
+  posterUrl?: string;
+  /** TMDB's poster path, kept so snapshots can build any poster size later. */
+  posterPath?: string;
+  director?: string;
+  /** Top-billed cast, at most 10. */
   cast: string[];
 }
 
-export const SORT_KEYS = ["rating", "year", "name"] as const;
+/** The fields a title card needs. */
+export interface TitleSummary {
+  id: number;
+  slug: string;
+  name: string;
+  year?: number;
+  rating: number;
+  /** Grid-size poster URL. */
+  posterUrl?: string;
+}
 
-export type SortKey = (typeof SORT_KEYS)[number];
-
-/** The fields a title card needs; small enough to pass to client components. */
-export type TitleSummary = Pick<Title, "slug" | "name" | "year" | "rating">;
-
-export function toSummary({ slug, name, year, rating }: Title): TitleSummary {
-  return { slug, name, year, rating };
+export interface Paged<T> {
+  results: T[];
+  page: number;
+  /** Capped at TMDB's page limit. */
+  totalPages: number;
+  totalResults: number;
 }

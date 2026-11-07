@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { TitleSummary } from "@/lib/catalog/types";
+import type { TitleSummary } from "@/lib/seed-catalog/types";
 import { Poster } from "./poster";
 
 export function TitleCard({ title }: { title: TitleSummary }) {

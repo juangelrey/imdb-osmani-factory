@@ -1,5 +1,5 @@
-import { searchTitles } from "@/lib/catalog/queries";
-import type { Title } from "@/lib/catalog/types";
+import { searchTitles } from "@/lib/seed-catalog/queries";
+import type { Title } from "@/lib/seed-catalog/types";
 import { TitleGrid } from "./title-grid";
 
 interface SearchResultsProps {

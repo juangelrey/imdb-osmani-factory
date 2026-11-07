@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { notFound } from "next/navigation";
-import { listTitles } from "@/lib/catalog/queries";
+import { listTitles } from "@/lib/seed-catalog/queries";
 import TitlePage, { dynamicParams, generateMetadata, generateStaticParams } from "./page";
 
 vi.mock("next/navigation", () => ({

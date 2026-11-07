@@ -1,5 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
-import { listTitles } from "@/lib/catalog/queries";
+import { listTitles } from "@/lib/seed-catalog/queries";
 import { STORAGE_KEY } from "@/lib/watchlist/watchlist";
 import { WatchlistView } from "./watchlist-view";
 

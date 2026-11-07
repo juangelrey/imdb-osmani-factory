@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
-import type { TitleSummary } from "@/lib/catalog/types";
+import type { TitleSummary } from "@/lib/seed-catalog/types";
 import { useWatchlist } from "@/lib/watchlist/use-watchlist";
 import { TitleGrid } from "./title-grid";
 

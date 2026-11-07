@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { WatchlistView } from "@/components/watchlist-view";
-import { listTitles } from "@/lib/catalog/queries";
-import { toSummary } from "@/lib/catalog/types";
+import { listTitles } from "@/lib/seed-catalog/queries";
+import { toSummary } from "@/lib/seed-catalog/types";
 
 export const metadata: Metadata = { title: "Watchlist · Reelbase" };
 

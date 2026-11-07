@@ -1,7 +1,7 @@
 import { BrowseControls } from "@/components/browse-controls";
 import { TitleGrid } from "@/components/title-grid";
 import { parseBrowseParams, type SearchParamValue } from "@/lib/catalog/browse-params";
-import { filterByGenre, listGenres, listTitles, sortTitles } from "@/lib/catalog/queries";
+import { filterByGenre, listGenres, listTitles, sortTitles } from "@/lib/seed-catalog/queries";
 
 interface HomeProps {
   searchParams: Promise<Record<string, SearchParamValue>>;

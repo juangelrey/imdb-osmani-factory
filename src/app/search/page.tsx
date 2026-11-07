@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SearchResults } from "@/components/search-results";
 import { firstParam, type SearchParamValue } from "@/lib/catalog/browse-params";
-import { listTitles } from "@/lib/catalog/queries";
+import { listTitles } from "@/lib/seed-catalog/queries";
 
 export const metadata: Metadata = { title: "Search · Reelbase" };
 

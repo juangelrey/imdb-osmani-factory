@@ -1,5 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
-import { filterByGenre, listTitles } from "@/lib/catalog/queries";
+import { filterByGenre, listTitles } from "@/lib/seed-catalog/queries";
 import Home from "./page";
 
 async function renderHome(params: Record<string, string> = {}) {

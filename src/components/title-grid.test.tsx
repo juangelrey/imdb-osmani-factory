@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import type { Title } from "@/lib/catalog/types";
+import type { Title } from "@/lib/seed-catalog/types";
 import { TitleGrid } from "./title-grid";
 
 const ember: Title = {

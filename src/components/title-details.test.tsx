@@ -1,5 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
-import type { Title } from "@/lib/catalog/types";
+import type { Title } from "@/lib/seed-catalog/types";
 import { TitleDetails } from "./title-details";
 
 const title: Title = {

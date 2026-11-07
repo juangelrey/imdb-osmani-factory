@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { TitleDetails } from "@/components/title-details";
 import { WatchlistButton } from "@/components/watchlist-button";
-import { getTitleBySlug, listTitles } from "@/lib/catalog/queries";
+import { getTitleBySlug, listTitles } from "@/lib/seed-catalog/queries";
 
 interface TitlePageProps {
   params: Promise<{ slug: string }>;

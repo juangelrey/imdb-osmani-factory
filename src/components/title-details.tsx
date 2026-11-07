@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { formatRuntime } from "@/lib/catalog/format";
-import type { Title } from "@/lib/catalog/types";
+import type { Title } from "@/lib/seed-catalog/types";
 import { Poster } from "./poster";
 
 interface TitleDetailsProps {

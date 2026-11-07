@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { browseHref, type BrowseState } from "@/lib/catalog/browse-params";
-import type { Genre, SortKey } from "@/lib/catalog/types";
+import type { Genre, SortKey } from "@/lib/seed-catalog/types";
 
 const SORT_LABELS: Record<SortKey, string> = { rating: "Rating", year: "Year", name: "Name" };
 

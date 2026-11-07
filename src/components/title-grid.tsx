@@ -1,4 +1,4 @@
-import type { TitleSummary } from "@/lib/catalog/types";
+import type { TitleSummary } from "@/lib/seed-catalog/types";
 import { TitleCard } from "./title-card";
 
 interface TitleGridProps {

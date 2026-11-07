@@ -1,4 +1,4 @@
-import { GENRES, SORT_KEYS, type Genre, type SortKey } from "./types";
+import { GENRES, SORT_KEYS, type Genre, type SortKey } from "@/lib/seed-catalog/types";
 
 export type SearchParamValue = string | string[] | undefined;
 
