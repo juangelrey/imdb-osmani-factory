@@ -44,12 +44,11 @@ describe("TitleDetails", () => {
   });
 
   it("hides fields TMDB does not have", () => {
-    const sparse: Title = { id: 1, slug: "untitled", name: "Untitled", genres: [], rating: 0, cast: [] };
+    const sparse: Title = { id: 1, slug: "untitled", name: "Untitled", genres: [], cast: [] };
     const { container } = render(<TitleDetails title={sparse} />);
-    for (const term of ["Year", "Runtime", "Genres", "Director", "Cast"]) {
+    for (const term of ["Year", "Runtime", "Genres", "Rating", "Director", "Cast"]) {
       expect(screen.queryByText(term, { selector: "dt" })).not.toBeInTheDocument();
     }
-    expect(fact("Rating")).toHaveTextContent("0.0 / 10");
     expect(container).not.toHaveTextContent(/NaN|undefined/);
     expect(container.querySelector("img")).not.toBeInTheDocument();
   });

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { BrowseControls } from "@/components/browse-controls";
 import { cardFromSummary } from "@/components/card-title";
 import { Pagination } from "@/components/pagination";
@@ -15,6 +16,8 @@ export default async function Home({ searchParams }: HomeProps) {
   const genres = await listGenres();
   const state = parseBrowseParams(params, new Set(genres.map(({ id }) => id)));
   const { results, page, totalPages } = await discoverTitles(state);
+  // A page past the last one (a stale or edited link) falls back to page 1.
+  if (results.length === 0 && state.page > 1) redirect(browseHref({ ...state, page: 1 }));
   const genreName = genres.find(({ id }) => id === state.genre)?.name;
 
   return (

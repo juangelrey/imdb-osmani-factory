@@ -8,7 +8,7 @@ export interface WatchlistEntry {
   slug: string;
   name: string;
   year?: number;
-  rating: number;
+  rating?: number;
   /** TMDB poster path such as "/abc.jpg". */
   posterPath?: string;
 }
@@ -28,7 +28,7 @@ function toEntry(item: unknown): WatchlistEntry | undefined {
   const { id, slug, name, year, rating, posterPath } = item as Record<string, unknown>;
   if (typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0) return undefined;
   if (typeof slug !== "string" || typeof name !== "string") return undefined;
-  if (typeof rating !== "number" || !Number.isFinite(rating)) return undefined;
+  if (rating !== undefined && (typeof rating !== "number" || !Number.isFinite(rating))) return undefined;
   if (year !== undefined && (typeof year !== "number" || !Number.isInteger(year))) return undefined;
   if (posterPath !== undefined && (typeof posterPath !== "string" || !POSTER_PATH.test(posterPath))) return undefined;
   return { id, slug, name, year, rating, posterPath };

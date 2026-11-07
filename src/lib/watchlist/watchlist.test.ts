@@ -93,6 +93,11 @@ describe("parseWatchlist", () => {
     expect(parseWatchlist(raw)).toEqual([inception]);
   });
 
+  it("keeps an entry without a rating", () => {
+    const unrated = { id: 1, slug: "untitled", name: "Untitled" };
+    expect(parseWatchlist(JSON.stringify([unrated]))).toEqual([unrated]);
+  });
+
   it("drops duplicate ids, keeping the first", () => {
     expect(parseWatchlist(JSON.stringify([matrix, { ...matrix, name: "Dupe" }]))).toEqual([matrix]);
   });

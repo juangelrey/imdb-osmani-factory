@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import { redirect } from "next/navigation";
 import discover from "@/lib/tmdb/fixtures/discover-movie.json";
 import genreList from "@/lib/tmdb/fixtures/genre-movie-list.json";
 import Home from "./page";
@@ -29,6 +30,12 @@ function gridNames() {
     .getAllByRole("listitem")
     .map((item) => within(item).getByRole("heading").textContent);
 }
+
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn((url: string) => {
+    throw new Error(`redirect ${url}`);
+  }),
+}));
 
 beforeEach(() => {
   vi.stubEnv("TMDB_READ_ACCESS_TOKEN", "test-token");
@@ -90,6 +97,14 @@ describe("Home page", () => {
     const fetchMock = stubTmdb();
     await renderHome({ page: "9999" });
     expect(discoverUrl(fetchMock).searchParams.get("page")).toBe("1");
+  });
+
+  it("sends a page past the last one back to page 1, keeping genre and sort", async () => {
+    stubTmdb({ page: 400, results: [], total_pages: 30, total_results: 600 });
+    await expect(Home({ searchParams: Promise.resolve({ genre: "28", sort: "title", page: "400" }) })).rejects.toThrow(
+      "redirect /?genre=28&sort=title",
+    );
+    expect(redirect).toHaveBeenCalledWith("/?genre=28&sort=title");
   });
 
   it("says so when nothing matches", async () => {

@@ -117,6 +117,11 @@ describe("toTitle", () => {
     expect(title.cast).toEqual([]);
   });
 
+  it("leaves the rating undefined when nobody has voted", () => {
+    expect(toTitle(sparseMovie).rating).toBeUndefined();
+    expect(toTitle({ ...matrix, vote_count: 0 }).rating).toBeUndefined();
+  });
+
   it("treats a zero runtime as unknown", () => {
     expect(toTitle({ ...matrix, runtime: 0 }).runtime).toBeUndefined();
   });
@@ -138,10 +143,11 @@ describe("toSummary", () => {
     });
   });
 
-  it("leaves a missing year and poster undefined", () => {
+  it("leaves a missing year, poster and unvoted rating undefined", () => {
     const summary = toSummary(discoverPage.results[3]);
     expect(summary.year).toBeUndefined();
     expect(summary.posterUrl).toBeUndefined();
+    expect(summary.rating).toBeUndefined();
   });
 });
 

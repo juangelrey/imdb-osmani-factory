@@ -35,6 +35,11 @@ export function posterUrl(path: string | null | undefined, size: PosterSize): st
   return path ? `https://image.tmdb.org/t/p/${size}${path}` : undefined;
 }
 
+/** TMDB reports 0 for films nobody has rated; that is unknown, not zero. */
+function rating({ vote_average, vote_count }: { vote_average: number; vote_count: number }): number | undefined {
+  return vote_count > 0 ? vote_average : undefined;
+}
+
 function releaseYear(date: string | undefined): number | undefined {
   const match = /^(\d{4})-/.exec(date ?? "");
   return match ? Number(match[1]) : undefined;
@@ -52,7 +57,7 @@ export function toTitle(movie: TmdbMovieDetails): Title {
     year: releaseYear(movie.release_date),
     runtime: movie.runtime || undefined,
     genres: movie.genres.map(toGenre),
-    rating: movie.vote_average,
+    rating: rating(movie),
     synopsis: movie.overview || undefined,
     posterUrl: posterUrl(movie.poster_path, "w500"),
     posterPath: movie.poster_path || undefined,
@@ -70,7 +75,7 @@ export function toSummary(movie: TmdbMovieListItem): TitleSummary {
     slug: slugify(movie.title),
     name: movie.title,
     year: releaseYear(movie.release_date),
-    rating: movie.vote_average,
+    rating: rating(movie),
     posterUrl: posterUrl(movie.poster_path, "w342"),
   };
 }

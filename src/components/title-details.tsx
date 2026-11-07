@@ -14,7 +14,7 @@ export function TitleDetails({ title, actions }: TitleDetailsProps) {
     ["Year", title.year?.toString()],
     ["Runtime", title.runtime ? formatRuntime(title.runtime) : undefined],
     ["Genres", title.genres.map(({ name }) => name).join(", ") || undefined],
-    ["Rating", `${title.rating.toFixed(1)} / 10`],
+    ["Rating", title.rating === undefined ? undefined : `${title.rating.toFixed(1)} / 10`],
     ["Director", title.director],
     ["Cast", title.cast.join(", ") || undefined],
   ];

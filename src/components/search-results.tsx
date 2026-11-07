@@ -8,7 +8,7 @@ interface SearchResultsProps {
   results: Paged<TitleSummary>;
 }
 
-function searchHref(query: string, page: number): string {
+export function searchHref(query: string, page: number): string {
   const params = new URLSearchParams({ q: query });
   if (page > 1) params.set("page", String(page));
   return `/search?${params}`;

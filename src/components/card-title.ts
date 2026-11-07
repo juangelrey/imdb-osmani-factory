@@ -9,7 +9,7 @@ export interface CardTitle {
   href: string;
   name: string;
   year?: number;
-  rating: number;
+  rating?: number;
   posterUrl?: string;
 }
 

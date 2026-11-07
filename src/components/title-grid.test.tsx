@@ -40,6 +40,13 @@ describe("TitleGrid", () => {
     expect(screen.getByText("Rating 8.2 out of 10")).toBeInTheDocument();
   });
 
+  it("hides the rating of an unrated movie instead of showing 0.0", () => {
+    render(<TitleGrid titles={[{ ...matrix, rating: undefined }]} emptyMessage="" />);
+    const card = screen.getByRole("link", { name: /The Matrix/ });
+    expect(card).not.toHaveTextContent("0.0");
+    expect(screen.queryByText(/^Rating/)).not.toBeInTheDocument();
+  });
+
   it("shows the empty message and no list when there are no titles", () => {
     render(<TitleGrid titles={[]} emptyMessage="No titles match this genre." />);
     expect(screen.getByText("No titles match this genre.")).toBeInTheDocument();

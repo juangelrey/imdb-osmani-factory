@@ -12,8 +12,8 @@ export interface Title {
   /** Runtime in minutes. */
   runtime?: number;
   genres: Genre[];
-  /** Average rating from 0 to 10. */
-  rating: number;
+  /** Average rating from 0 to 10; undefined when nobody has voted. */
+  rating?: number;
   synopsis?: string;
   /** Detail-size poster URL. */
   posterUrl?: string;
@@ -30,7 +30,7 @@ export interface TitleSummary {
   slug: string;
   name: string;
   year?: number;
-  rating: number;
+  rating?: number;
   /** Grid-size poster URL. */
   posterUrl?: string;
 }
