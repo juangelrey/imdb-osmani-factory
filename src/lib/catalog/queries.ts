@@ -47,3 +47,17 @@ export async function discoverTitles({ genre, sort, page }: BrowseState): Promis
   });
   return toPaged(response, toSummary);
 }
+
+const NO_RESULTS: Paged<TitleSummary> = { results: [], page: 1, totalPages: 0, totalResults: 0 };
+
+/** Search movies by title. A blank query returns no results without calling TMDB. */
+export async function searchTitles(query: string, page: number): Promise<Paged<TitleSummary>> {
+  const trimmed = query.trim();
+  if (!trimmed) return NO_RESULTS;
+  const response = await tmdbFetch<TmdbPaged<TmdbMovieListItem>>("/search/movie", {
+    query: trimmed,
+    include_adult: false,
+    page,
+  });
+  return toPaged(response, toSummary);
+}

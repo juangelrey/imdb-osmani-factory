@@ -1,8 +1,9 @@
 import details from "@/lib/tmdb/fixtures/movie-details.json";
 import discover from "@/lib/tmdb/fixtures/discover-movie.json";
 import genreList from "@/lib/tmdb/fixtures/genre-movie-list.json";
+import search from "@/lib/tmdb/fixtures/search-movie.json";
 import { TmdbError } from "@/lib/tmdb/client";
-import { discoverTitles, getTitle, listGenres } from "./queries";
+import { discoverTitles, getTitle, listGenres, searchTitles } from "./queries";
 
 function stubFetch(body: unknown, status = 200) {
   const fetchMock = vi.fn(async () => Response.json(body, { status }));
@@ -103,5 +104,26 @@ describe("discoverTitles", () => {
     expect(params.get("sort_by")).toBe("primary_release_date.desc");
     expect(params.get("primary_release_date.lte")).toBe("2026-11-07");
     expect(params.get("vote_count.gte")).toBe("50");
+  });
+});
+
+describe("searchTitles", () => {
+  it("searches non-adult movies by the trimmed query and page", async () => {
+    const fetchMock = stubFetch(search);
+    const page = await searchTitles("  matrix ", 2);
+    const url = requestedUrl(fetchMock);
+    expect(url.pathname).toBe("/3/search/movie");
+    expect(url.searchParams.get("query")).toBe("matrix");
+    expect(url.searchParams.get("include_adult")).toBe("false");
+    expect(url.searchParams.get("page")).toBe("2");
+    expect(page.results.map(({ name }) => name)).toEqual(["The Matrix", "The Matrix Reloaded", "The Matrix Revolutions"]);
+    expect(page.totalResults).toBe(72);
+    expect(page.totalPages).toBe(4);
+  });
+
+  it("returns an empty page for a blank query without calling TMDB", async () => {
+    const fetchMock = stubFetch(search);
+    await expect(searchTitles("   ", 1)).resolves.toEqual({ results: [], page: 1, totalPages: 0, totalResults: 0 });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
