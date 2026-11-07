@@ -14,6 +14,6 @@ Read the open `prd` issue and the relevant codebase sections. Then:
 5. Add checkpoints between phases
 6. Present the plan for human review
 
-Save the plan as an open issue labeled `plan`, then create one ticket issue per task. Do not create tasks/plan.md or tasks/todo.md.
+Save the plan as an open issue labeled `plan`, then create one issue labeled `ticket` per task. Create either label first if it does not exist. Do not create tasks/plan.md or tasks/todo.md.
 
 If an open `plan` issue already exists with open tickets for different work, stop and ask before writing — never silently overwrite an incomplete plan.

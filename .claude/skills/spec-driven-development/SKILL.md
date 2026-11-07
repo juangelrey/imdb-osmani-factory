@@ -149,7 +149,8 @@ Don't silently fill in ambiguous requirements. The spec's entire purpose is to s
 
 **Spec storage:** Specs live in GitHub Issues, not files. Save the spec as an
 open issue labeled `prd`, titled `PRD: [Project/Feature Name]`, with the template
-above as its body. Do not create `SPEC.md`. This skill owns the clarification,
+above as its body. Create the `prd` label first if it does not exist. Do not
+create `SPEC.md`. This skill owns the clarification,
 content, and approval gates.
 
 **Reframe instructions as success criteria.** When receiving vague requirements, translate them into concrete conditions:
@@ -184,7 +185,7 @@ With the validated spec, generate a technical implementation plan:
 
 > Follow `planning-and-task-breakdown` for the dependency-graph mapping and vertical-slicing mechanics behind these steps; it is the canonical source. The bullets above are a lightweight summary; if they ever diverge, `planning-and-task-breakdown` takes precedence.
 >
-> **Output convention:** Save the plan as an open issue labeled `plan` and each task as a ticket issue, as defined by `planning-and-task-breakdown`. Downstream commands (`/as-build`, etc.) expect this.
+> **Output convention:** Save the plan as an open issue labeled `plan` and each task as an issue labeled `ticket`, as defined by `planning-and-task-breakdown`. Downstream commands (`/as-build`, etc.) expect this.
 
 The plan should be reviewable: the human should be able to read it and say "yes, that's the right approach" or "no, change X."
 
