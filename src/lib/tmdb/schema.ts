@@ -29,11 +29,15 @@ export interface TmdbPaged<T> {
 }
 
 export interface TmdbCastMember {
+  /** The TMDB person id. */
+  id: number;
   name: string;
   order: number;
 }
 
 export interface TmdbCrewMember {
+  /** The TMDB person id. */
+  id: number;
   name: string;
   job: string;
 }

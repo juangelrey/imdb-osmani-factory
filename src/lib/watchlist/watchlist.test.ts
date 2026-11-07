@@ -56,8 +56,8 @@ describe("entryFromTitle", () => {
         genres: [{ id: 28, name: "Action" }],
         synopsis: "s",
         posterUrl: "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
-        director: "Lana Wachowski",
-        cast: ["Keanu Reeves"],
+        directors: [{ id: 9340, slug: "lana-wachowski", name: "Lana Wachowski" }],
+        cast: [{ id: 6384, slug: "keanu-reeves", name: "Keanu Reeves" }],
       }),
     ).toEqual(matrix);
   });

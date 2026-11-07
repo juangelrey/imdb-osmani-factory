@@ -376,26 +376,51 @@ describe("toTitle", () => {
       synopsis: matrix.overview,
       posterUrl: "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
       posterPath: "/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
-      director: "Lana Wachowski",
+      directors: [
+        { id: 9340, slug: "lana-wachowski", name: "Lana Wachowski" },
+        { id: 9339, slug: "lilly-wachowski", name: "Lilly Wachowski" },
+      ],
       cast: [
-        "Keanu Reeves",
-        "Laurence Fishburne",
-        "Carrie-Anne Moss",
-        "Hugo Weaving",
-        "Gloria Foster",
-        "Joe Pantoliano",
-        "Marcus Chong",
-        "Julian Arahanga",
-        "Matt Doran",
-        "Belinda McClory",
+        { id: 6384, slug: "keanu-reeves", name: "Keanu Reeves" },
+        { id: 2975, slug: "laurence-fishburne", name: "Laurence Fishburne" },
+        { id: 530, slug: "carrie-anne-moss", name: "Carrie-Anne Moss" },
+        { id: 1331, slug: "hugo-weaving", name: "Hugo Weaving" },
+        { id: 9364, slug: "gloria-foster", name: "Gloria Foster" },
+        { id: 532, slug: "joe-pantoliano", name: "Joe Pantoliano" },
+        { id: 9372, slug: "marcus-chong", name: "Marcus Chong" },
+        { id: 7244, slug: "julian-arahanga", name: "Julian Arahanga" },
+        { id: 9374, slug: "matt-doran", name: "Matt Doran" },
+        { id: 9361, slug: "belinda-mcclory", name: "Belinda McClory" },
       ],
     });
+  });
+
+  it("keeps every Director in TMDB order, once each, and no other crew job", () => {
+    const lana = { id: 9340, name: "Lana Wachowski", job: "Director" };
+    const crew = [
+      { id: 1, name: "Co Director", job: "Co-Director" },
+      lana,
+      { id: 9339, name: "Lilly Wachowski", job: "Director" },
+      lana,
+      { id: 1279, name: "Joel Silver", job: "Producer" },
+    ];
+    expect(toTitle({ ...matrix, credits: { ...matrix.credits, crew } }).directors).toEqual([
+      { id: 9340, slug: "lana-wachowski", name: "Lana Wachowski" },
+      { id: 9339, slug: "lilly-wachowski", name: "Lilly Wachowski" },
+    ]);
+  });
+
+  it("falls back to a person slug for names with nothing Latin left", () => {
+    const crew = [{ id: 5, name: "宮崎駿", job: "Director" }];
+    expect(toTitle({ ...matrix, credits: { cast: [], crew } }).directors).toEqual([
+      { id: 5, slug: "person", name: "宮崎駿" },
+    ]);
   });
 
   it("caps the cast at 10 in billing order", () => {
     const shuffled = { ...matrix, credits: { ...matrix.credits, cast: [...matrix.credits.cast].reverse() } };
     expect(toTitle(shuffled).cast).toHaveLength(10);
-    expect(toTitle(shuffled).cast[0]).toBe("Keanu Reeves");
+    expect(toTitle(shuffled).cast[0]).toEqual({ id: 6384, slug: "keanu-reeves", name: "Keanu Reeves" });
   });
 
   it("leaves missing fields undefined instead of 0, NaN or empty strings", () => {
@@ -405,7 +430,7 @@ describe("toTitle", () => {
     expect(title.synopsis).toBeUndefined();
     expect(title.posterUrl).toBeUndefined();
     expect(title.posterPath).toBeUndefined();
-    expect(title.director).toBeUndefined();
+    expect(title.directors).toEqual([]);
     expect(title.genres).toEqual([]);
     expect(title.cast).toEqual([]);
   });

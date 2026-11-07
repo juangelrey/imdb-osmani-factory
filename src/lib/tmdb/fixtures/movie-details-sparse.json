@@ -10,6 +10,6 @@
   "poster_path": null,
   "credits": {
     "cast": [],
-    "crew": [{ "name": "Sam Ortiz", "job": "Producer", "department": "Production" }]
+    "crew": [{ "id": 4870211, "name": "Sam Ortiz", "job": "Producer", "department": "Production" }]
   }
 }

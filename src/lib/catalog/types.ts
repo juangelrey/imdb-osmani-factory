@@ -19,9 +19,10 @@ export interface Title {
   posterUrl?: string;
   /** TMDB's poster path, kept so snapshots can build any poster size later. */
   posterPath?: string;
-  director?: string;
+  /** Every crew member with job "Director", in TMDB order; empty when there are none. */
+  directors: PersonLink[];
   /** Top-billed cast, at most 10. */
-  cast: string[];
+  cast: PersonLink[];
 }
 
 /** The fields a title card needs. */

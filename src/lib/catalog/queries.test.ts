@@ -37,7 +37,8 @@ describe("getTitle", () => {
   it("maps the response into a Title", async () => {
     stubFetch(details);
     const title = await getTitle(603);
-    expect(title).toMatchObject({ id: 603, slug: "the-matrix", name: "The Matrix", director: "Lana Wachowski" });
+    expect(title).toMatchObject({ id: 603, slug: "the-matrix", name: "The Matrix" });
+    expect(title?.directors.map(({ name }) => name)).toEqual(["Lana Wachowski", "Lilly Wachowski"]);
   });
 
   it("returns undefined for an unknown id", async () => {

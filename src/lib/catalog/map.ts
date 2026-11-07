@@ -1,4 +1,5 @@
 import type {
+  TmdbCrewMember,
   TmdbGenre,
   TmdbMovieDetails,
   TmdbMovieListItem,
@@ -8,7 +9,7 @@ import type {
   TmdbPersonMovieCredits,
 } from "@/lib/tmdb/schema";
 import { ageOn, formatDate } from "./format";
-import type { CareerEntry, CareerYear, Genre, Paged, Person, Title, TitleSummary } from "./types";
+import type { CareerEntry, CareerYear, Genre, Paged, Person, PersonLink, Title, TitleSummary } from "./types";
 
 /** TMDB serves at most this many pages for discover and search. */
 export const MAX_PAGES = 500;
@@ -74,6 +75,19 @@ function releaseYear(date: string | undefined): number | undefined {
   return match ? Number(match[1]) : undefined;
 }
 
+export function toPersonLink({ id, name }: { id: number; name: string }): PersonLink {
+  return { id, slug: slugify(name, "person"), name };
+}
+
+/** Every crew member with job "Director", in TMDB order, once each. Co-Director and other jobs are left out. */
+function directors(crew: TmdbCrewMember[]): PersonLink[] {
+  const byId = new Map<number, PersonLink>();
+  for (const person of crew) {
+    if (person.job === "Director" && !byId.has(person.id)) byId.set(person.id, toPersonLink(person));
+  }
+  return [...byId.values()];
+}
+
 export function toGenre({ id, name }: TmdbGenre): Genre {
   return { id, name };
 }
@@ -90,11 +104,11 @@ export function toTitle(movie: TmdbMovieDetails): Title {
     synopsis: movie.overview || undefined,
     posterUrl: posterUrl(movie.poster_path, "w500"),
     posterPath: movie.poster_path || undefined,
-    director: movie.credits.crew.find((person) => person.job === "Director")?.name,
+    directors: directors(movie.credits.crew),
     cast: [...movie.credits.cast]
       .sort((a, b) => a.order - b.order)
       .slice(0, CAST_LIMIT)
-      .map((person) => person.name),
+      .map(toPersonLink),
   };
 }
 
