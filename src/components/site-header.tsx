@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SearchBox } from "./search-box";
 
 export function SiteHeader() {
   return (
@@ -7,6 +8,7 @@ export function SiteHeader() {
         <Link href="/" className="text-xl font-bold tracking-tight text-amber-400 hover:text-amber-300">
           Reelbase
         </Link>
+        <SearchBox />
         <nav aria-label="Main" className="ml-auto">
           <ul className="flex items-center gap-4 text-sm">
             <li>
