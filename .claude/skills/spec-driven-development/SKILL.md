@@ -62,7 +62,7 @@ Build order: identity → billing, notifications → reporting
 
 **The map is gated like every phase.** The human reviews module boundaries, dependency direction, and build order before any module spec is written. Getting the map wrong is expensive; reviewing ten lines is not.
 
-**Then recurse per module.** Run Specify → Plan → Tasks → Implement for each module in dependency order. Each module gets its own spec, scoped to that module's objective, boundaries, and success criteria. Save the approved map at the project root and each module's spec alongside it, named by module id (`SPEC-identity.md`, `SPEC-billing.md`) — the map, not filename guessing, is the index of what exists.
+**Then recurse per module.** Run Specify → Plan → Tasks → Implement for each module in dependency order. Each module gets its own spec, scoped to that module's objective, boundaries, and success criteria. Save the approved map in the project's `prd` issue and each module's spec as its own `prd` issue, titled by module id (`PRD: identity`, `PRD: billing`) with the issue numbers listed in the map — the map, not title guessing, is the index of what exists.
 
 ### Phase 1: Specify
 
@@ -147,11 +147,10 @@ Don't silently fill in ambiguous requirements. The spec's entire purpose is to s
 [Anything unresolved that needs human input]
 ```
 
-**External spec tools:** This workflow is format-agnostic. If the project
-already uses OpenSpec or another specification system, keep that system's
-artifact format and storage conventions instead of creating a duplicate
-`SPEC.md`. This skill owns the clarification, content, and approval gates; the
-external tool owns how the approved spec is represented.
+**Spec storage:** Specs live in GitHub Issues, not files. Save the spec as an
+open issue labeled `prd`, titled `PRD: [Project/Feature Name]`, with the template
+above as its body. Do not create `SPEC.md`. This skill owns the clarification,
+content, and approval gates.
 
 **Reframe instructions as success criteria.** When receiving vague requirements, translate them into concrete conditions:
 
@@ -185,7 +184,7 @@ With the validated spec, generate a technical implementation plan:
 
 > Follow `planning-and-task-breakdown` for the dependency-graph mapping and vertical-slicing mechanics behind these steps; it is the canonical source. The bullets above are a lightweight summary; if they ever diverge, `planning-and-task-breakdown` takes precedence.
 >
-> **Output convention:** Save the plan to `tasks/plan.md` and record the task list in the task list target defined by `planning-and-task-breakdown` (default `tasks/todo.md`; projects may designate an external tracker instead). Create `tasks/` if it does not exist. Downstream commands (`/build`, etc.) expect these defaults.
+> **Output convention:** Save the plan as an open issue labeled `plan` and each task as a ticket issue, as defined by `planning-and-task-breakdown`. Downstream commands (`/as-build`, etc.) expect this.
 
 The plan should be reviewable: the human should be able to read it and say "yes, that's the right approach" or "no, change X."
 
@@ -219,7 +218,7 @@ The spec is a living document, not a one-time artifact:
 
 - **Update when decisions change** — If you discover the data model needs to change, update the spec first, then implement.
 - **Update when scope changes** — Features added or cut should be reflected in the spec.
-- **Commit the spec** — The spec belongs in version control alongside the code.
+- **Keep the issue current** — Edit the `prd` issue body when the spec changes. GitHub keeps its edit history.
 - **Reference the spec in PRs** — Link back to the spec section that each PR implements.
 
 ## Common Rationalizations
@@ -254,6 +253,6 @@ Before proceeding to implementation, confirm:
 - [ ] The turn ended after saving the spec; approval came in a later turn
 - [ ] Success criteria are specific and testable
 - [ ] Boundaries (Always/Ask First/Never) are defined
-- [ ] The spec is saved to a file in the repository
+- [ ] The spec is saved to a `prd` issue
 - [ ] If the request bundles several independently testable capabilities, a capability map (module ids, dependency direction, build order) was approved before any module spec was written
 - [ ] Every module spec traces to a module id in the approved map

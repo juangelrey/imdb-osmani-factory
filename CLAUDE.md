@@ -1,15 +1,16 @@
 # Reelbase
 
-The spec is `SPEC.md`. Follow its boundaries.
+Specs, plans and tasks live in GitHub Issues, not files. In the skills, the spec is the open `prd`
+issue, the plan is the open `plan` issue, and a task is a ticket issue. Follow the spec's boundaries.
 
 ## Issue tracker
 
-GitHub Issues on `juangelrey/imdb-osmani-factory` is the task list target. Do not create
-`tasks/todo.md`.
+GitHub Issues on `juangelrey/imdb-osmani-factory` is the tracker. Do not create `SPEC.md`,
+`tasks/plan.md` or `tasks/todo.md`.
 
-- One issue per task. Acceptance criteria and verification steps go in the body, and dependencies
-  go in as "Blocked by #N".
-- `tasks/plan.md` stays a file. Its task list is an ordered index of issue links, not a checklist.
+- One ticket per task. Acceptance criteria and verification steps go in the body, and links go in
+  as "Part of #N" and "Blocked by #N".
+- The plan issue's task list is an ordered index of ticket numbers.
 - A task is done when its issue is closed. PRs use `Closes #N`.
 
 ## Agent skills

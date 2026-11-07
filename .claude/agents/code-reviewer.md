@@ -89,7 +89,7 @@ Categorize every finding, using the same severity labels as the `code-review-and
 ## Rules
 
 1. Review the tests first — they reveal intent and coverage
-2. Read the spec or task description before reviewing code
+2. Read the ticket and the open `prd` issue before reviewing code
 3. Every Critical and Required finding should include a specific fix recommendation
 4. Don't approve code with Critical issues
 5. Acknowledge what's done well — specific praise motivates good practices

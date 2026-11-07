@@ -15,4 +15,4 @@ Then generate a structured spec covering all six core areas: objective, commands
 
 If the request bundles several independently testable capabilities, first propose a capability map (module ids, dependency direction, build order) per the skill's Phase 0 and get it approved, then spec each module in dependency order.
 
-Save the spec as SPEC.md in the project root and confirm with the user before proceeding.
+Save the spec as an open GitHub issue labeled `prd`, titled `PRD: [name]`, editing the existing issue if there is one. Do not create SPEC.md. Confirm with the user before proceeding.
