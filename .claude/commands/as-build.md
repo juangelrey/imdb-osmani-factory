@@ -24,8 +24,9 @@ Pick the first open ticket in the open `plan` issue's Task List whose blockers a
 6. Run the full test suite to check for regressions
 7. Run the build to verify compilation
 8. Commit with a descriptive message
-9. Push the branch and open a PR to `main`, using the PR body below
-10. Stop. Leave the ticket open, because merging the PR closes it
+9. Spawn the `code-reviewer` agent on the diff against `main`, naming the ticket. Fix every Critical and Required finding, re-run tests and build, commit, and spawn it once more. If it still returns REQUEST CHANGES, stop and report the findings without opening a PR
+10. Push the branch and open a PR to `main`, using the PR body below
+11. Stop. Leave the ticket open, because merging the PR closes it
 
 ## PR body
 
@@ -56,7 +57,7 @@ Use this once a spec exists and you want to collapse plan + build into one run. 
    - a task is high-risk or irreversible — auth/permission changes, destructive data migrations, payments, deletions, deploys, anything touching secrets, **or anything you can't undo with `git revert`** → follow doubt-driven-development and get explicit sign-off before continuing
 
    After the user resolves a blocker, they re-invoke `/as-build auto` — it resumes from the next ticket not yet on the branch.
-7. **Open one PR.** Push the branch and open a PR to `main`, using the PR body above with one `Closes #N` line per ticket. Leave the tickets open.
+7. **Open one PR.** Run the review step above once on the whole branch, naming every ticket. Then push the branch and open a PR to `main`, using the PR body above with one `Closes #N` line per ticket. Leave the tickets open.
 8. **Summarize at the end:** tasks completed, tests added, commits made, and anything skipped, flagged, or left for the user.
 
 If any step fails, follow the debugging-and-error-recovery skill.
