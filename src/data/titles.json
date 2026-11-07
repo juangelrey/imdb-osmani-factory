@@ -1,0 +1,953 @@
+[
+  {
+    "slug": "the-lantern-keepers-of-varro",
+    "name": "The Lantern Keepers of Varro",
+    "year": 2014,
+    "runtime": 118,
+    "genres": [
+      "Fantasy",
+      "Adventure"
+    ],
+    "rating": 7.8,
+    "synopsis": "Two estranged sisters inherit the job of keeping a mountain town's enchanted lanterns lit through the longest night of the year.",
+    "director": "Hollis Vell",
+    "cast": [
+      "Ravi Kestwick",
+      "Odile Ashgrove",
+      "Galen Ottridge",
+      "Leif Okonedo-Marsh",
+      "Pia Orrin"
+    ]
+  },
+  {
+    "slug": "saltwind-overture",
+    "name": "Saltwind Overture",
+    "year": 2009,
+    "runtime": 104,
+    "genres": [
+      "Drama",
+      "Romance"
+    ],
+    "rating": 7.1,
+    "synopsis": "A retired conductor and a fishmonger's son stage an orchestra on a crumbling pier before the tide takes it.",
+    "director": "Cassia Vell",
+    "cast": [
+      "Niall Kestwick",
+      "Idris Salcombe",
+      "Bo Wexley"
+    ]
+  },
+  {
+    "slug": "copper-moth",
+    "name": "Copper Moth",
+    "year": 2021,
+    "runtime": 96,
+    "genres": [
+      "Thriller",
+      "Mystery"
+    ],
+    "rating": 6.9,
+    "synopsis": "A night-shift locksmith finds the same moth-shaped key at three crime scenes and becomes the prime suspect.",
+    "director": "Maren Mbeki-Lowe",
+    "cast": [
+      "Leif Orrin",
+      "Odile Fairweather",
+      "Pia Morrowby",
+      "Ada Delacourt",
+      "Kestrel Mbeki-Lowe"
+    ]
+  },
+  {
+    "slug": "nine-bells-for-ottoline",
+    "name": "Nine Bells for Ottoline",
+    "year": 1998,
+    "runtime": 112,
+    "genres": [
+      "Drama"
+    ],
+    "rating": 7.6,
+    "synopsis": "A village bell-ringer counts down the days until her hearing fades, determined to finish one last perfect peal.",
+    "director": "Bastian Quillan",
+    "cast": [
+      "Jory Duranne",
+      "Vesna Lindqvar",
+      "Fenwick Castellane",
+      "Galen Brightwater"
+    ]
+  },
+  {
+    "slug": "the-quiet-orbit",
+    "name": "The Quiet Orbit",
+    "year": 2017,
+    "runtime": 131,
+    "genres": [
+      "Sci-Fi",
+      "Drama"
+    ],
+    "rating": 8.2,
+    "synopsis": "The lone engineer on a silent research station starts hearing a voice on a channel that should not exist.",
+    "director": "Wren Salcombe",
+    "cast": [
+      "Cassia Fenmore",
+      "Dashiell Wexley",
+      "Hollis Rook",
+      "Yorick Okonedo-Marsh"
+    ]
+  },
+  {
+    "slug": "ember-road-to-halvane",
+    "name": "Ember Road to Halvane",
+    "year": 2019,
+    "runtime": 124,
+    "genres": [
+      "Action",
+      "Adventure"
+    ],
+    "rating": 7.3,
+    "synopsis": "A courier with a stolen truck full of seed vaults races across a burning valley to reach the last free city.",
+    "director": "Mireille Halvorsen-Teague",
+    "cast": [
+      "Silas Penhallow",
+      "Ximena Hazelburn",
+      "Elsbeth Thrane",
+      "Odile Delacourt",
+      "Sorrel Okonedo-Marsh"
+    ]
+  },
+  {
+    "slug": "paper-kingdoms",
+    "name": "Paper Kingdoms",
+    "year": 2006,
+    "runtime": 89,
+    "genres": [
+      "Animation",
+      "Comedy"
+    ],
+    "rating": 7.9,
+    "synopsis": "Origami creatures in a stationery shop wage a polite but fierce war over the window display.",
+    "director": "Odile Iversholm",
+    "cast": [
+      "Yorick Morrowby",
+      "Dashiell Ravensdale",
+      "Ximena Pellacott"
+    ]
+  },
+  {
+    "slug": "glasshouse-harbor",
+    "name": "Glasshouse Harbor",
+    "year": 2011,
+    "runtime": 108,
+    "genres": [
+      "Drama",
+      "Mystery"
+    ],
+    "rating": 7.4,
+    "synopsis": "In a fishing town of greenhouses, a botanist investigates why every orchid bloomed black on the same morning.",
+    "director": "Ximena Brightwater",
+    "cast": [
+      "Ravi Mbeki-Lowe",
+      "Elsbeth Salcombe",
+      "Kestrel Wexley"
+    ]
+  },
+  {
+    "slug": "midnight-at-the-fennick",
+    "name": "Midnight at the Fennick",
+    "year": 1987,
+    "runtime": 101,
+    "genres": [
+      "Crime",
+      "Thriller"
+    ],
+    "rating": 7.0,
+    "synopsis": "A hotel night porter has until dawn to hide a briefcase that half the city's crooks are looking for.",
+    "director": "Perrin Pellacott",
+    "cast": [
+      "Mireille Kestwick",
+      "Ulric Abernath",
+      "Dorin Kestwick",
+      "Cassia Strand"
+    ]
+  },
+  {
+    "slug": "the-mapmaker-of-brindle-cove",
+    "name": "The Mapmaker of Brindle Cove",
+    "year": 2003,
+    "runtime": 115,
+    "genres": [
+      "Adventure",
+      "Drama"
+    ],
+    "rating": 7.2,
+    "synopsis": "A shy mapmaker charts an island that keeps changing shape, and the town that wants it to stay lost.",
+    "director": "Ulric Castellane",
+    "cast": [
+      "Elsbeth Duranne",
+      "Oren Penhallow",
+      "Ulric Duranne",
+      "Faye Castellane"
+    ]
+  },
+  {
+    "slug": "rustbelt-serenade",
+    "name": "Rustbelt Serenade",
+    "year": 2015,
+    "runtime": 97,
+    "genres": [
+      "Comedy",
+      "Drama"
+    ],
+    "rating": 6.8,
+    "synopsis": "Laid-off factory workers form a barbershop quartet to win back the plant's old social hall.",
+    "director": "Dashiell Ashgrove",
+    "cast": [
+      "Ines Kestwick",
+      "Mireille Wexley",
+      "Quenna Fenmore",
+      "Pia Castellane"
+    ]
+  },
+  {
+    "slug": "tidebreaker",
+    "name": "Tidebreaker",
+    "year": 2022,
+    "runtime": 119,
+    "genres": [
+      "Action",
+      "Sci-Fi"
+    ],
+    "rating": 6.4,
+    "synopsis": "A salvage diver learns the flooded city beneath her boat is still running, and it wants a new mayor.",
+    "director": "Ximena Kestwick",
+    "cast": [
+      "Idris Tolliver",
+      "Fenwick Delacourt",
+      "Dorin Iversholm"
+    ]
+  },
+  {
+    "slug": "crown-of-ashvale",
+    "name": "Crown of Ashvale",
+    "year": 1994,
+    "runtime": 142,
+    "genres": [
+      "Fantasy",
+      "Drama"
+    ],
+    "rating": 7.7,
+    "synopsis": "A reluctant heir must choose between a throne of ash and the outlaw sister who burned the old one down.",
+    "director": "Hollis Ashgrove",
+    "cast": [
+      "Kestrel Strand",
+      "Bastian Salcombe",
+      "Elsbeth Castellane",
+      "Yorick Salcombe",
+      "Dashiell Varga-Nyle"
+    ]
+  },
+  {
+    "slug": "the-long-static",
+    "name": "The Long Static",
+    "year": 2012,
+    "runtime": 103,
+    "genres": [
+      "Horror",
+      "Mystery"
+    ],
+    "rating": 6.6,
+    "synopsis": "A pirate radio host keeps broadcasting after the town goes dark, and someone out there keeps calling in.",
+    "director": "Quenna Wexley",
+    "cast": [
+      "Hollis Ottridge",
+      "Leif Delacourt",
+      "Ravi Delacourt"
+    ]
+  },
+  {
+    "slug": "velvet-circuit",
+    "name": "Velvet Circuit",
+    "year": 2008,
+    "runtime": 99,
+    "genres": [
+      "Crime",
+      "Romance"
+    ],
+    "rating": 6.9,
+    "synopsis": "A jewel thief and the insurance adjuster chasing her keep meeting at the same underground dance hall.",
+    "director": "Sorrel Orrin",
+    "cast": [
+      "Dashiell Vell",
+      "Quenna Varga-Nyle",
+      "Linnea Varga-Nyle"
+    ]
+  },
+  {
+    "slug": "four-winters-in-kesk",
+    "name": "Four Winters in Kesk",
+    "year": 2018,
+    "runtime": 136,
+    "genres": [
+      "Drama"
+    ],
+    "rating": 8.4,
+    "synopsis": "Across four winters, a family of reindeer herders holds on to their land as a mine creeps closer.",
+    "director": "Galen Iversholm",
+    "cast": [
+      "Tamsin Abernath",
+      "Maren Ashgrove",
+      "Ximena Delacourt",
+      "Juno Rook",
+      "Ada Salcombe"
+    ]
+  },
+  {
+    "slug": "the-gilded-ferret",
+    "name": "The Gilded Ferret",
+    "year": 1979,
+    "runtime": 94,
+    "genres": [
+      "Comedy",
+      "Crime"
+    ],
+    "rating": 7.0,
+    "synopsis": "A bumbling pawnbroker accidentally buys a priceless statuette and every collector in town comes calling.",
+    "director": "Ulric Tolliver",
+    "cast": [
+      "Ximena Penhallow",
+      "Tamsin Kestwick",
+      "Oren Okonedo-Marsh"
+    ]
+  },
+  {
+    "slug": "moonquarry",
+    "name": "Moonquarry",
+    "year": 2020,
+    "runtime": 112,
+    "genres": [
+      "Sci-Fi",
+      "Thriller"
+    ],
+    "rating": 7.1,
+    "synopsis": "Miners on a lunar dig strike something hollow and learn their contract was never about rock.",
+    "director": "Fenwick Fenmore",
+    "cast": [
+      "Elsbeth Delacourt",
+      "Ines Ashgrove",
+      "Emrys Wexley",
+      "Kestrel Morrowby"
+    ]
+  },
+  {
+    "slug": "dust-on-the-pelham-line",
+    "name": "Dust on the Pelham Line",
+    "year": 1968,
+    "runtime": 109,
+    "genres": [
+      "Western"
+    ],
+    "rating": 7.5,
+    "synopsis": "An aging railway marshal escorts a prisoner across a drought-struck plain while bounty hunters close in.",
+    "director": "Juno Iversholm",
+    "cast": [
+      "Bastian Duranne",
+      "Tamsin Castellane",
+      "Ximena Fairweather",
+      "Juno Fairweather",
+      "Hollis Kestwick"
+    ]
+  },
+  {
+    "slug": "a-pocketful-of-thunder",
+    "name": "A Pocketful of Thunder",
+    "year": 2013,
+    "runtime": 92,
+    "genres": [
+      "Animation",
+      "Adventure"
+    ],
+    "rating": 7.4,
+    "synopsis": "A girl who can bottle storms sets out to return a stolen hurricane to the sky.",
+    "director": "Odile Okonedo-Marsh",
+    "cast": [
+      "Bo Hazelburn",
+      "Pia Kestwick",
+      "Ada Okonedo-Marsh",
+      "Elsbeth Penhallow"
+    ]
+  },
+  {
+    "slug": "the-seventh-lighthouse",
+    "name": "The Seventh Lighthouse",
+    "year": 2001,
+    "runtime": 117,
+    "genres": [
+      "Mystery",
+      "Thriller"
+    ],
+    "rating": 7.3,
+    "synopsis": "A coastal inspector visits six lighthouses on a stormy coast and keeps seeing a light from a seventh.",
+    "director": "Cassia Iversholm",
+    "cast": [
+      "Elsbeth Varga-Nyle",
+      "Perrin Morrowby",
+      "Faye Duranne",
+      "Leif Ashgrove"
+    ]
+  },
+  {
+    "slug": "neon-saints-of-port-mire",
+    "name": "Neon Saints of Port Mire",
+    "year": 2016,
+    "runtime": 126,
+    "genres": [
+      "Crime",
+      "Drama"
+    ],
+    "rating": 7.8,
+    "synopsis": "Three brothers running a neon sign shop get pulled into the harbor's oldest feud.",
+    "director": "Oren Hazelburn",
+    "cast": [
+      "Perrin Strand",
+      "Emrys Strand",
+      "Anouk Duranne",
+      "Galen Lindqvar"
+    ]
+  },
+  {
+    "slug": "bramblewick",
+    "name": "Bramblewick",
+    "year": 2010,
+    "runtime": 88,
+    "genres": [
+      "Animation",
+      "Fantasy"
+    ],
+    "rating": 7.2,
+    "synopsis": "A hedgehog apprentice to a forgetful hedge-witch must brew the cure for a forest-wide sneeze.",
+    "director": "Bastian Brightwater",
+    "cast": [
+      "Anouk Fairweather",
+      "Dorin Ottridge",
+      "Galen Thrane",
+      "Zelda Fenmore"
+    ]
+  },
+  {
+    "slug": "the-last-train-to-ostravale",
+    "name": "The Last Train to Ostravale",
+    "year": 1991,
+    "runtime": 128,
+    "genres": [
+      "Drama",
+      "Thriller"
+    ],
+    "rating": 7.9,
+    "synopsis": "Strangers on the final run of a mountain railway discover one of them plans to stop it for good.",
+    "director": "Vesna Strand",
+    "cast": [
+      "Perrin Duranne",
+      "Maren Wexley",
+      "Coralie Ashgrove"
+    ]
+  },
+  {
+    "slug": "signal-from-kepler-row",
+    "name": "Signal from Kepler Row",
+    "year": 2023,
+    "runtime": 107,
+    "genres": [
+      "Sci-Fi",
+      "Mystery"
+    ],
+    "rating": 6.7,
+    "synopsis": "Amateur astronomers on a council estate decode a signal that seems to know their names.",
+    "director": "Bastian Pellacott",
+    "cast": [
+      "Dashiell Kestwick",
+      "Elsbeth Fairweather",
+      "Mireille Lindqvar",
+      "Dorin Ravensdale"
+    ]
+  },
+  {
+    "slug": "orchard-of-small-hours",
+    "name": "Orchard of Small Hours",
+    "year": 2005,
+    "runtime": 111,
+    "genres": [
+      "Drama",
+      "Romance"
+    ],
+    "rating": 7.5,
+    "synopsis": "A night-picking crew in an apple orchard trade secrets and fall in love over one harvest.",
+    "director": "Leif Abernath",
+    "cast": [
+      "Fenwick Rook",
+      "Anouk Tolliver",
+      "Emrys Duranne"
+    ]
+  },
+  {
+    "slug": "iron-lullaby",
+    "name": "Iron Lullaby",
+    "year": 1999,
+    "runtime": 102,
+    "genres": [
+      "Horror"
+    ],
+    "rating": 6.3,
+    "synopsis": "A family restoring an old foundry hears a lullaby rising from the furnace every night at three.",
+    "director": "Zelda Penhallow",
+    "cast": [
+      "Kestrel Castellane",
+      "Ada Castellane",
+      "Quenna Rook"
+    ]
+  },
+  {
+    "slug": "the-peculiar-case-of-mr-quillby",
+    "name": "The Peculiar Case of Mr. Quillby",
+    "year": 1984,
+    "runtime": 98,
+    "genres": [
+      "Comedy",
+      "Mystery"
+    ],
+    "rating": 7.1,
+    "synopsis": "A fussy librarian turns detective when overdue books start returning with clues written in the margins.",
+    "director": "Dashiell Halvorsen-Teague",
+    "cast": [
+      "Mireille Ottridge",
+      "Faye Ashgrove",
+      "Maren Halvorsen-Teague",
+      "Niall Thrane"
+    ]
+  },
+  {
+    "slug": "starling-season",
+    "name": "Starling Season",
+    "year": 2019,
+    "runtime": 94,
+    "genres": [
+      "Documentary"
+    ],
+    "rating": 8.0,
+    "synopsis": "A year with the volunteers who count the vast starling flocks over a northern marsh.",
+    "director": "Pia Fenmore",
+    "cast": [
+      "Dorin Fenmore",
+      "Ulric Thrane",
+      "Dorin Hazelburn",
+      "Emrys Varga-Nyle",
+      "Juno Pellacott"
+    ]
+  },
+  {
+    "slug": "coldwater-gambit",
+    "name": "Coldwater Gambit",
+    "year": 2014,
+    "runtime": 113,
+    "genres": [
+      "Thriller",
+      "Crime"
+    ],
+    "rating": 6.8,
+    "synopsis": "A chess hustler is blackmailed into throwing a match on a frozen lake where the stakes are a missing child.",
+    "director": "Dorin Varga-Nyle",
+    "cast": [
+      "Linnea Okonedo-Marsh",
+      "Rosalind Okonedo-Marsh",
+      "Perrin Castellane"
+    ]
+  },
+  {
+    "slug": "whispering-gallery-of-teme",
+    "name": "Whispering Gallery of Teme",
+    "year": 1996,
+    "runtime": 105,
+    "genres": [
+      "Mystery",
+      "Romance"
+    ],
+    "rating": 7.0,
+    "synopsis": "Two restorers of a cathedral dome fall for each other through messages whispered across the gallery.",
+    "director": "Hollis Penhallow",
+    "cast": [
+      "Perrin Hazelburn",
+      "Rosalind Thrane",
+      "Silas Okonedo-Marsh",
+      "Anouk Ottridge",
+      "Pia Hazelburn"
+    ]
+  },
+  {
+    "slug": "sundown-at-calloway-ridge",
+    "name": "Sundown at Calloway Ridge",
+    "year": 1972,
+    "runtime": 116,
+    "genres": [
+      "Western",
+      "Drama"
+    ],
+    "rating": 7.6,
+    "synopsis": "A widow refuses to sell her ranch to a railroad baron and recruits the town's misfits to defend it.",
+    "director": "Juno Quillan",
+    "cast": [
+      "Niall Ottridge",
+      "Ulric Kestwick",
+      "Quenna Castellane",
+      "Ines Ottridge"
+    ]
+  },
+  {
+    "slug": "ghostlight-parade",
+    "name": "Ghostlight Parade",
+    "year": 2018,
+    "runtime": 90,
+    "genres": [
+      "Comedy",
+      "Fantasy"
+    ],
+    "rating": 6.9,
+    "synopsis": "The ghosts of a shuttered theater put on one last show to scare off the developers.",
+    "director": "Tamsin Fairweather",
+    "cast": [
+      "Elsbeth Vell",
+      "Dashiell Salcombe",
+      "Oren Lindqvar",
+      "Elsbeth Wexley"
+    ]
+  },
+  {
+    "slug": "the-brass-astronomer",
+    "name": "The Brass Astronomer",
+    "year": 2007,
+    "runtime": 121,
+    "genres": [
+      "Sci-Fi",
+      "Adventure"
+    ],
+    "rating": 7.4,
+    "synopsis": "In a clockwork city, an inventor builds a mechanical astronomer that predicts the sun will not rise.",
+    "director": "Niall Varga-Nyle",
+    "cast": [
+      "Ines Rook",
+      "Wren Penhallow",
+      "Perrin Brightwater",
+      "Sorrel Pellacott"
+    ]
+  },
+  {
+    "slug": "marrowfield",
+    "name": "Marrowfield",
+    "year": 2021,
+    "runtime": 99,
+    "genres": [
+      "Horror",
+      "Thriller"
+    ],
+    "rating": 6.1,
+    "synopsis": "Harvest workers on a remote farm realise the scarecrows move a little closer each night.",
+    "director": "Coralie Abernath",
+    "cast": [
+      "Tamsin Salcombe",
+      "Juno Vell",
+      "Galen Penhallow",
+      "Ines Morrowby",
+      "Galen Fenmore"
+    ]
+  },
+  {
+    "slug": "hush-valley-rodeo",
+    "name": "Hush Valley Rodeo",
+    "year": 1965,
+    "runtime": 95,
+    "genres": [
+      "Western",
+      "Comedy"
+    ],
+    "rating": 6.7,
+    "synopsis": "A traveling rodeo stranded in a silent-order monastery town must win over the monks to get home.",
+    "director": "Mireille Ashgrove",
+    "cast": [
+      "Sorrel Salcombe",
+      "Niall Mbeki-Lowe",
+      "Vesna Duranne",
+      "Faye Morrowby"
+    ]
+  },
+  {
+    "slug": "small-wonders-of-pell-street",
+    "name": "Small Wonders of Pell Street",
+    "year": 2011,
+    "runtime": 84,
+    "genres": [
+      "Documentary"
+    ],
+    "rating": 7.7,
+    "synopsis": "A portrait of the shopkeepers on one city street during the year it is scheduled for demolition.",
+    "director": "Dorin Okonedo-Marsh",
+    "cast": [
+      "Bastian Abernath",
+      "Ravi Thrane",
+      "Ada Quillan",
+      "Ines Ravensdale",
+      "Quenna Pellacott"
+    ]
+  },
+  {
+    "slug": "the-ninefold-gate",
+    "name": "The Ninefold Gate",
+    "year": 2004,
+    "runtime": 138,
+    "genres": [
+      "Fantasy",
+      "Action"
+    ],
+    "rating": 7.0,
+    "synopsis": "Nine champions from nine rival realms must cooperate to close a gate none of them can open alone.",
+    "director": "Coralie Wexley",
+    "cast": [
+      "Bastian Wexley",
+      "Ada Lindqvar",
+      "Jory Wexley",
+      "Cassia Abernath",
+      "Bastian Ashgrove"
+    ]
+  },
+  {
+    "slug": "driftglass",
+    "name": "Driftglass",
+    "year": 2016,
+    "runtime": 101,
+    "genres": [
+      "Drama"
+    ],
+    "rating": 7.3,
+    "synopsis": "A beachcomber who makes jewelry from sea glass reconnects with the son who left the island years ago.",
+    "director": "Cassia Halvorsen-Teague",
+    "cast": [
+      "Cassia Penhallow",
+      "Wren Duranne",
+      "Perrin Ottridge",
+      "Mireille Penhallow"
+    ]
+  },
+  {
+    "slug": "halfway-to-ithren",
+    "name": "Halfway to Ithren",
+    "year": 2024,
+    "runtime": 109,
+    "genres": [
+      "Adventure",
+      "Comedy"
+    ],
+    "rating": 6.5,
+    "synopsis": "Two rival tour guides are forced to share one rickety bus on the road to a mythical lake.",
+    "director": "Anouk Salcombe",
+    "cast": [
+      "Jory Rook",
+      "Perrin Iversholm",
+      "Linnea Penhallow",
+      "Anouk Vell",
+      "Linnea Fenmore"
+    ]
+  },
+  {
+    "slug": "cinder-and-sage",
+    "name": "Cinder and Sage",
+    "year": 2009,
+    "runtime": 93,
+    "genres": [
+      "Romance",
+      "Comedy"
+    ],
+    "rating": 6.6,
+    "synopsis": "A fire-eater and a herbalist share a market stall and a steadily escalating prank war.",
+    "director": "Anouk Strand",
+    "cast": [
+      "Galen Castellane",
+      "Emrys Kestwick",
+      "Maren Abernath",
+      "Dashiell Brightwater",
+      "Odile Kestwick"
+    ]
+  },
+  {
+    "slug": "the-undersea-postmaster",
+    "name": "The Undersea Postmaster",
+    "year": 2015,
+    "runtime": 86,
+    "genres": [
+      "Animation",
+      "Comedy"
+    ],
+    "rating": 7.6,
+    "synopsis": "An octopus postmaster delivers letters across a coral town, until one parcel ticks.",
+    "director": "Bo Ottridge",
+    "cast": [
+      "Zelda Quillan",
+      "Ravi Iversholm",
+      "Ravi Brightwater"
+    ]
+  },
+  {
+    "slug": "foxglove-protocol",
+    "name": "Foxglove Protocol",
+    "year": 2020,
+    "runtime": 118,
+    "genres": [
+      "Thriller",
+      "Action"
+    ],
+    "rating": 6.9,
+    "synopsis": "A retired cryptographer is pulled back in when her old cipher turns up in a ransom note.",
+    "director": "Idris Castellane",
+    "cast": [
+      "Leif Quillan",
+      "Bo Lindqvar",
+      "Cassia Lindqvar",
+      "Rosalind Orrin",
+      "Wren Fenmore"
+    ]
+  },
+  {
+    "slug": "wintermere-station",
+    "name": "Wintermere Station",
+    "year": 1989,
+    "runtime": 120,
+    "genres": [
+      "Drama",
+      "Mystery"
+    ],
+    "rating": 7.2,
+    "synopsis": "Snowbound at a polar weather station, five scientists find a logbook written in their own handwriting.",
+    "director": "Ulric Orrin",
+    "cast": [
+      "Idris Lindqvar",
+      "Yorick Penhallow",
+      "Oren Duranne",
+      "Quenna Thrane",
+      "Bastian Vell"
+    ]
+  },
+  {
+    "slug": "a-map-of-vanishing-rivers",
+    "name": "A Map of Vanishing Rivers",
+    "year": 2022,
+    "runtime": 97,
+    "genres": [
+      "Documentary",
+      "Adventure"
+    ],
+    "rating": 8.1,
+    "synopsis": "A canoe journey down rivers that run dry for most of the year, and the people who wait for them.",
+    "director": "Leif Ottridge",
+    "cast": [
+      "Maren Brightwater",
+      "Bastian Okonedo-Marsh",
+      "Vesna Salcombe",
+      "Ulric Ottridge",
+      "Hollis Fenmore"
+    ]
+  },
+  {
+    "slug": "thimble-and-the-giant",
+    "name": "Thimble and the Giant",
+    "year": 2002,
+    "runtime": 91,
+    "genres": [
+      "Animation",
+      "Fantasy"
+    ],
+    "rating": 7.8,
+    "synopsis": "A tiny seamstress agrees to mend a lonely giant's coat, stitch by stitch, over one summer.",
+    "director": "Tamsin Varga-Nyle",
+    "cast": [
+      "Anouk Quillan",
+      "Zelda Mbeki-Lowe",
+      "Sorrel Wexley",
+      "Ines Duranne"
+    ]
+  },
+  {
+    "slug": "red-lantern-junction",
+    "name": "Red Lantern Junction",
+    "year": 1976,
+    "runtime": 107,
+    "genres": [
+      "Crime",
+      "Western"
+    ],
+    "rating": 7.1,
+    "synopsis": "A telegraph operator at a desert junction intercepts a message about a robbery planned for his own town.",
+    "director": "Yorick Ottridge",
+    "cast": [
+      "Linnea Salcombe",
+      "Oren Halvorsen-Teague",
+      "Zelda Wexley",
+      "Ada Halvorsen-Teague",
+      "Sorrel Duranne"
+    ]
+  },
+  {
+    "slug": "the-clockmaker-s-wager",
+    "name": "The Clockmaker's Wager",
+    "year": 1993,
+    "runtime": 114,
+    "genres": [
+      "Fantasy",
+      "Mystery"
+    ],
+    "rating": 7.5,
+    "synopsis": "A clockmaker bets a stranger that he can build a clock that stops time, and loses more than he expected.",
+    "director": "Bastian Strand",
+    "cast": [
+      "Rosalind Ravensdale",
+      "Ulric Fairweather",
+      "Coralie Fairweather",
+      "Kestrel Ottridge",
+      "Fenwick Halvorsen-Teague"
+    ]
+  },
+  {
+    "slug": "echoes-of-tallow-bay",
+    "name": "Echoes of Tallow Bay",
+    "year": 2013,
+    "runtime": 106,
+    "genres": [
+      "Horror",
+      "Drama"
+    ],
+    "rating": 6.4,
+    "synopsis": "Returning to her childhood bay, a sound engineer records voices in the cliffs that no one else can hear.",
+    "director": "Idris Ottridge",
+    "cast": [
+      "Silas Quillan",
+      "Fenwick Abernath",
+      "Bo Thrane",
+      "Perrin Tolliver",
+      "Silas Iversholm"
+    ]
+  },
+  {
+    "slug": "saffron-skies-over-durn",
+    "name": "Saffron Skies over Durn",
+    "year": 2017,
+    "runtime": 123,
+    "genres": [
+      "Romance",
+      "Drama"
+    ],
+    "rating": 7.0,
+    "synopsis": "A pilot grounded in a spice-trading town finds a reason to stay when the harvest festival begins.",
+    "director": "Anouk Penhallow",
+    "cast": [
+      "Yorick Tolliver",
+      "Zelda Kestwick",
+      "Jory Ravensdale",
+      "Ada Penhallow",
+      "Galen Delacourt"
+    ]
+  }
+]
