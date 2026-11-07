@@ -142,10 +142,10 @@ If a task is L or larger, it should be broken into smaller tasks. An agent perfo
 
 ## Output Issues
 
-All planning output lives in GitHub Issues. Do not create `tasks/plan.md`, `tasks/todo.md` or a `tasks/` directory.
+All planning output lives in GitHub Issues. Do not create `tasks/plan.md`, `tasks/todo.md` or a `tasks/` directory. Create the `plan` and `ticket` labels first if they do not exist.
 
 - **Plan issue:** An open issue labeled `plan`, titled `Plan: [Feature/Project Name]`, with `Part of #N` pointing at the `prd` issue. Its body follows the template below and holds design decisions, risks, open questions, checkpoints and the ordered ticket list.
-- **Tickets:** One issue per task, with the Step 4 structure in the body and `Part of #N` pointing at the plan issue. Create the plan issue first, then tickets in dependency order so each `Blocked by #N` points at an existing issue. Then fill the plan issue's Task List with the ticket numbers.
+- **Tickets:** One issue per task, labeled `ticket`, with the Step 4 structure in the body and `Part of #N` pointing at the plan issue. Create the plan issue first, then tickets in dependency order so each `Blocked by #N` points at an existing issue. Then fill the plan issue's Task List with the ticket numbers.
 
 **Never overwrite an incomplete plan.** Before creating a plan issue, list open issues labeled `plan`:
 
@@ -237,7 +237,7 @@ Before starting implementation, confirm:
 - [ ] Every task has acceptance criteria
 - [ ] Every task has a verification step
 - [ ] Task dependencies are identified and ordered correctly
-- [ ] Every task is a ticket issue, listed in order in the plan issue
+- [ ] Every task is an issue labeled `ticket`, listed in order in the plan issue
 - [ ] No pre-existing incomplete plan was overwritten without explicit user confirmation
 - [ ] No task touches more than ~5 files
 - [ ] Checkpoints exist between major phases
