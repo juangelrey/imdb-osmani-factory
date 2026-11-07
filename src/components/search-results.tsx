@@ -1,5 +1,6 @@
 import { searchTitles } from "@/lib/seed-catalog/queries";
 import type { Title } from "@/lib/seed-catalog/types";
+import { cardFromSeed } from "./card-title";
 import { TitleGrid } from "./title-grid";
 
 interface SearchResultsProps {
@@ -21,7 +22,7 @@ export function SearchResults({ titles, query }: SearchResultsProps) {
           {matches.length} {matches.length === 1 ? "result" : "results"} for “{trimmed}”
         </p>
       )}
-      <TitleGrid titles={matches} emptyMessage={`No titles match “${trimmed}”.`} />
+      <TitleGrid titles={matches.map(cardFromSeed)} emptyMessage={`No titles match “${trimmed}”.`} />
     </div>
   );
 }

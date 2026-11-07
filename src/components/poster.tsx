@@ -1,14 +1,36 @@
+import Image from "next/image";
 import { posterColors, posterInitials } from "./poster-art";
 
+const SIZES = {
+  grid: { width: 342, height: 513 },
+  detail: { width: 500, height: 750 },
+} as const;
+
 interface PosterProps {
-  slug: string;
+  /** Seeds the fallback gradient. */
+  colorKey: string;
   name: string;
+  posterUrl?: string;
+  size?: keyof typeof SIZES;
   className?: string;
 }
 
-/** A generated poster: a gradient and initials derived from the title. Decorative only. */
-export function Poster({ slug, name, className = "" }: PosterProps) {
-  const { from, to } = posterColors(slug);
+/** The TMDB poster, or a generated gradient with initials when there is none. Decorative only. */
+export function Poster({ colorKey, name, posterUrl, size = "grid", className = "" }: PosterProps) {
+  if (posterUrl) {
+    return (
+      <Image
+        src={posterUrl}
+        alt=""
+        {...SIZES[size]}
+        unoptimized
+        loading={size === "detail" ? "eager" : "lazy"}
+        className={`aspect-[2/3] h-auto w-full rounded-md bg-zinc-800 object-cover ${className}`}
+      />
+    );
+  }
+
+  const { from, to } = posterColors(colorKey);
   return (
     <div
       aria-hidden="true"

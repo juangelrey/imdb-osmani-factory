@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import type { TitleSummary } from "@/lib/seed-catalog/types";
 import { useWatchlist } from "@/lib/watchlist/use-watchlist";
+import { cardFromSeed } from "./card-title";
 import { TitleGrid } from "./title-grid";
 
 const noopSubscribe = () => () => {};
@@ -48,5 +49,5 @@ export function WatchlistView({ titles }: WatchlistViewProps) {
     );
   }
 
-  return <TitleGrid titles={saved} emptyMessage="" />;
+  return <TitleGrid titles={saved.map(cardFromSeed)} emptyMessage="" />;
 }

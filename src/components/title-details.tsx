@@ -21,7 +21,7 @@ export function TitleDetails({ title, actions }: TitleDetailsProps) {
 
   return (
     <article className="grid gap-6 sm:grid-cols-[minmax(0,14rem)_1fr] sm:gap-8">
-      <Poster slug={title.slug} name={title.name} className="mx-auto w-40 text-5xl sm:w-full" />
+      <Poster colorKey={title.slug} name={title.name} className="mx-auto w-40 text-5xl sm:w-full" />
       <div className="min-w-0 space-y-5">
         <header className="space-y-3">
           <h1 className="text-3xl font-bold leading-tight">{title.name}</h1>
