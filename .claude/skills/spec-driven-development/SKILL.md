@@ -195,7 +195,6 @@ Break the plan into discrete, implementable tasks:
 
 - Each task should be completable in a single focused session
 - Each task has explicit acceptance criteria
-- Each task includes a verification step (test, build, manual check)
 - Tasks are ordered by dependency, not by perceived importance
 - No task should require changing more than ~5 files
 
@@ -205,7 +204,6 @@ Break the plan into discrete, implementable tasks:
 ```markdown
 - [ ] Task: [Description]
   - Acceptance: [What must be true when done]
-  - Verify: [How to confirm — test command, build, manual check]
   - Files: [Which files will be touched]
 ```
 

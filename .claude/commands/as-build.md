@@ -38,9 +38,13 @@ Closes #N
 **Door:** one-way or two-way
 
 **Blast Radius:** one word
+
+## Manual check
+
+- [what to verify by hand in the preview deployment]
 ```
 
-A two-way door is cheap to reverse. A one-way door is destructive or hard to reverse. When unsure, call it one-way. Blast radius is what the change could affect if it is wrong.
+A two-way door is cheap to reverse. A one-way door is destructive or hard to reverse. When unsure, call it one-way. Blast radius is what the change could affect if it is wrong. Manual check is what a person should verify in the preview deployment before merging, drawn from the acceptance criteria, for what tests cannot cover.
 
 ## Autonomous: the whole plan (`/as-build auto`)
 

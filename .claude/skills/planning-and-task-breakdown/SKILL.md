@@ -86,13 +86,8 @@ Each task becomes one ticket issue with this structure (see Output Issues):
 **Description:** One paragraph explaining what this task accomplishes.
 
 **Acceptance criteria:**
-- [ ] [Specific, testable condition]
-- [ ] [Specific, testable condition]
-
-**Verification:**
-- [ ] Tests pass: [the repository's focused-test command]
-- [ ] Build succeeds: [the repository's build command]
-- [ ] Manual check: [description of what to verify]
+- [Specific, testable condition]
+- [Specific, testable condition]
 
 **Dependencies:** ["Blocked by #N" for each blocking ticket, or "None"]
 
@@ -225,7 +220,6 @@ When multiple agents or sessions are available:
 - Replacing a `plan` issue that still has open tickets for different work, without asking
 - Writing plan or task files instead of issues (or scattering tasks across both)
 - Tasks that say "implement the feature" without acceptance criteria
-- No verification steps in the plan
 - All tasks are XL-sized
 - No checkpoints between tasks
 - Dependency order isn't considered
@@ -235,7 +229,6 @@ When multiple agents or sessions are available:
 Before starting implementation, confirm:
 
 - [ ] Every task has acceptance criteria
-- [ ] Every task has a verification step
 - [ ] Task dependencies are identified and ordered correctly
 - [ ] Every task is an issue labeled `ticket`, listed in order in the plan issue
 - [ ] No pre-existing incomplete plan was overwritten without explicit user confirmation
