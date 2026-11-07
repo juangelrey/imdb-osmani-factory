@@ -3,7 +3,7 @@
 A small catalogue of invented movies: browse, search, view a title, keep a watchlist.
 Every title and person in it is made up.
 
-**Live:** https://tmdb-osmani-factory.vercel.app/
+**Live:** https://reelbase-tau.vercel.app/
 
 ## Commands
 

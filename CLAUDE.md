@@ -5,7 +5,7 @@ issue, the plan is the open `plan` issue, and a task is an issue labeled `ticket
 
 ## Issue tracker
 
-GitHub Issues on `juangelrey/imdb-osmani-factory` is the tracker. Do not create `SPEC.md`,
+GitHub Issues on `juangelrey/reelbase` is the tracker. Do not create `SPEC.md`,
 `tasks/plan.md` or `tasks/todo.md`.
 
 - One issue labeled `ticket` per task. Acceptance criteria and verification steps go in the body, and links go in
@@ -21,4 +21,4 @@ do not load. Commands: `/as-spec`, `/as-plan`, `/as-build`, `/as-test`, `/as-rev
 ## Cloud sessions
 
 `gh issue` and `gh pr` fail in cloud sessions because the GitHub proxy blocks GraphQL. Use the
-built-in GitHub tools, or REST through `gh api repos/juangelrey/imdb-osmani-factory/...`.
+built-in GitHub tools, or REST through `gh api repos/juangelrey/reelbase/...`.
