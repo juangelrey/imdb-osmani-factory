@@ -1,21 +1,23 @@
 ---
-description: Implement tasks incrementally — build, test, verify, commit. Add "auto" to run the whole plan in one approved pass, or "dark" to also merge two-way-door PRs.
+description: Build tickets test-first and open a PR. No argument: next ticket. "auto": whole plan, you merge. "dark": whole plan, merged if two-way.
 disable-model-invocation: true
 ---
 
 ## Modes
 
-- **`/as-build`** — implement the *next* pending task, then stop (careful, one slice at a time).
-- **`/as-build auto`** — generate the plan if needed, get a single approval, then implement *every* task without stopping between them.
-- **`/as-build dark`** — `auto`, plus an independent merge of the PR when its door is two-way.
+| Mode | Builds | User approves | Ends with |
+|---|---|---|---|
+| `/as-build` | the next ready ticket | nothing up front | one PR for that ticket, which the user merges |
+| `/as-build auto` | the whole plan, written first if none exists, each ticket in a fresh subagent | the plan once, plus any blocker or high-risk ticket | one PR for the plan, which the user merges |
+| `/as-build dark` | same as `auto` | same as `auto` | the same PR, merged by a fresh subagent if its door is two-way, otherwise left for the user |
 
-`$ARGUMENTS` selects the mode. Treat `auto` as autonomous mode and `dark` as autonomous mode with step 8; anything else (or empty) is the default single-task mode.
+`$ARGUMENTS` selects the mode: `auto` and `dark` run Autonomous below, and empty or anything else runs Default.
 
 ## Default: one task
 
 Pick the first open ticket in the open `plan` issue's Task List whose blockers are closed. Then:
 
-1. Create a branch from `main` named `<N>-<short-slug>`, where N is the ticket number
+1. Create the branch per `.claude/skills/git-workflow-and-versioning/references/branch-naming.md`
 2. Invoke the incremental-implementation skill alongside test-driven-development, then read the ticket's acceptance criteria
 3. Write a failing test for the expected behavior (RED)
 4. Implement the minimum code to pass the test (GREEN)
@@ -44,13 +46,13 @@ Closes #N
 
 A two-way door is cheap to reverse. A one-way door is destructive or hard to reverse. When unsure, call it one-way. Blast radius is what the change could affect if it is wrong. Manual check is what a person should verify in the preview deployment before merging, drawn from the acceptance criteria, for what tests cannot cover.
 
-## Autonomous: the whole plan (`/as-build auto`)
+## Autonomous: the whole plan (`/as-build auto` and `dark`)
 
 1. **Require a spec.** Look only for an open issue labeled `prd`. A README or arbitrary doc does **not** count. If none exists, stop and tell the user to run `/as-spec` first — do not invent requirements.
 2. **Establish a clean baseline.** Run `git status --porcelain`. If there are any uncommitted changes, stop and ask the user to commit, stash, or confirm how to handle them. Autonomous per-task commits must not absorb unrelated local work, or the clean-rollback guarantee breaks.
 3. **Plan if needed.** If there is no open issue labeled `plan`, invoke planning-and-task-breakdown to generate one.
 4. **Single checkpoint.** Present the full plan and wait for an unambiguous affirmative (e.g. "approve", "go", "yes"). Treat hedged responses ("looks reasonable", "I guess") as **not** approved.
-5. **Execute every task in dependency order, one at a time.** Use each task's declared dependencies; if they aren't explicit, execute in the order the plan lists them. Create one branch named `plan-<N>`, where N is the plan issue number, or reuse it when resuming. You coordinate; do not write code yourself. For each ticket, spawn one foreground implementer subagent, so every ticket starts with a fresh context and its work stays out of this session.
+5. **Execute every task in dependency order, one at a time.** Use each task's declared dependencies; if they aren't explicit, execute in the order the plan lists them. Create the branch per `.claude/skills/git-workflow-and-versioning/references/branch-naming.md`, or reuse it when resuming. You coordinate; do not write code yourself. For each ticket, spawn one foreground implementer subagent, so every ticket starts with a fresh context and its work stays out of this session.
 
    Keep the brief short and use pointers, not copied text:
    - the ticket number, the `prd` issue and the `plan` issue

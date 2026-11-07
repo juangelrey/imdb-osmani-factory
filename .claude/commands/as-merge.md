@@ -10,9 +10,9 @@ Use REST through `gh api repos/juangelrey/reelbase/...` for every PR operation.
 
 ## Steps
 
-1. **Check your independence.** If this session wrote, built or reviewed this branch, you are biased: give the human-review verdict with that reason.
+1. **Check your independence.** If your context holds the writing, building or reviewing of this branch, you are biased: give the human-review verdict with that reason.
 2. **Check eligibility.** All must hold, or give the human-review verdict:
-   - the PR is open, its base is `main`, and its head branch is `plan-<N>` (only `/as-build auto` and `dark` make these)
+   - the PR is open and its base is `main`
    - the PR body says `**Door:** two-way`
    - every check run on the head commit concluded `success`, and its combined status is `success`. If any is still pending, stop and report that
 
