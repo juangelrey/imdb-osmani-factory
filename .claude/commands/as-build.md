@@ -17,7 +17,7 @@ disable-model-invocation: true
 
 Pick the first open ticket in the open `plan` issue's Task List whose blockers are closed. Then:
 
-1. Create a branch from `main` named `<N>-<short-slug>`, where N is the ticket number
+1. Create the branch per `.claude/skills/git-workflow-and-versioning/references/branch-naming.md`
 2. Invoke the incremental-implementation skill alongside test-driven-development, then read the ticket's acceptance criteria
 3. Write a failing test for the expected behavior (RED)
 4. Implement the minimum code to pass the test (GREEN)
@@ -52,7 +52,7 @@ A two-way door is cheap to reverse. A one-way door is destructive or hard to rev
 2. **Establish a clean baseline.** Run `git status --porcelain`. If there are any uncommitted changes, stop and ask the user to commit, stash, or confirm how to handle them. Autonomous per-task commits must not absorb unrelated local work, or the clean-rollback guarantee breaks.
 3. **Plan if needed.** If there is no open issue labeled `plan`, invoke planning-and-task-breakdown to generate one.
 4. **Single checkpoint.** Present the full plan and wait for an unambiguous affirmative (e.g. "approve", "go", "yes"). Treat hedged responses ("looks reasonable", "I guess") as **not** approved.
-5. **Execute every task in dependency order, one at a time.** Use each task's declared dependencies; if they aren't explicit, execute in the order the plan lists them. Create one branch named `plan-<N>`, where N is the plan issue number, or reuse it when resuming. You coordinate; do not write code yourself. For each ticket, spawn one foreground implementer subagent, so every ticket starts with a fresh context and its work stays out of this session.
+5. **Execute every task in dependency order, one at a time.** Use each task's declared dependencies; if they aren't explicit, execute in the order the plan lists them. Create the branch per `.claude/skills/git-workflow-and-versioning/references/branch-naming.md`, or reuse it when resuming. You coordinate; do not write code yourself. For each ticket, spawn one foreground implementer subagent, so every ticket starts with a fresh context and its work stays out of this session.
 
    Keep the brief short and use pointers, not copied text:
    - the ticket number, the `prd` issue and the `plan` issue
