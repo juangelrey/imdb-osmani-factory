@@ -46,6 +46,18 @@ describe("Title page", () => {
     expect(screen.getByText("Lana Wachowski")).toBeInTheDocument();
   });
 
+  it("links both Matrix directors to their person pages with exactly one TMDB request", async () => {
+    const fetchMock = stubTmdb(details);
+    render(await TitlePage(params("603-the-matrix")));
+    expect(screen.getByRole("link", { name: "Lana Wachowski" })).toHaveAttribute("href", "/person/9340-lana-wachowski");
+    expect(screen.getByRole("link", { name: "Lilly Wachowski" })).toHaveAttribute("href", "/person/9339-lilly-wachowski");
+    expect(screen.getByText("Directors", { selector: "dt" })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const url = new URL(String((fetchMock.mock.calls[0] as unknown[])[0]));
+    expect(url.pathname).toBe("/3/movie/603");
+    expect(url.searchParams.get("append_to_response")).toBe("credits");
+  });
+
   it("names the page after the title", async () => {
     stubTmdb(details);
     expect(await generateMetadata(params("603-the-matrix"))).toEqual({ title: "The Matrix · Reelbase" });

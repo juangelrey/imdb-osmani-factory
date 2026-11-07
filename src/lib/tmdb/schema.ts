@@ -29,11 +29,15 @@ export interface TmdbPaged<T> {
 }
 
 export interface TmdbCastMember {
+  /** The TMDB person id. */
+  id: number;
   name: string;
   order: number;
 }
 
 export interface TmdbCrewMember {
+  /** The TMDB person id. */
+  id: number;
   name: string;
   job: string;
 }
@@ -52,4 +56,42 @@ export interface TmdbMovieDetails {
     cast: TmdbCastMember[];
     crew: TmdbCrewMember[];
   };
+}
+
+/** A film in a person's `movie_credits`, carrying the movie's own fields. */
+export interface TmdbPersonMovieCredit extends TmdbMovieListItem {
+  adult: boolean;
+  /** Present on live responses next to `adult`; softcore films are excluded like adult ones. */
+  softcore?: boolean;
+}
+
+export interface TmdbPersonCastCredit extends TmdbPersonMovieCredit {
+  /** May be "" or join several roles with " / ". */
+  character?: string;
+  order?: number;
+}
+
+export interface TmdbPersonCrewCredit extends TmdbPersonMovieCredit {
+  job: string;
+  department: string;
+}
+
+export interface TmdbPersonMovieCredits {
+  cast: TmdbPersonCastCredit[];
+  crew: TmdbPersonCrewCredit[];
+}
+
+/** `GET /person/{id}?append_to_response=movie_credits`. */
+export interface TmdbPersonDetails {
+  id: number;
+  name: string;
+  adult: boolean;
+  biography: string;
+  /** "YYYY-MM-DD", or null when unknown. */
+  birthday: string | null;
+  deathday: string | null;
+  place_of_birth: string | null;
+  known_for_department: string | null;
+  profile_path: string | null;
+  movie_credits: TmdbPersonMovieCredits;
 }

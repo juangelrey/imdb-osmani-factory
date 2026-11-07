@@ -1,0 +1,58 @@
+{
+  "adult": false,
+  "id": 4891257,
+  "name": "Mara Lindqvist",
+  "biography": "",
+  "birthday": null,
+  "deathday": null,
+  "place_of_birth": null,
+  "known_for_department": null,
+  "profile_path": null,
+  "movie_credits": {
+    "cast": [
+      {
+        "adult": false,
+        "softcore": false,
+        "id": 1184918,
+        "title": "Untitled Short",
+        "release_date": "",
+        "poster_path": null,
+        "vote_average": 0,
+        "vote_count": 0,
+        "genre_ids": [],
+        "character": "",
+        "credit_id": "65a1f0c2e8a3e1012c9b7d11",
+        "order": 0
+      },
+      {
+        "adult": true,
+        "softcore": false,
+        "id": 1290431,
+        "title": "Late Shift",
+        "release_date": "2021-03-12",
+        "poster_path": null,
+        "vote_average": 0,
+        "vote_count": 0,
+        "genre_ids": [],
+        "character": "Nina",
+        "credit_id": "6049c3a1e8a3e1003f5e2a90",
+        "order": 1
+      },
+      {
+        "adult": false,
+        "softcore": true,
+        "id": 1301877,
+        "title": "Velvet Hours",
+        "release_date": "2022-06-03",
+        "poster_path": null,
+        "vote_average": 0,
+        "vote_count": 0,
+        "genre_ids": [],
+        "character": "Ilse",
+        "credit_id": "62a0b7d1e8a3e1004c8f1b22",
+        "order": 2
+      }
+    ],
+    "crew": []
+  }
+}

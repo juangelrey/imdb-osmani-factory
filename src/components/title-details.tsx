@@ -1,6 +1,8 @@
-import type { ReactNode } from "react";
+import Link from "next/link";
+import { Fragment, type ReactNode } from "react";
 import { formatRuntime } from "@/lib/catalog/format";
-import type { Title } from "@/lib/catalog/types";
+import { personHref } from "@/lib/catalog/map";
+import type { PersonLink, Title } from "@/lib/catalog/types";
 import { Poster } from "./poster";
 
 interface TitleDetailsProps {
@@ -9,14 +11,30 @@ interface TitleDetailsProps {
   actions?: ReactNode;
 }
 
+/** Comma-separated links to each person's page, or undefined when there is nobody to list. */
+function personLinks(people: PersonLink[]): ReactNode {
+  if (people.length === 0) return undefined;
+  return people.map((person, index) => (
+    <Fragment key={person.id}>
+      {index > 0 && ", "}
+      <Link
+        href={personHref(person)}
+        className="hover:text-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
+      >
+        {person.name}
+      </Link>
+    </Fragment>
+  ));
+}
+
 export function TitleDetails({ title, actions }: TitleDetailsProps) {
-  const facts: [string, string | undefined][] = [
+  const facts: [string, ReactNode][] = [
     ["Year", title.year?.toString()],
     ["Runtime", title.runtime ? formatRuntime(title.runtime) : undefined],
     ["Genres", title.genres.map(({ name }) => name).join(", ") || undefined],
     ["Rating", title.rating === undefined ? undefined : `${title.rating.toFixed(1)} / 10`],
-    ["Director", title.director],
-    ["Cast", title.cast.join(", ") || undefined],
+    [title.directors.length > 1 ? "Directors" : "Director", personLinks(title.directors)],
+    ["Cast", personLinks(title.cast)],
   ];
 
   return (
