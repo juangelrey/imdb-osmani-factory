@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
-import type { TitleSummary } from "@/lib/seed-catalog/types";
 import { useWatchlist } from "@/lib/watchlist/use-watchlist";
-import { cardFromSeed } from "./card-title";
+import { cardFromEntry } from "./card-title";
 import { TitleGrid } from "./title-grid";
 
 const noopSubscribe = () => () => {};
@@ -18,14 +17,10 @@ function useHydrated() {
   );
 }
 
-interface WatchlistViewProps {
-  /** The catalogue, slimmed to card fields by the server page. */
-  titles: TitleSummary[];
-}
-
-export function WatchlistView({ titles }: WatchlistViewProps) {
+/** Renders the saved snapshots; needs no catalogue or API data. */
+export function WatchlistView() {
   const hydrated = useHydrated();
-  const { slugs } = useWatchlist();
+  const { entries } = useWatchlist();
 
   if (!hydrated) {
     return (
@@ -35,10 +30,7 @@ export function WatchlistView({ titles }: WatchlistViewProps) {
     );
   }
 
-  const bySlug = new Map(titles.map((title) => [title.slug, title]));
-  const saved = slugs.flatMap((slug) => bySlug.get(slug) ?? []);
-
-  if (saved.length === 0) {
+  if (entries.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-zinc-700 p-8 text-center">
         <p className="text-zinc-400">Your watchlist is empty.</p>
@@ -49,5 +41,5 @@ export function WatchlistView({ titles }: WatchlistViewProps) {
     );
   }
 
-  return <TitleGrid titles={saved.map(cardFromSeed)} emptyMessage="" />;
+  return <TitleGrid titles={entries.map(cardFromEntry)} emptyMessage="" />;
 }

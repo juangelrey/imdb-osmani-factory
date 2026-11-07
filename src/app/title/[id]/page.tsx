@@ -6,6 +6,7 @@ import { parseTitleParam, titleHref } from "@/lib/catalog/map";
 import { getTitle } from "@/lib/catalog/queries";
 import type { Title } from "@/lib/catalog/types";
 import { getTitleBySlug, listTitles } from "@/lib/seed-catalog/queries";
+import { entryFromTitle } from "@/lib/watchlist/watchlist";
 
 interface TitlePageProps {
   params: Promise<{ id: string }>;
@@ -42,5 +43,5 @@ export default async function TitlePage({ params }: TitlePageProps) {
   const { title, canonical, fromSeed } = await findTitle((await params).id);
   if (!title) notFound();
   if (!canonical) permanentRedirect(titleHref(title));
-  return <TitleDetails title={title} actions={<WatchlistButton slug={fromSeed ? title.slug : `${title.id}-${title.slug}`} />} />;
+  return <TitleDetails title={title} actions={fromSeed ? undefined : <WatchlistButton entry={entryFromTitle(title)} />} />;
 }

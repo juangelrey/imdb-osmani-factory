@@ -1,5 +1,6 @@
-import { titleHref } from "@/lib/catalog/map";
+import { posterUrl, titleHref } from "@/lib/catalog/map";
 import type { TitleSummary } from "@/lib/catalog/types";
+import type { WatchlistEntry } from "@/lib/watchlist/watchlist";
 
 /** What a title card renders. Every data source adapts to this shape. */
 export interface CardTitle {
@@ -21,6 +22,10 @@ export function cardFromSummary(title: TitleSummary): CardTitle {
     rating: title.rating,
     posterUrl: title.posterUrl,
   };
+}
+
+export function cardFromEntry(entry: WatchlistEntry): CardTitle {
+  return cardFromSummary({ ...entry, posterUrl: posterUrl(entry.posterPath, "w342") });
 }
 
 /** Temporary: seed titles still link by slug until every page reads TMDB. */

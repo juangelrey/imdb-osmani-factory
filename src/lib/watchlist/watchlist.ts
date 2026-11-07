@@ -1,14 +1,41 @@
-export const STORAGE_KEY = "reelbase:watchlist:v1";
+import type { Title } from "@/lib/catalog/types";
+
+export const STORAGE_KEY = "reelbase:watchlist:v2";
+
+/** A small snapshot of a saved movie, enough to render its card without calling TMDB. */
+export interface WatchlistEntry {
+  id: number;
+  slug: string;
+  name: string;
+  year?: number;
+  rating: number;
+  /** TMDB poster path such as "/abc.jpg". */
+  posterPath?: string;
+}
 
 export type WatchlistStorage = Pick<Storage, "getItem" | "setItem">;
 
-const EMPTY: readonly string[] = Object.freeze([]);
+const EMPTY: readonly WatchlistEntry[] = Object.freeze([]);
+const POSTER_PATH = /^\/[\w.-]+$/;
 
-/**
- * Parse stored data. Anything missing or malformed reads as empty. When `knownSlugs` is given,
- * slugs outside it are dropped.
- */
-export function parseWatchlist(raw: string | null, knownSlugs?: ReadonlySet<string>): string[] {
+export function entryFromTitle({ id, slug, name, year, rating, posterPath }: Title): WatchlistEntry {
+  return { id, slug, name, year, rating, posterPath };
+}
+
+/** Validate one stored item, keeping only known fields. Returns undefined for anything malformed. */
+function toEntry(item: unknown): WatchlistEntry | undefined {
+  if (typeof item !== "object" || item === null) return undefined;
+  const { id, slug, name, year, rating, posterPath } = item as Record<string, unknown>;
+  if (typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0) return undefined;
+  if (typeof slug !== "string" || typeof name !== "string") return undefined;
+  if (typeof rating !== "number" || !Number.isFinite(rating)) return undefined;
+  if (year !== undefined && (typeof year !== "number" || !Number.isInteger(year))) return undefined;
+  if (posterPath !== undefined && (typeof posterPath !== "string" || !POSTER_PATH.test(posterPath))) return undefined;
+  return { id, slug, name, year, rating, posterPath };
+}
+
+/** Parse stored data. Anything missing or malformed reads as empty; bad entries and duplicate ids are dropped. */
+export function parseWatchlist(raw: string | null): WatchlistEntry[] {
   if (!raw) return [];
   let value: unknown;
   try {
@@ -17,24 +44,28 @@ export function parseWatchlist(raw: string | null, knownSlugs?: ReadonlySet<stri
     return [];
   }
   if (!Array.isArray(value)) return [];
-  const slugs = value.filter((item): item is string => typeof item === "string" && (!knownSlugs || knownSlugs.has(item)));
-  return [...new Set(slugs)];
+  const entries: WatchlistEntry[] = [];
+  for (const item of value) {
+    const entry = toEntry(item);
+    if (entry && !hasEntry(entries, entry.id)) entries.push(entry);
+  }
+  return entries;
 }
 
-export function serializeWatchlist(slugs: readonly string[]): string {
-  return JSON.stringify(slugs);
+export function serializeWatchlist(entries: readonly WatchlistEntry[]): string {
+  return JSON.stringify(entries);
 }
 
-export function hasSlug(slugs: readonly string[], slug: string): boolean {
-  return slugs.includes(slug);
+export function hasEntry(entries: readonly WatchlistEntry[], id: number): boolean {
+  return entries.some((entry) => entry.id === id);
 }
 
-export function addSlug(slugs: readonly string[], slug: string): string[] {
-  return hasSlug(slugs, slug) ? [...slugs] : [...slugs, slug];
+export function addEntry(entries: readonly WatchlistEntry[], entry: WatchlistEntry): WatchlistEntry[] {
+  return hasEntry(entries, entry.id) ? [...entries] : [...entries, entry];
 }
 
-export function removeSlug(slugs: readonly string[], slug: string): string[] {
-  return slugs.filter((item) => item !== slug);
+export function removeEntry(entries: readonly WatchlistEntry[], id: number): WatchlistEntry[] {
+  return entries.filter((entry) => entry.id !== id);
 }
 
 function readRaw(storage: WatchlistStorage | undefined): string | null {
@@ -45,15 +76,15 @@ function readRaw(storage: WatchlistStorage | undefined): string | null {
   }
 }
 
-export function readWatchlist(storage: WatchlistStorage | undefined, knownSlugs?: ReadonlySet<string>): string[] {
-  return parseWatchlist(readRaw(storage), knownSlugs);
+export function readWatchlist(storage: WatchlistStorage | undefined): WatchlistEntry[] {
+  return parseWatchlist(readRaw(storage));
 }
 
 /** Returns false when storage is unavailable or refuses the write. */
-export function writeWatchlist(storage: WatchlistStorage | undefined, slugs: readonly string[]): boolean {
+export function writeWatchlist(storage: WatchlistStorage | undefined, entries: readonly WatchlistEntry[]): boolean {
   if (!storage) return false;
   try {
-    storage.setItem(STORAGE_KEY, serializeWatchlist(slugs));
+    storage.setItem(STORAGE_KEY, serializeWatchlist(entries));
     return true;
   } catch {
     return false;
@@ -62,25 +93,23 @@ export function writeWatchlist(storage: WatchlistStorage | undefined, slugs: rea
 
 interface WatchlistStoreOptions {
   getStorage: () => WatchlistStorage | undefined;
-  /** Optional: the client store omits it so the catalogue stays out of the browser bundle. */
-  knownSlugs?: ReadonlySet<string>;
   /** Where cross-tab `storage` events arrive; `window` in the browser. */
   events?: EventTarget;
 }
 
 export interface WatchlistStore {
   subscribe(listener: () => void): () => void;
-  getSnapshot(): readonly string[];
-  getServerSnapshot(): readonly string[];
-  add(slug: string): void;
-  remove(slug: string): void;
+  getSnapshot(): readonly WatchlistEntry[];
+  getServerSnapshot(): readonly WatchlistEntry[];
+  add(entry: WatchlistEntry): void;
+  remove(id: number): void;
 }
 
 /** An external store for `useSyncExternalStore`. Snapshots are cached by the raw stored string. */
-export function createWatchlistStore({ getStorage, knownSlugs, events }: WatchlistStoreOptions): WatchlistStore {
+export function createWatchlistStore({ getStorage, events }: WatchlistStoreOptions): WatchlistStore {
   const listeners = new Set<() => void>();
   let cachedRaw: string | null = null;
-  let cached: readonly string[] = EMPTY;
+  let cached: readonly WatchlistEntry[] = EMPTY;
 
   const emit = () => listeners.forEach((listener) => listener());
   const onStorage = (event: Event) => {
@@ -92,13 +121,13 @@ export function createWatchlistStore({ getStorage, knownSlugs, events }: Watchli
     const raw = readRaw(getStorage());
     if (raw !== cachedRaw) {
       cachedRaw = raw;
-      const parsed = parseWatchlist(raw, knownSlugs);
+      const parsed = parseWatchlist(raw);
       cached = parsed.length ? parsed : EMPTY;
     }
     return cached;
   };
 
-  const update = (change: (slugs: readonly string[]) => string[]) => {
+  const update = (change: (entries: readonly WatchlistEntry[]) => WatchlistEntry[]) => {
     if (writeWatchlist(getStorage(), change(getSnapshot()))) emit();
   };
 
@@ -113,7 +142,7 @@ export function createWatchlistStore({ getStorage, knownSlugs, events }: Watchli
     },
     getSnapshot,
     getServerSnapshot: () => EMPTY,
-    add: (slug) => update((slugs) => addSlug(slugs, slug)),
-    remove: (slug) => update((slugs) => removeSlug(slugs, slug)),
+    add: (entry) => update((entries) => addEntry(entries, entry)),
+    remove: (id) => update((entries) => removeEntry(entries, id)),
   };
 }

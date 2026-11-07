@@ -1,6 +1,8 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { notFound, permanentRedirect } from "next/navigation";
 import details from "@/lib/tmdb/fixtures/movie-details.json";
+import { STORAGE_KEY } from "@/lib/watchlist/watchlist";
 import TitlePage, { dynamicParams, generateMetadata, generateStaticParams, revalidate } from "./page";
 
 vi.mock("next/navigation", () => ({
@@ -67,10 +69,14 @@ describe("Title page", () => {
     expect(notFound).not.toHaveBeenCalled();
   });
 
-  it("offers the watchlist button", async () => {
+  it("offers the watchlist button, saving a snapshot of the movie", async () => {
     stubTmdb(details);
+    localStorage.clear();
     render(await TitlePage(params("603-the-matrix")));
-    expect(screen.getByRole("button", { name: "Save to watchlist" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Save to watchlist" }));
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual([
+      { id: 603, slug: "the-matrix", name: "The Matrix", year: 1999, rating: 8.218, posterPath: "/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg" },
+    ]);
   });
 });
 
@@ -80,6 +86,12 @@ describe("Title page legacy seed slugs (until the seed is removed)", () => {
     render(await TitlePage(params("the-lantern-keepers-of-varro")));
     expect(screen.getByRole("heading", { level: 1, name: "The Lantern Keepers of Varro" })).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("offers no watchlist button for a seed title", async () => {
+    stubTmdb(details);
+    render(await TitlePage(params("the-lantern-keepers-of-varro")));
+    expect(screen.queryByRole("button", { name: "Save to watchlist" })).not.toBeInTheDocument();
   });
 
   it("returns a 404 for an unknown non-numeric param", async () => {

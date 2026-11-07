@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { createWatchlistStore, hasSlug } from "./watchlist";
+import { createWatchlistStore, hasEntry } from "./watchlist";
 
 function browserStorage(): Storage | undefined {
   try {
@@ -17,15 +17,12 @@ const store = createWatchlistStore({
   events: typeof window === "undefined" ? undefined : window,
 });
 
-/**
- * The saved slugs, in the order they were added. Empty on the server and before hydration.
- * Slugs are not checked against the catalogue here; views drop unknown ones when resolving titles.
- */
+/** The saved movie snapshots, in the order they were added. Empty on the server and before hydration. */
 export function useWatchlist() {
-  const slugs = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getServerSnapshot);
+  const entries = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getServerSnapshot);
   return {
-    slugs,
-    has: (slug: string) => hasSlug(slugs, slug),
+    entries,
+    has: (id: number) => hasEntry(entries, id),
     add: store.add,
     remove: store.remove,
   };

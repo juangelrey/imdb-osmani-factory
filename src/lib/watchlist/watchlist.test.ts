@@ -1,16 +1,26 @@
 import {
   STORAGE_KEY,
-  addSlug,
+  addEntry,
   createWatchlistStore,
-  hasSlug,
+  entryFromTitle,
+  hasEntry,
   parseWatchlist,
   readWatchlist,
-  removeSlug,
+  removeEntry,
   serializeWatchlist,
   writeWatchlist,
+  type WatchlistEntry,
 } from "./watchlist";
 
-const known = new Set(["glass-harbor", "ember-road", "the-quiet-orbit"]);
+const matrix: WatchlistEntry = {
+  id: 603,
+  slug: "the-matrix",
+  name: "The Matrix",
+  year: 1999,
+  rating: 8.2,
+  posterPath: "/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
+};
+const inception: WatchlistEntry = { id: 27205, slug: "inception", name: "Inception", year: 2010, rating: 8.4 };
 
 class MemoryStorage implements Pick<Storage, "getItem" | "setItem"> {
   data = new Map<string, string>();
@@ -32,88 +42,121 @@ const throwingStorage: Pick<Storage, "getItem" | "setItem"> = {
 };
 
 describe("STORAGE_KEY", () => {
-  it("is versioned", () => {
-    expect(STORAGE_KEY).toBe("reelbase:watchlist:v1");
+  it("is the v2 key", () => {
+    expect(STORAGE_KEY).toBe("reelbase:watchlist:v2");
+  });
+});
+
+describe("entryFromTitle", () => {
+  it("keeps only the snapshot fields", () => {
+    expect(
+      entryFromTitle({
+        ...matrix,
+        runtime: 136,
+        genres: [{ id: 28, name: "Action" }],
+        synopsis: "s",
+        posterUrl: "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
+        director: "Lana Wachowski",
+        cast: ["Keanu Reeves"],
+      }),
+    ).toEqual(matrix);
   });
 });
 
 describe("parseWatchlist", () => {
-  it("reads a JSON array of known slugs", () => {
-    expect(parseWatchlist('["ember-road","glass-harbor"]', known)).toEqual(["ember-road", "glass-harbor"]);
+  it("reads a JSON array of entries", () => {
+    expect(parseWatchlist(JSON.stringify([matrix, inception]))).toEqual([matrix, inception]);
   });
 
   it.each([
     ["missing", null],
     ["empty", ""],
     ["not JSON", "{oops"],
-    ["an object", '{"slugs":["ember-road"]}'],
-    ["a string", '"ember-road"'],
+    ["an object", JSON.stringify({ entries: [matrix] })],
     ["null", "null"],
-    ["a number", "42"],
+    ["v1 slug strings", '["the-lantern-keepers-of-varro"]'],
   ])("reads %s data as empty", (_label, raw) => {
-    expect(parseWatchlist(raw, known)).toEqual([]);
+    expect(parseWatchlist(raw)).toEqual([]);
   });
 
-  it("keeps any string slug when no known set is given", () => {
-    expect(parseWatchlist('["anything",3,"anything"]')).toEqual(["anything"]);
+  it("drops malformed entries and keeps the valid ones", () => {
+    const raw = JSON.stringify([
+      { ...matrix, id: "603" },
+      { ...matrix, id: -1 },
+      { ...matrix, name: 42 },
+      { ...matrix, rating: "high" },
+      { ...matrix, year: "1999" },
+      { ...matrix, posterPath: "https://evil.example/x.jpg" },
+      null,
+      inception,
+    ]);
+    expect(parseWatchlist(raw)).toEqual([inception]);
   });
 
-  it("drops non-strings, unknown slugs and duplicates", () => {
-    expect(parseWatchlist('["ember-road",7,null,"gone","ember-road",{"a":1}]', known)).toEqual(["ember-road"]);
+  it("drops duplicate ids, keeping the first", () => {
+    expect(parseWatchlist(JSON.stringify([matrix, { ...matrix, name: "Dupe" }]))).toEqual([matrix]);
+  });
+
+  it("drops unknown fields", () => {
+    expect(parseWatchlist(JSON.stringify([{ ...inception, extra: "<script>" }]))).toEqual([inception]);
   });
 });
 
 describe("serializeWatchlist", () => {
   it("round-trips through parseWatchlist", () => {
-    const slugs = ["the-quiet-orbit", "ember-road"];
-    expect(parseWatchlist(serializeWatchlist(slugs), known)).toEqual(slugs);
+    expect(parseWatchlist(serializeWatchlist([inception, matrix]))).toEqual([inception, matrix]);
   });
 });
 
-describe("addSlug / removeSlug / hasSlug", () => {
-  it("adds a slug to the end once", () => {
-    expect(addSlug(["ember-road"], "glass-harbor")).toEqual(["ember-road", "glass-harbor"]);
-    expect(addSlug(["ember-road"], "ember-road")).toEqual(["ember-road"]);
+describe("addEntry / removeEntry / hasEntry", () => {
+  it("adds an entry to the end once", () => {
+    expect(addEntry([matrix], inception)).toEqual([matrix, inception]);
+    expect(addEntry([matrix], { ...matrix, name: "Again" })).toEqual([matrix]);
   });
 
-  it("removes a slug and ignores a missing one", () => {
-    expect(removeSlug(["ember-road", "glass-harbor"], "ember-road")).toEqual(["glass-harbor"]);
-    expect(removeSlug(["ember-road"], "glass-harbor")).toEqual(["ember-road"]);
+  it("removes by id and ignores a missing one", () => {
+    expect(removeEntry([matrix, inception], 603)).toEqual([inception]);
+    expect(removeEntry([matrix], 27205)).toEqual([matrix]);
   });
 
   it("does not mutate its input", () => {
-    const list = ["ember-road"];
-    addSlug(list, "glass-harbor");
-    removeSlug(list, "ember-road");
-    expect(list).toEqual(["ember-road"]);
+    const list = [matrix];
+    addEntry(list, inception);
+    removeEntry(list, 603);
+    expect(list).toEqual([matrix]);
   });
 
-  it("reports membership", () => {
-    expect(hasSlug(["ember-road"], "ember-road")).toBe(true);
-    expect(hasSlug(["ember-road"], "glass-harbor")).toBe(false);
+  it("reports membership by id", () => {
+    expect(hasEntry([matrix], 603)).toBe(true);
+    expect(hasEntry([matrix], 27205)).toBe(false);
   });
 });
 
 describe("readWatchlist / writeWatchlist", () => {
   it("writes and reads back through storage", () => {
     const storage = new MemoryStorage();
-    expect(writeWatchlist(storage, ["glass-harbor"])).toBe(true);
-    expect(storage.getItem(STORAGE_KEY)).toBe('["glass-harbor"]');
-    expect(readWatchlist(storage, known)).toEqual(["glass-harbor"]);
+    expect(writeWatchlist(storage, [matrix])).toBe(true);
+    expect(readWatchlist(storage)).toEqual([matrix]);
+  });
+
+  it("never reads the v1 key", () => {
+    const storage = new MemoryStorage();
+    storage.setItem("reelbase:watchlist:v1", '["the-lantern-keepers-of-varro"]');
+    expect(readWatchlist(storage)).toEqual([]);
   });
 
   it("reads as empty and reports failure when storage is missing or throws", () => {
-    expect(readWatchlist(undefined, known)).toEqual([]);
-    expect(readWatchlist(throwingStorage, known)).toEqual([]);
-    expect(writeWatchlist(undefined, ["ember-road"])).toBe(false);
-    expect(writeWatchlist(throwingStorage, ["ember-road"])).toBe(false);
+    expect(readWatchlist(undefined)).toEqual([]);
+    expect(readWatchlist(throwingStorage)).toEqual([]);
+    expect(writeWatchlist(undefined, [matrix])).toBe(false);
+    expect(writeWatchlist(throwingStorage, [matrix])).toBe(false);
   });
 });
 
 describe("createWatchlistStore", () => {
   function setup(storage: Pick<Storage, "getItem" | "setItem"> | undefined = new MemoryStorage()) {
     const target = new EventTarget();
-    const store = createWatchlistStore({ getStorage: () => storage, knownSlugs: known, events: target });
+    const store = createWatchlistStore({ getStorage: () => storage, events: target });
     return { store, storage, target };
   }
 
@@ -125,23 +168,23 @@ describe("createWatchlistStore", () => {
 
   it("returns the same snapshot reference until the data changes", () => {
     const { store } = setup();
-    store.add("ember-road");
+    store.add(matrix);
     const first = store.getSnapshot();
     expect(store.getSnapshot()).toBe(first);
-    store.add("glass-harbor");
+    store.add(inception);
     expect(store.getSnapshot()).not.toBe(first);
-    expect(store.getSnapshot()).toEqual(["ember-road", "glass-harbor"]);
+    expect(store.getSnapshot()).toEqual([matrix, inception]);
   });
 
   it("notifies subscribers on add and remove, and stops after unsubscribe", () => {
     const { store } = setup();
     const listener = vi.fn();
     const unsubscribe = store.subscribe(listener);
-    store.add("ember-road");
-    store.remove("ember-road");
+    store.add(matrix);
+    store.remove(603);
     expect(listener).toHaveBeenCalledTimes(2);
     unsubscribe();
-    store.add("ember-road");
+    store.add(matrix);
     expect(listener).toHaveBeenCalledTimes(2);
   });
 
@@ -158,16 +201,16 @@ describe("createWatchlistStore", () => {
 
   it("does not throw and reads as empty when storage throws", () => {
     const { store } = setup(throwingStorage);
-    expect(() => store.add("ember-road")).not.toThrow();
+    expect(() => store.add(matrix)).not.toThrow();
     expect(store.getSnapshot()).toEqual([]);
   });
 
-  it("reads corrupt storage as empty", () => {
+  it("reads corrupt storage as empty and recovers on the next write", () => {
     const storage = new MemoryStorage();
     storage.setItem(STORAGE_KEY, "{oops");
     const { store } = setup(storage);
     expect(store.getSnapshot()).toEqual([]);
-    store.add("ember-road");
-    expect(store.getSnapshot()).toEqual(["ember-road"]);
+    store.add(matrix);
+    expect(store.getSnapshot()).toEqual([matrix]);
   });
 });
