@@ -25,3 +25,10 @@ describe("Title page", () => {
     await expect(TitlePage(params("does-not-exist"))).rejects.toThrow(/NEXT_HTTP_ERROR_FALLBACK;404/);
   });
 });
+
+describe("Title page watchlist", () => {
+  it("offers the watchlist button", async () => {
+    render(await TitlePage(params("the-lantern-keepers-of-varro")));
+    expect(screen.getByRole("button", { name: "Save to watchlist" })).toBeInTheDocument();
+  });
+});

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { TitleDetails } from "@/components/title-details";
+import { WatchlistButton } from "@/components/watchlist-button";
 import { getTitleBySlug, listTitles } from "@/lib/catalog/queries";
 
 interface TitlePageProps {
@@ -26,5 +27,5 @@ export async function generateMetadata({ params }: TitlePageProps): Promise<Meta
 export default async function TitlePage({ params }: TitlePageProps) {
   const title = await findTitle(params);
   if (!title) notFound();
-  return <TitleDetails title={title} />;
+  return <TitleDetails title={title} actions={<WatchlistButton slug={title.slug} />} />;
 }
