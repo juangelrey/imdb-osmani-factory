@@ -1,8 +1,9 @@
 import "server-only";
-import { TmdbError, tmdbFetch } from "@/lib/tmdb/client";
-import type { TmdbMovieDetails } from "@/lib/tmdb/schema";
-import { toTitle } from "./map";
-import type { Title } from "./types";
+import { TmdbError, tmdbFetch, type TmdbParams } from "@/lib/tmdb/client";
+import type { TmdbGenreList, TmdbMovieDetails, TmdbMovieListItem, TmdbPaged } from "@/lib/tmdb/schema";
+import type { BrowseState, SortKey } from "./browse-params";
+import { toGenre, toPaged, toSummary, toTitle } from "./map";
+import type { Genre, Paged, Title, TitleSummary } from "./types";
 
 /** A movie with credits, or undefined when TMDB does not know the id. Other failures throw. */
 export async function getTitle(id: number): Promise<Title | undefined> {
@@ -12,4 +13,37 @@ export async function getTitle(id: number): Promise<Title | undefined> {
     if (error instanceof TmdbError && error.status === 404) return undefined;
     throw error;
   }
+}
+
+export async function listGenres(): Promise<Genre[]> {
+  const { genres } = await tmdbFetch<TmdbGenreList>("/genre/movie/list");
+  return genres.map(toGenre);
+}
+
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** TMDB discover params per sort. Release date skips unreleased films and near-empty placeholder entries. */
+function sortParams(sort: SortKey): TmdbParams {
+  switch (sort) {
+    case "popularity":
+      return { sort_by: "popularity.desc" };
+    case "rating":
+      return { sort_by: "vote_average.desc", "vote_count.gte": 200 };
+    case "release":
+      return { sort_by: "primary_release_date.desc", "primary_release_date.lte": today(), "vote_count.gte": 50 };
+    case "title":
+      return { sort_by: "title.asc" };
+  }
+}
+
+export async function discoverTitles({ genre, sort, page }: BrowseState): Promise<Paged<TitleSummary>> {
+  const response = await tmdbFetch<TmdbPaged<TmdbMovieListItem>>("/discover/movie", {
+    include_adult: false,
+    with_genres: genre,
+    page,
+    ...sortParams(sort),
+  });
+  return toPaged(response, toSummary);
 }

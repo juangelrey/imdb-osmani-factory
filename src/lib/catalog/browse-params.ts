@@ -1,39 +1,54 @@
-import { GENRES, SORT_KEYS, type Genre, type SortKey } from "@/lib/seed-catalog/types";
+import { MAX_PAGES } from "./map";
 
 export type SearchParamValue = string | string[] | undefined;
 
-export interface BrowseState {
-  genre: Genre | undefined;
-  sort: SortKey;
-}
+export const SORT_KEYS = ["popularity", "rating", "release", "title"] as const;
 
-export const DEFAULT_SORT: SortKey = "rating";
+export type SortKey = (typeof SORT_KEYS)[number];
+
+export const DEFAULT_SORT: SortKey = "popularity";
+
+export interface BrowseState {
+  /** A TMDB genre id. */
+  genre: number | undefined;
+  sort: SortKey;
+  page: number;
+}
 
 export function firstParam(value: SearchParamValue): string | undefined {
   return Array.isArray(value) ? value[0] : value;
-}
-
-function isGenre(value: string | undefined): value is Genre {
-  return (GENRES as readonly string[]).includes(value ?? "");
 }
 
 function isSortKey(value: string | undefined): value is SortKey {
   return (SORT_KEYS as readonly string[]).includes(value ?? "");
 }
 
-export function parseBrowseParams(params: Record<string, SearchParamValue>): BrowseState {
-  const genre = firstParam(params.genre);
+/** A page number from 1 to TMDB's limit; anything else reads as 1. */
+export function parsePage(value: SearchParamValue): number {
+  const raw = firstParam(value) ?? "";
+  if (!/^[1-9]\d*$/.test(raw)) return 1;
+  const page = Number(raw);
+  return page <= MAX_PAGES ? page : 1;
+}
+
+export function parseBrowseParams(
+  params: Record<string, SearchParamValue>,
+  knownGenreIds: ReadonlySet<number>,
+): BrowseState {
+  const genre = Number(firstParam(params.genre) || NaN);
   const sort = firstParam(params.sort);
   return {
-    genre: isGenre(genre) ? genre : undefined,
+    genre: knownGenreIds.has(genre) ? genre : undefined,
     sort: isSortKey(sort) ? sort : DEFAULT_SORT,
+    page: parsePage(params.page),
   };
 }
 
-export function browseHref({ genre, sort }: BrowseState): string {
+export function browseHref({ genre, sort, page }: BrowseState): string {
   const query = new URLSearchParams();
-  if (genre) query.set("genre", genre);
+  if (genre !== undefined) query.set("genre", String(genre));
   if (sort !== DEFAULT_SORT) query.set("sort", sort);
+  if (page > 1) query.set("page", String(page));
   const search = query.toString();
   return search ? `/?${search}` : "/";
 }
