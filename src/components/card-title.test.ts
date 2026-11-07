@@ -1,4 +1,4 @@
-import { cardFromEntry, cardFromSeed, cardFromSummary } from "./card-title";
+import { cardFromEntry, cardFromSummary } from "./card-title";
 
 describe("cardFromSummary", () => {
   it("links to the canonical TMDB title URL and keeps the poster", () => {
@@ -11,18 +11,6 @@ describe("cardFromSummary", () => {
       year: 1999,
       rating: 8.2,
       posterUrl: "https://image.tmdb.org/t/p/w342/m.jpg",
-    });
-  });
-});
-
-describe("cardFromSeed", () => {
-  it("links to the seed slug URL with no poster", () => {
-    expect(cardFromSeed({ slug: "ember-road", name: "Ember Road", year: 2019, rating: 8.1 })).toEqual({
-      key: "ember-road",
-      href: "/title/ember-road",
-      name: "Ember Road",
-      year: 2019,
-      rating: 8.1,
     });
   });
 });

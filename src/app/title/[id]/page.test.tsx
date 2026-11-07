@@ -80,22 +80,13 @@ describe("Title page", () => {
   });
 });
 
-describe("Title page legacy seed slugs (until the seed is removed)", () => {
-  it("still renders a seed title without calling TMDB", async () => {
-    const fetchMock = stubTmdb(details);
-    render(await TitlePage(params("the-lantern-keepers-of-varro")));
-    expect(screen.getByRole("heading", { level: 1, name: "The Lantern Keepers of Varro" })).toBeInTheDocument();
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  it("offers no watchlist button for a seed title", async () => {
-    stubTmdb(details);
-    render(await TitlePage(params("the-lantern-keepers-of-varro")));
-    expect(screen.queryByRole("button", { name: "Save to watchlist" })).not.toBeInTheDocument();
-  });
-
-  it("returns a 404 for an unknown non-numeric param", async () => {
-    stubTmdb(details);
-    await expect(TitlePage(params("does-not-exist"))).rejects.toThrow("not found");
-  });
+describe("Title page params", () => {
+  it.each(["the-lantern-keepers-of-varro", "does-not-exist", "0603-the-matrix"])(
+    "returns a 404 for %s without calling TMDB",
+    async (id) => {
+      const fetchMock = stubTmdb(details);
+      await expect(TitlePage(params(id))).rejects.toThrow("not found");
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
 });
