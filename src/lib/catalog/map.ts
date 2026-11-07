@@ -1,5 +1,11 @@
-import type { TmdbGenre, TmdbMovieDetails, TmdbMovieListItem, TmdbPaged } from "@/lib/tmdb/schema";
-import type { Genre, Paged, Title, TitleSummary } from "./types";
+import type {
+  TmdbGenre,
+  TmdbMovieDetails,
+  TmdbMovieListItem,
+  TmdbPaged,
+  TmdbPersonDetails,
+} from "@/lib/tmdb/schema";
+import type { Genre, Paged, Person, Title, TitleSummary } from "./types";
 
 /** TMDB serves at most this many pages for discover and search. */
 export const MAX_PAGES = 500;
@@ -7,23 +13,29 @@ export const MAX_PAGES = 500;
 const CAST_LIMIT = 10;
 
 export type PosterSize = "w342" | "w500";
+export type ProfileSize = "h632";
 
-export function slugify(name: string): string {
+/** URL slug for a name; `fallback` is used when nothing Latin is left, e.g. "千と千尋の神隠し". */
+export function slugify(name: string, fallback = "movie"): string {
   const slug = name
     .normalize("NFKD")
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-  return slug || "movie";
+  return slug || fallback;
 }
 
 export function titleHref({ id, slug }: { id: number; slug: string }): string {
   return `/title/${id}-${slug}`;
 }
 
-/** Parse a `/title/[id]` route param shaped "<id>-<slug>" or "<id>". */
-export function parseTitleParam(param: string): { id: number; slug: string } | undefined {
+export function personHref({ id, slug }: { id: number; slug: string }): string {
+  return `/person/${id}-${slug}`;
+}
+
+/** Parse a route param shaped "<id>-<slug>" or "<id>". */
+function parseIdSlugParam(param: string): { id: number; slug: string } | undefined {
   const match = /^([1-9]\d*)(?:-(.*))?$/.exec(param);
   if (!match) return undefined;
   const id = Number(match[1]);
@@ -31,8 +43,22 @@ export function parseTitleParam(param: string): { id: number; slug: string } | u
   return { id, slug: match[2] ?? "" };
 }
 
-export function posterUrl(path: string | null | undefined, size: PosterSize): string | undefined {
+/** Parse a `/title/[id]` route param shaped "<id>-<slug>" or "<id>". */
+export const parseTitleParam = parseIdSlugParam;
+
+/** Parse a `/person/[id]` route param shaped "<id>-<slug>" or "<id>". */
+export const parsePersonParam = parseIdSlugParam;
+
+function imageUrl(path: string | null | undefined, size: string): string | undefined {
   return path ? `https://image.tmdb.org/t/p/${size}${path}` : undefined;
+}
+
+export function posterUrl(path: string | null | undefined, size: PosterSize): string | undefined {
+  return imageUrl(path, size);
+}
+
+export function profileUrl(path: string | null | undefined, size: ProfileSize): string | undefined {
+  return imageUrl(path, size);
 }
 
 /** TMDB reports 0 for films nobody has rated; that is unknown, not zero. */
@@ -66,6 +92,15 @@ export function toTitle(movie: TmdbMovieDetails): Title {
       .sort((a, b) => a.order - b.order)
       .slice(0, CAST_LIMIT)
       .map((person) => person.name),
+  };
+}
+
+export function toPerson(person: TmdbPersonDetails): Person {
+  return {
+    id: person.id,
+    slug: slugify(person.name, "person"),
+    name: person.name,
+    profileUrl: profileUrl(person.profile_path, "h632"),
   };
 }
 

@@ -1,9 +1,15 @@
 import "server-only";
 import { TmdbError, tmdbFetch, type TmdbParams } from "@/lib/tmdb/client";
-import type { TmdbGenreList, TmdbMovieDetails, TmdbMovieListItem, TmdbPaged } from "@/lib/tmdb/schema";
+import type {
+  TmdbGenreList,
+  TmdbMovieDetails,
+  TmdbMovieListItem,
+  TmdbPaged,
+  TmdbPersonDetails,
+} from "@/lib/tmdb/schema";
 import type { BrowseState, SortKey } from "./browse-params";
-import { toGenre, toPaged, toSummary, toTitle } from "./map";
-import type { Genre, Paged, Title, TitleSummary } from "./types";
+import { toGenre, toPaged, toPerson, toSummary, toTitle } from "./map";
+import type { Genre, Paged, Person, Title, TitleSummary } from "./types";
 
 /** A movie with credits, or undefined when TMDB does not know the id. Other failures throw. */
 export async function getTitle(id: number): Promise<Title | undefined> {
@@ -13,6 +19,21 @@ export async function getTitle(id: number): Promise<Title | undefined> {
     if (error instanceof TmdbError && error.status === 404) return undefined;
     throw error;
   }
+}
+
+/**
+ * A person with their movie credits in one request, or undefined when TMDB does not know the id
+ * or flags the person adult. Other failures throw.
+ */
+export async function getPerson(id: number): Promise<Person | undefined> {
+  let person: TmdbPersonDetails;
+  try {
+    person = await tmdbFetch<TmdbPersonDetails>(`/person/${id}`, { append_to_response: "movie_credits" });
+  } catch (error) {
+    if (error instanceof TmdbError && error.status === 404) return undefined;
+    throw error;
+  }
+  return person.adult ? undefined : toPerson(person);
 }
 
 export async function listGenres(): Promise<Genre[]> {

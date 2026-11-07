@@ -1,0 +1,101 @@
+{
+  "adult": false,
+  "id": 190,
+  "name": "Clint Eastwood",
+  "biography": "Clinton Eastwood Jr. is an American actor and film director.\n\nHe rose to fame playing the Man with No Name in Sergio Leone's Dollars trilogy.",
+  "birthday": "1930-05-31",
+  "deathday": null,
+  "place_of_birth": "San Francisco, California, USA",
+  "known_for_department": "Acting",
+  "profile_path": "/dU35NnjZ8aGh9LxIgSXgXGr4jmx.jpg",
+  "movie_credits": {
+    "cast": [
+      {
+        "adult": false,
+        "softcore": false,
+        "id": 33,
+        "title": "Unforgiven",
+        "release_date": "1992-08-07",
+        "poster_path": "/54roTwbX9fltg85zjsmrooXAs12.jpg",
+        "vote_average": 7.9,
+        "vote_count": 4521,
+        "genre_ids": [37],
+        "character": "Bill Munny",
+        "credit_id": "52fe4211c3a36847f8000a3b",
+        "order": 0
+      },
+      {
+        "adult": false,
+        "softcore": false,
+        "id": 13223,
+        "title": "Gran Torino",
+        "release_date": "2008-12-09",
+        "poster_path": "/zUybYvxWdAJy5hhYovsXtHSWI1l.jpg",
+        "vote_average": 7.8,
+        "vote_count": 7432,
+        "genre_ids": [18],
+        "character": "Walt Kowalski",
+        "credit_id": "52fe45abc3a36847f80d4f1d",
+        "order": 0
+      },
+      {
+        "adult": false,
+        "softcore": false,
+        "id": 429,
+        "title": "The Good, the Bad and the Ugly",
+        "release_date": "1966-12-22",
+        "poster_path": "/bX2xnavhMYjWDoZp1VM6VnU1xwe.jpg",
+        "vote_average": 8.5,
+        "vote_count": 8312,
+        "genre_ids": [37],
+        "character": "Blondie",
+        "credit_id": "52fe4247c3a36847f8012b27",
+        "order": 0
+      }
+    ],
+    "crew": [
+      {
+        "adult": false,
+        "softcore": false,
+        "id": 33,
+        "title": "Unforgiven",
+        "release_date": "1992-08-07",
+        "poster_path": "/54roTwbX9fltg85zjsmrooXAs12.jpg",
+        "vote_average": 7.9,
+        "vote_count": 4521,
+        "genre_ids": [37],
+        "department": "Directing",
+        "job": "Director",
+        "credit_id": "52fe4211c3a36847f8000a29"
+      },
+      {
+        "adult": false,
+        "softcore": false,
+        "id": 33,
+        "title": "Unforgiven",
+        "release_date": "1992-08-07",
+        "poster_path": "/54roTwbX9fltg85zjsmrooXAs12.jpg",
+        "vote_average": 7.9,
+        "vote_count": 4521,
+        "genre_ids": [37],
+        "department": "Production",
+        "job": "Producer",
+        "credit_id": "52fe4211c3a36847f8000a41"
+      },
+      {
+        "adult": false,
+        "softcore": false,
+        "id": 13223,
+        "title": "Gran Torino",
+        "release_date": "2008-12-09",
+        "poster_path": "/zUybYvxWdAJy5hhYovsXtHSWI1l.jpg",
+        "vote_average": 7.8,
+        "vote_count": 7432,
+        "genre_ids": [18],
+        "department": "Directing",
+        "job": "Director",
+        "credit_id": "52fe45abc3a36847f80d4f09"
+      }
+    ]
+  }
+}

@@ -42,3 +42,16 @@ export interface Paged<T> {
   totalPages: number;
   totalResults: number;
 }
+
+/** A person as a link target: `/person/<id>-<slug>`. */
+export interface PersonLink {
+  id: number;
+  slug: string;
+  name: string;
+}
+
+/** A person as the person page shows it. Fields TMDB may omit are optional. */
+export interface Person extends PersonLink {
+  /** Profile-size (h632) photo URL. */
+  profileUrl?: string;
+}

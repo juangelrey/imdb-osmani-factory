@@ -2,8 +2,24 @@ import details from "@/lib/tmdb/fixtures/movie-details.json";
 import sparse from "@/lib/tmdb/fixtures/movie-details-sparse.json";
 import discover from "@/lib/tmdb/fixtures/discover-movie.json";
 import genreList from "@/lib/tmdb/fixtures/genre-movie-list.json";
-import type { TmdbMovieDetails, TmdbMovieListItem, TmdbPaged } from "@/lib/tmdb/schema";
-import { MAX_PAGES, parseTitleParam, posterUrl, slugify, titleHref, toGenre, toPaged, toSummary, toTitle } from "./map";
+import person from "@/lib/tmdb/fixtures/person-details.json";
+import sparsePerson from "@/lib/tmdb/fixtures/person-details-sparse.json";
+import type { TmdbMovieDetails, TmdbMovieListItem, TmdbPaged, TmdbPersonDetails } from "@/lib/tmdb/schema";
+import {
+  MAX_PAGES,
+  parsePersonParam,
+  parseTitleParam,
+  personHref,
+  posterUrl,
+  profileUrl,
+  slugify,
+  titleHref,
+  toGenre,
+  toPaged,
+  toPerson,
+  toSummary,
+  toTitle,
+} from "./map";
 
 const matrix = details as TmdbMovieDetails;
 const sparseMovie = sparse as TmdbMovieDetails;
@@ -51,6 +67,54 @@ describe("titleHref and parseTitleParam", () => {
       id: 27205,
       slug: "inception",
     });
+  });
+});
+
+describe("personHref and parsePersonParam", () => {
+  it("builds /person/<id>-<slug>", () => {
+    expect(personHref({ id: 190, slug: "clint-eastwood" })).toBe("/person/190-clint-eastwood");
+  });
+
+  it("parses an id and slug, or a bare id", () => {
+    expect(parsePersonParam("190-clint-eastwood")).toEqual({ id: 190, slug: "clint-eastwood" });
+    expect(parsePersonParam("190")).toEqual({ id: 190, slug: "" });
+  });
+
+  it.each(["clint-eastwood", "", "0-zero", "-190", "abc190"])("rejects %j", (param) => {
+    expect(parsePersonParam(param)).toBeUndefined();
+  });
+
+  it("shares one parser with parseTitleParam", () => {
+    expect(parsePersonParam).toBe(parseTitleParam);
+  });
+});
+
+describe("profileUrl", () => {
+  it("builds an h632 image.tmdb.org URL", () => {
+    expect(profileUrl("/abc.jpg", "h632")).toBe("https://image.tmdb.org/t/p/h632/abc.jpg");
+  });
+
+  it("returns undefined without a path", () => {
+    expect(profileUrl(null, "h632")).toBeUndefined();
+  });
+});
+
+describe("toPerson", () => {
+  it("maps the name, slug and profile photo", () => {
+    expect(toPerson(person as TmdbPersonDetails)).toEqual({
+      id: 190,
+      slug: "clint-eastwood",
+      name: "Clint Eastwood",
+      profileUrl: "https://image.tmdb.org/t/p/h632/dU35NnjZ8aGh9LxIgSXgXGr4jmx.jpg",
+    });
+  });
+
+  it("leaves a missing photo undefined", () => {
+    expect(toPerson(sparsePerson as TmdbPersonDetails).profileUrl).toBeUndefined();
+  });
+
+  it("falls back to a 'person' slug when the name has no Latin letters", () => {
+    expect(toPerson({ ...(person as TmdbPersonDetails), name: "宮崎駿" }).slug).toBe("person");
   });
 });
 

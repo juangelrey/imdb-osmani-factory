@@ -2,8 +2,9 @@ import details from "@/lib/tmdb/fixtures/movie-details.json";
 import discover from "@/lib/tmdb/fixtures/discover-movie.json";
 import genreList from "@/lib/tmdb/fixtures/genre-movie-list.json";
 import search from "@/lib/tmdb/fixtures/search-movie.json";
+import person from "@/lib/tmdb/fixtures/person-details.json";
 import { TmdbError } from "@/lib/tmdb/client";
-import { discoverTitles, getTitle, listGenres, searchTitles } from "./queries";
+import { discoverTitles, getPerson, getTitle, listGenres, searchTitles } from "./queries";
 
 function stubFetch(body: unknown, status = 200) {
   const fetchMock = vi.fn(async () => Response.json(body, { status }));
@@ -47,6 +48,38 @@ describe("getTitle", () => {
   it("lets other TMDB errors reach the error boundary", async () => {
     stubFetch({}, 503);
     await expect(getTitle(603)).rejects.toBeInstanceOf(TmdbError);
+  });
+});
+
+describe("getPerson", () => {
+  it("makes one request for the person with movie credits appended, in English", async () => {
+    const fetchMock = stubFetch(person);
+    await getPerson(190);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const url = requestedUrl(fetchMock);
+    expect(url.pathname).toBe("/3/person/190");
+    expect(url.searchParams.get("append_to_response")).toBe("movie_credits");
+    expect(url.searchParams.get("language")).toBe("en-US");
+  });
+
+  it("maps the response into a Person", async () => {
+    stubFetch(person);
+    await expect(getPerson(190)).resolves.toMatchObject({ id: 190, slug: "clint-eastwood", name: "Clint Eastwood" });
+  });
+
+  it("returns undefined for an unknown id", async () => {
+    stubFetch({ success: false, status_code: 34 }, 404);
+    await expect(getPerson(999999999)).resolves.toBeUndefined();
+  });
+
+  it("returns undefined for a person TMDB flags adult", async () => {
+    stubFetch({ ...person, adult: true });
+    await expect(getPerson(190)).resolves.toBeUndefined();
+  });
+
+  it("lets other TMDB errors reach the error boundary", async () => {
+    stubFetch({}, 503);
+    await expect(getPerson(190)).rejects.toBeInstanceOf(TmdbError);
   });
 });
 
