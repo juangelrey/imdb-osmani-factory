@@ -6,7 +6,12 @@ const SIZES = {
   detail: { width: 500, height: 750 },
   /** A TMDB h632 profile photo. */
   profile: { width: 421, height: 632 },
+  /** A TMDB w92 poster, for career timeline rows. */
+  thumb: { width: 92, height: 138 },
 } as const;
+
+/** Sizes shown in long lists, below the fold: their images load lazily. */
+const LAZY: ReadonlySet<keyof typeof SIZES> = new Set(["grid", "thumb"]);
 
 interface PosterProps {
   /** Seeds the fallback gradient. */
@@ -31,7 +36,7 @@ export function Poster({ colorKey, name, posterUrl, size = "grid", className = "
         alt={alt ?? ""}
         {...SIZES[size]}
         unoptimized
-        loading={size === "grid" ? "lazy" : "eager"}
+        loading={LAZY.has(size) ? "lazy" : "eager"}
         className={`aspect-[2/3] h-auto w-full rounded-md bg-zinc-800 object-cover ${className}`}
       />
     );
@@ -41,7 +46,7 @@ export function Poster({ colorKey, name, posterUrl, size = "grid", className = "
   return (
     <div
       {...(alt ? { role: "img", "aria-label": alt } : { "aria-hidden": true })}
-      className={`flex aspect-[2/3] items-center justify-center rounded-md text-4xl font-black tracking-wider text-white/90 shadow-inner ${className}`}
+      className={`flex aspect-[2/3] items-center justify-center rounded-md ${size === "thumb" ? "text-xs" : "text-4xl"} font-black tracking-wider text-white/90 shadow-inner ${className}`}
       style={{ backgroundImage: `linear-gradient(160deg, ${from}, ${to})` }}
     >
       {posterInitials(name)}

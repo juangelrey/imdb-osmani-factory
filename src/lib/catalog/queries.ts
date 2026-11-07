@@ -25,7 +25,8 @@ export async function getTitle(id: number): Promise<Title | undefined> {
  * A person with their movie credits in one request, or undefined when TMDB does not know the id
  * or flags the person adult. Other failures throw.
  */
-export async function getPerson(id: number): Promise<Person | undefined> {
+/** `today` is "YYYY-MM-DD"; it decides which films in the career are upcoming. */
+export async function getPerson(id: number, today: string): Promise<Person | undefined> {
   let person: TmdbPersonDetails;
   try {
     person = await tmdbFetch<TmdbPersonDetails>(`/person/${id}`, { append_to_response: "movie_credits" });
@@ -33,7 +34,7 @@ export async function getPerson(id: number): Promise<Person | undefined> {
     if (error instanceof TmdbError && error.status === 404) return undefined;
     throw error;
   }
-  return person.adult ? undefined : toPerson(person);
+  return person.adult ? undefined : toPerson(person, today);
 }
 
 export async function listGenres(): Promise<Genre[]> {

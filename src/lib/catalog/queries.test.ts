@@ -54,7 +54,7 @@ describe("getTitle", () => {
 describe("getPerson", () => {
   it("makes one request for the person with movie credits appended, in English", async () => {
     const fetchMock = stubFetch(person);
-    await getPerson(190);
+    await getPerson(190, "2026-11-07");
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const url = requestedUrl(fetchMock);
     expect(url.pathname).toBe("/3/person/190");
@@ -64,22 +64,27 @@ describe("getPerson", () => {
 
   it("maps the response into a Person", async () => {
     stubFetch(person);
-    await expect(getPerson(190)).resolves.toMatchObject({ id: 190, slug: "clint-eastwood", name: "Clint Eastwood" });
+    await expect(getPerson(190, "2026-11-07")).resolves.toMatchObject({
+      id: 190,
+      slug: "clint-eastwood",
+      name: "Clint Eastwood",
+      career: expect.arrayContaining([expect.objectContaining({ label: "2024" })]),
+    });
   });
 
   it("returns undefined for an unknown id", async () => {
     stubFetch({ success: false, status_code: 34 }, 404);
-    await expect(getPerson(999999999)).resolves.toBeUndefined();
+    await expect(getPerson(999999999, "2026-11-07")).resolves.toBeUndefined();
   });
 
   it("returns undefined for a person TMDB flags adult", async () => {
     stubFetch({ ...person, adult: true });
-    await expect(getPerson(190)).resolves.toBeUndefined();
+    await expect(getPerson(190, "2026-11-07")).resolves.toBeUndefined();
   });
 
   it("lets other TMDB errors reach the error boundary", async () => {
     stubFetch({}, 503);
-    await expect(getPerson(190)).rejects.toBeInstanceOf(TmdbError);
+    await expect(getPerson(190, "2026-11-07")).rejects.toBeInstanceOf(TmdbError);
   });
 });
 

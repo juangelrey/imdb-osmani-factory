@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { notFound, permanentRedirect } from "next/navigation";
 import person from "@/lib/tmdb/fixtures/person-details.json";
 import sparse from "@/lib/tmdb/fixtures/person-details-sparse.json";
@@ -27,6 +27,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
 });
@@ -54,6 +55,50 @@ describe("Person page", () => {
     const placeholder = screen.getByRole("img", { name: "Mara Lindqvist" });
     expect(placeholder.tagName).toBe("DIV");
     expect(placeholder).toHaveTextContent("ML");
+  });
+
+  it("shows the merged career, flagging films dated after today's date as upcoming", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2024-06-01T12:00:00Z"));
+    stubTmdb(person);
+    render(await PersonPage(params("190-clint-eastwood")));
+    const career = screen.getByRole("region", { name: "Career" });
+    expect(within(career).getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual([
+      "2024",
+      "2008",
+      "1992",
+      "1966",
+    ]);
+    expect(within(career).getByRole("link", { name: "Unforgiven" })).toHaveAttribute("href", "/title/33-unforgiven");
+    expect(within(career).getByText("Director · as Bill Munny")).toBeInTheDocument();
+    expect(within(career).getByText("Upcoming").closest("li")).toHaveTextContent("Juror #2");
+  });
+
+  it("drops the badge once the release date has passed", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-07T12:00:00Z"));
+    stubTmdb(person);
+    render(await PersonPage(params("190-clint-eastwood")));
+    expect(screen.queryByText("Upcoming")).not.toBeInTheDocument();
+  });
+
+  it("shows only the sparse fixture's undated credit, under TBA", async () => {
+    stubTmdb(sparse);
+    render(await PersonPage(params("4891257-mara-lindqvist")));
+    const career = screen.getByRole("region", { name: "Career" });
+    expect(within(career).getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual(["TBA"]);
+    expect(within(career).getAllByRole("listitem")).toHaveLength(1);
+    expect(within(career).getByText("Actor")).toBeInTheDocument();
+    expect(screen.queryByText("Late Shift")).not.toBeInTheDocument();
+    expect(screen.queryByText("Velvet Hours")).not.toBeInTheDocument();
+  });
+
+  it("hides the Career section when no credits are left to show", async () => {
+    const [, adult, softcore] = sparse.movie_credits.cast;
+    stubTmdb({ ...sparse, movie_credits: { cast: [adult, softcore], crew: [] } });
+    render(await PersonPage(params("4891257-mara-lindqvist")));
+    expect(screen.queryByRole("region", { name: "Career" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Career" })).not.toBeInTheDocument();
   });
 
   it("names the page after the person", async () => {

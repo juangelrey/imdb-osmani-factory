@@ -16,10 +16,15 @@ export function generateStaticParams(): { id: string }[] {
   return [];
 }
 
+/** Today's date as "YYYY-MM-DD" (UTC), which decides which films are upcoming. */
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 async function findPerson(param: string) {
   const parsed = parsePersonParam(param);
   if (!parsed) return { person: undefined, canonical: false };
-  const person = await getPerson(parsed.id);
+  const person = await getPerson(parsed.id, today());
   return { person, canonical: person !== undefined && param === `${person.id}-${person.slug}` };
 }
 

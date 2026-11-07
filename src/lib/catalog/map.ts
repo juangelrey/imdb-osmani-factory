@@ -4,15 +4,17 @@ import type {
   TmdbMovieListItem,
   TmdbPaged,
   TmdbPersonDetails,
+  TmdbPersonMovieCredit,
+  TmdbPersonMovieCredits,
 } from "@/lib/tmdb/schema";
-import type { Genre, Paged, Person, Title, TitleSummary } from "./types";
+import type { CareerEntry, CareerYear, Genre, Paged, Person, Title, TitleSummary } from "./types";
 
 /** TMDB serves at most this many pages for discover and search. */
 export const MAX_PAGES = 500;
 
 const CAST_LIMIT = 10;
 
-export type PosterSize = "w342" | "w500";
+export type PosterSize = "w92" | "w342" | "w500";
 export type ProfileSize = "h632";
 
 /** URL slug for a name; `fallback` is used when nothing Latin is left, e.g. "千と千尋の神隠し". */
@@ -95,13 +97,58 @@ export function toTitle(movie: TmdbMovieDetails): Title {
   };
 }
 
-export function toPerson(person: TmdbPersonDetails): Person {
+/** `today` is "YYYY-MM-DD"; it decides which films are upcoming. */
+export function toPerson(person: TmdbPersonDetails, today: string): Person {
   return {
     id: person.id,
     slug: slugify(person.name, "person"),
     name: person.name,
     profileUrl: profileUrl(person.profile_path, "h632"),
+    career: toCareer(person.movie_credits, today),
   };
+}
+
+/**
+ * Merge acting and directing credits into one entry per film, grouped by year, newest first.
+ * `today` is "YYYY-MM-DD"; films dated after it are flagged upcoming.
+ */
+export function toCareer(credits: TmdbPersonMovieCredits, today: string): CareerYear[] {
+  const byFilm = new Map<number, CareerEntry>();
+  const add = (film: TmdbPersonMovieCredit, role: string) => {
+    if (film.adult || film.softcore) return;
+    const entry = byFilm.get(film.id) ?? {
+      title: { ...toSummary(film), posterUrl: posterUrl(film.poster_path, "w92") },
+      releaseDate: film.release_date || undefined,
+      upcoming: Boolean(film.release_date && film.release_date > today),
+      roles: [],
+    };
+    if (!entry.roles.includes(role)) entry.roles.push(role);
+    byFilm.set(film.id, entry);
+  };
+  credits.crew.filter((credit) => credit.job === "Director").forEach((credit) => add(credit, "Director"));
+  [...credits.cast]
+    .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity))
+    .forEach((credit) => add(credit, credit.character ? `as ${credit.character}` : "Actor"));
+  return groupByYearDesc([...byFilm.values()]);
+}
+
+/** Undated films first, under "TBA"; then years newest first, each sorted by date (newest first), then title. */
+function groupByYearDesc(entries: CareerEntry[]): CareerYear[] {
+  const sorted = [...entries].sort((a, b) => {
+    if (a.releaseDate === b.releaseDate) return a.title.name.localeCompare(b.title.name);
+    if (!a.releaseDate) return -1;
+    if (!b.releaseDate) return 1;
+    return a.releaseDate < b.releaseDate ? 1 : -1;
+  });
+  const years: CareerYear[] = [];
+  for (const entry of sorted) {
+    const year = entry.title.year;
+    const label = year === undefined ? "TBA" : String(year);
+    const last = years.at(-1);
+    if (last?.label === label) last.entries.push(entry);
+    else years.push({ year, label, entries: [entry] });
+  }
+  return years;
 }
 
 export function toSummary(movie: TmdbMovieListItem): TitleSummary {

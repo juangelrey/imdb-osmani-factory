@@ -95,6 +95,20 @@
         "department": "Directing",
         "job": "Director",
         "credit_id": "52fe45abc3a36847f80d4f09"
+      },
+      {
+        "adult": false,
+        "softcore": false,
+        "id": 1023922,
+        "title": "Juror #2",
+        "release_date": "2024-10-30",
+        "poster_path": null,
+        "vote_average": 7.0,
+        "vote_count": 1520,
+        "genre_ids": [18, 9648],
+        "department": "Directing",
+        "job": "Director",
+        "credit_id": "64d1a2b3c4d5e6f708192a3b"
       }
     ]
   }

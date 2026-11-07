@@ -1,4 +1,5 @@
 import type { Person } from "@/lib/catalog/types";
+import { CareerTimeline } from "./career-timeline";
 import { Poster } from "./poster";
 
 interface PersonDetailsProps {
@@ -20,6 +21,7 @@ export function PersonDetails({ person }: PersonDetailsProps) {
         <header className="space-y-3">
           <h1 className="text-3xl font-bold leading-tight">{person.name}</h1>
         </header>
+        <CareerTimeline career={person.career} />
       </div>
     </article>
   );

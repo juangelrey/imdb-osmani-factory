@@ -4,7 +4,14 @@ import discover from "@/lib/tmdb/fixtures/discover-movie.json";
 import genreList from "@/lib/tmdb/fixtures/genre-movie-list.json";
 import person from "@/lib/tmdb/fixtures/person-details.json";
 import sparsePerson from "@/lib/tmdb/fixtures/person-details-sparse.json";
-import type { TmdbMovieDetails, TmdbMovieListItem, TmdbPaged, TmdbPersonDetails } from "@/lib/tmdb/schema";
+import type {
+  TmdbMovieDetails,
+  TmdbMovieListItem,
+  TmdbPaged,
+  TmdbPersonCastCredit,
+  TmdbPersonCrewCredit,
+  TmdbPersonDetails,
+} from "@/lib/tmdb/schema";
 import {
   MAX_PAGES,
   parsePersonParam,
@@ -14,6 +21,7 @@ import {
   profileUrl,
   slugify,
   titleHref,
+  toCareer,
   toGenre,
   toPaged,
   toPerson,
@@ -99,22 +107,191 @@ describe("profileUrl", () => {
   });
 });
 
+const TODAY = "2026-11-07";
+
 describe("toPerson", () => {
-  it("maps the name, slug and profile photo", () => {
-    expect(toPerson(person as TmdbPersonDetails)).toEqual({
+  it("maps the name, slug, profile photo and career", () => {
+    const clint = person as TmdbPersonDetails;
+    expect(toPerson(clint, TODAY)).toEqual({
       id: 190,
       slug: "clint-eastwood",
       name: "Clint Eastwood",
       profileUrl: "https://image.tmdb.org/t/p/h632/dU35NnjZ8aGh9LxIgSXgXGr4jmx.jpg",
+      career: toCareer(clint.movie_credits, TODAY),
     });
   });
 
   it("leaves a missing photo undefined", () => {
-    expect(toPerson(sparsePerson as TmdbPersonDetails).profileUrl).toBeUndefined();
+    expect(toPerson(sparsePerson as TmdbPersonDetails, TODAY).profileUrl).toBeUndefined();
   });
 
   it("falls back to a 'person' slug when the name has no Latin letters", () => {
-    expect(toPerson({ ...(person as TmdbPersonDetails), name: "宮崎駿" }).slug).toBe("person");
+    expect(toPerson({ ...(person as TmdbPersonDetails), name: "宮崎駿" }, TODAY).slug).toBe("person");
+  });
+});
+
+function film(id: number, title: string, release_date: string) {
+  return {
+    adult: false,
+    softcore: false,
+    id,
+    title,
+    release_date,
+    poster_path: null,
+    vote_average: 7,
+    vote_count: 10,
+    genre_ids: [],
+  };
+}
+
+function cast(id: number, title: string, release_date: string, character: string, order = 0): TmdbPersonCastCredit {
+  return { ...film(id, title, release_date), character, order };
+}
+
+function crew(id: number, title: string, release_date: string, job: string): TmdbPersonCrewCredit {
+  return { ...film(id, title, release_date), job, department: job === "Producer" ? "Production" : "Directing" };
+}
+
+describe("toCareer", () => {
+  it("merges the fixture's acting and directing credits into one entry per film, newest year first", () => {
+    const career = toCareer((person as TmdbPersonDetails).movie_credits, TODAY);
+    expect(career.map((year) => year.label)).toEqual(["2024", "2008", "1992", "1966"]);
+    expect(career.map((year) => year.entries.map((entry) => [entry.title.name, entry.roles]))).toEqual([
+      [["Juror #2", ["Director"]]],
+      [["Gran Torino", ["Director", "as Walt Kowalski"]]],
+      [["Unforgiven", ["Director", "as Bill Munny"]]],
+      [["The Good, the Bad and the Ugly", ["as Blondie"]]],
+    ]);
+  });
+
+  it("maps each film to a summary with a w92 thumbnail and its release date", () => {
+    const [, , unforgiven] = toCareer((person as TmdbPersonDetails).movie_credits, TODAY);
+    expect(unforgiven).toEqual({
+      year: 1992,
+      label: "1992",
+      entries: [
+        {
+          title: {
+            id: 33,
+            slug: "unforgiven",
+            name: "Unforgiven",
+            year: 1992,
+            rating: 7.9,
+            posterUrl: "https://image.tmdb.org/t/p/w92/54roTwbX9fltg85zjsmrooXAs12.jpg",
+          },
+          releaseDate: "1992-08-07",
+          upcoming: false,
+          roles: ["Director", "as Bill Munny"],
+        },
+      ],
+    });
+  });
+
+  it("ignores crew jobs other than Director, including Co-Director", () => {
+    const career = toCareer(
+      {
+        cast: [],
+        crew: [crew(1, "Produced", "2001-01-01", "Producer"), crew(2, "Co-Directed", "2002-01-01", "Co-Director")],
+      },
+      TODAY,
+    );
+    expect(career).toEqual([]);
+  });
+
+  it("puts undated films, with an empty release date, in a TBA group at the top", () => {
+    const career = toCareer(
+      { cast: [cast(1, "Old", "1999-05-01", "Ann"), cast(2, "Announced", "", "Bea")], crew: [] },
+      TODAY,
+    );
+    expect(career[0]).toMatchObject({ year: undefined, label: "TBA" });
+    expect(career[0].entries[0]).toMatchObject({ releaseDate: undefined, upcoming: false });
+    expect(career[0].entries[0].title).toMatchObject({ name: "Announced", year: undefined });
+    expect(career[1].label).toBe("1999");
+  });
+
+  it("sorts films within a year by release date, newest first, then by title", () => {
+    const career = toCareer(
+      {
+        cast: [
+          cast(1, "March", "2010-03-01", "A"),
+          cast(2, "Zulu", "2010-09-01", "B"),
+          cast(3, "Alpha", "2010-09-01", "C"),
+        ],
+        crew: [],
+      },
+      TODAY,
+    );
+    expect(career[0].entries.map((entry) => entry.title.name)).toEqual(["Alpha", "Zulu", "March"]);
+  });
+
+  it("sorts undated films by title", () => {
+    const career = toCareer({ cast: [cast(1, "Beta", "", "A"), cast(2, "Alpha", "", "B")], crew: [] }, TODAY);
+    expect(career[0].entries.map((entry) => entry.title.name)).toEqual(["Alpha", "Beta"]);
+  });
+
+  it("lists Director first, then characters in billing order, each once", () => {
+    const career = toCareer(
+      {
+        cast: [
+          cast(1, "Film", "2000-01-01", "Second", 4),
+          cast(1, "Film", "2000-01-01", "First", 1),
+          cast(1, "Film", "2000-01-01", "First", 1),
+        ],
+        crew: [crew(1, "Film", "2000-01-01", "Director"), crew(1, "Film", "2000-01-01", "Director")],
+      },
+      TODAY,
+    );
+    expect(career[0].entries).toHaveLength(1);
+    expect(career[0].entries[0].roles).toEqual(["Director", "as First", "as Second"]);
+  });
+
+  it("shows 'Actor' when the character is empty or missing, and character strings as TMDB gives them", () => {
+    const noCharacter: TmdbPersonCastCredit = { ...film(3, "Missing", "2003-01-01"), order: 0 };
+    const career = toCareer(
+      {
+        cast: [
+          cast(1, "Empty", "2001-01-01", ""),
+          cast(2, "Archive", "2002-01-01", "Self (archive footage)"),
+          noCharacter,
+        ],
+        crew: [],
+      },
+      TODAY,
+    );
+    expect(career.flatMap((year) => year.entries.map((entry) => entry.roles))).toEqual([
+      ["Actor"],
+      ["as Self (archive footage)"],
+      ["Actor"],
+    ]);
+  });
+
+  it("drops adult and softcore credits", () => {
+    const career = toCareer((sparsePerson as TmdbPersonDetails).movie_credits, TODAY);
+    expect(career).toEqual([
+      {
+        year: undefined,
+        label: "TBA",
+        entries: [
+          expect.objectContaining({ roles: ["Actor"], title: expect.objectContaining({ name: "Untitled Short" }) }),
+        ],
+      },
+    ]);
+  });
+
+  it("drops an adult directing credit too", () => {
+    const adult = { ...crew(1, "Adult", "2001-01-01", "Director"), adult: true };
+    expect(toCareer({ cast: [], crew: [adult] }, TODAY)).toEqual([]);
+  });
+
+  it("flags films dated after today as upcoming, but not films released today", () => {
+    const career = toCareer(
+      { cast: [cast(1, "Tomorrow", "2026-11-08", "A"), cast(2, "Today", "2026-11-07", "B")], crew: [] },
+      TODAY,
+    );
+    expect(career[0].entries.map((entry) => [entry.title.name, entry.upcoming])).toEqual([
+      ["Tomorrow", true],
+      ["Today", false],
+    ]);
   });
 });
 

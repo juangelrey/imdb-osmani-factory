@@ -54,4 +54,26 @@ export interface PersonLink {
 export interface Person extends PersonLink {
   /** Profile-size (h632) photo URL. */
   profileUrl?: string;
+  /** Movie credits, one entry per film, grouped by year. */
+  career: CareerYear[];
+}
+
+/** One film in a person's career, with every role they had in it. */
+export interface CareerEntry {
+  /** The film, with a thumbnail-size (w92) poster URL. */
+  title: TitleSummary;
+  /** "YYYY-MM-DD"; undefined when TMDB has no date. */
+  releaseDate?: string;
+  /** Dated after today. */
+  upcoming: boolean;
+  /** "Director" first, then "as <character>" (or "Actor") in billing order. */
+  roles: string[];
+}
+
+/** A year of a person's career; undated films form a "TBA" group with no year. */
+export interface CareerYear {
+  year?: number;
+  /** The heading: the year, or "TBA". */
+  label: string;
+  entries: CareerEntry[];
 }
