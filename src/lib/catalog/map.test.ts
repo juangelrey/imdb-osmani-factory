@@ -117,8 +117,53 @@ describe("toPerson", () => {
       slug: "clint-eastwood",
       name: "Clint Eastwood",
       profileUrl: "https://image.tmdb.org/t/p/h632/dU35NnjZ8aGh9LxIgSXgXGr4jmx.jpg",
+      knownFor: "Acting",
+      born: "May 31, 1930 (age 96)",
+      birthplace: "San Francisco, California, USA",
       career: toCareer(clint.movie_credits, TODAY),
     });
+  });
+
+  it("leaves every fact undefined for the sparse fixture", () => {
+    const mara = toPerson(sparsePerson as TmdbPersonDetails, TODAY);
+    expect(mara.knownFor).toBeUndefined();
+    expect(mara.born).toBeUndefined();
+    expect(mara.died).toBeUndefined();
+    expect(mara.birthplace).toBeUndefined();
+  });
+
+  it("gives a living person's age today", () => {
+    expect(toPerson(person as TmdbPersonDetails, "2026-05-30").born).toBe("May 31, 1930 (age 95)");
+  });
+
+  it("gives the age at death under Died, and only the date under Born, for a person who has died", () => {
+    const deceased = { ...(person as TmdbPersonDetails), deathday: "2020-11-05" };
+    const mapped = toPerson(deceased, TODAY);
+    expect(mapped.born).toBe("May 31, 1930");
+    expect(mapped.died).toBe("November 5, 2020 (aged 90)");
+  });
+
+  it("shows no age anywhere when the birthday is missing", () => {
+    const undated = { ...(person as TmdbPersonDetails), birthday: null };
+    expect(toPerson(undated, TODAY).born).toBeUndefined();
+    expect(toPerson({ ...undated, deathday: "2020-11-05" }, TODAY).died).toBe("November 5, 2020");
+  });
+
+  it("treats empty or malformed TMDB values as absent", () => {
+    const blank = {
+      ...(person as TmdbPersonDetails),
+      birthday: "",
+      deathday: "",
+      place_of_birth: " ",
+      known_for_department: "",
+    };
+    const mapped = toPerson(blank, TODAY);
+    expect([mapped.knownFor, mapped.born, mapped.died, mapped.birthplace]).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
   });
 
   it("leaves a missing photo undefined", () => {

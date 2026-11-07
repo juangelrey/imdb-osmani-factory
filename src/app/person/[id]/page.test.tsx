@@ -57,6 +57,26 @@ describe("Person page", () => {
     expect(placeholder).toHaveTextContent("ML");
   });
 
+  it("lists the facts, with the age on today's date", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-07T12:00:00Z"));
+    stubTmdb(person);
+    render(await PersonPage(params("190-clint-eastwood")));
+    const facts = screen.getByRole("heading", { level: 1 }).closest("header")!.querySelector("dl")!;
+    expect(within(facts).getAllByRole("term").map((dt) => dt.textContent)).toEqual([
+      "Known for",
+      "Born",
+      "Birthplace",
+    ]);
+    expect(within(facts).getByText("May 31, 1930 (age 96)")).toBeInTheDocument();
+  });
+
+  it("shows no facts list rows for the sparse fixture", async () => {
+    stubTmdb(sparse);
+    render(await PersonPage(params("4891257-mara-lindqvist")));
+    expect(screen.queryAllByRole("term")).toHaveLength(0);
+  });
+
   it("shows the merged career, flagging films dated after today's date as upcoming", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2024-06-01T12:00:00Z"));

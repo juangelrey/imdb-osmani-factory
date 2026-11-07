@@ -7,6 +7,7 @@ import type {
   TmdbPersonMovieCredit,
   TmdbPersonMovieCredits,
 } from "@/lib/tmdb/schema";
+import { ageOn, formatDate } from "./format";
 import type { CareerEntry, CareerYear, Genre, Paged, Person, Title, TitleSummary } from "./types";
 
 /** TMDB serves at most this many pages for discover and search. */
@@ -97,13 +98,27 @@ export function toTitle(movie: TmdbMovieDetails): Title {
   };
 }
 
-/** `today` is "YYYY-MM-DD"; it decides which films are upcoming. */
+/** A date with an age in brackets, e.g. "May 31, 1930 (age 96)"; the age is left off when unknown. */
+function dateWithAge(date: string | undefined, age: string | undefined): string | undefined {
+  return date && (age ? `${date} (${age})` : date);
+}
+
+/** `today` is "YYYY-MM-DD"; it decides which films are upcoming and how old a living person is. */
 export function toPerson(person: TmdbPersonDetails, today: string): Person {
+  const birthday = person.birthday ?? "";
+  const deathday = person.deathday ?? "";
+  const died = formatDate(deathday);
+  const ageAtDeath = died ? ageOn(birthday, deathday) : undefined;
+  const ageToday = died ? undefined : ageOn(birthday, today);
   return {
     id: person.id,
     slug: slugify(person.name, "person"),
     name: person.name,
     profileUrl: profileUrl(person.profile_path, "h632"),
+    knownFor: person.known_for_department?.trim() || undefined,
+    born: dateWithAge(formatDate(birthday), ageToday === undefined ? undefined : `age ${ageToday}`),
+    died: dateWithAge(died, ageAtDeath === undefined ? undefined : `aged ${ageAtDeath}`),
+    birthplace: person.place_of_birth?.trim() || undefined,
     career: toCareer(person.movie_credits, today),
   };
 }

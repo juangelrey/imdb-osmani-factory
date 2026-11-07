@@ -54,6 +54,13 @@ export interface PersonLink {
 export interface Person extends PersonLink {
   /** Profile-size (h632) photo URL. */
   profileUrl?: string;
+  /** TMDB's department, e.g. "Acting" or "Directing". */
+  knownFor?: string;
+  /** Birth date, plus the age today for a living person: "May 31, 1930 (age 96)". */
+  born?: string;
+  /** Death date, plus the age at death when the birthday is known: "November 5, 2020 (aged 90)". */
+  died?: string;
+  birthplace?: string;
   /** Movie credits, one entry per film, grouped by year. */
   career: CareerYear[];
 }
