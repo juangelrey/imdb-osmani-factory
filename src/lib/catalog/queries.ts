@@ -1,42 +1,63 @@
-import seed from "@/data/titles.json";
-import type { Genre, SortKey, Title } from "./types";
+import "server-only";
+import { TmdbError, tmdbFetch, type TmdbParams } from "@/lib/tmdb/client";
+import type { TmdbGenreList, TmdbMovieDetails, TmdbMovieListItem, TmdbPaged } from "@/lib/tmdb/schema";
+import type { BrowseState, SortKey } from "./browse-params";
+import { toGenre, toPaged, toSummary, toTitle } from "./map";
+import type { Genre, Paged, Title, TitleSummary } from "./types";
 
-// The seed file's shape is checked by seed.test.ts, which backs this cast.
-const catalogue = seed as Title[];
-
-export function listTitles(): Title[] {
-  return [...catalogue];
+/** A movie with credits, or undefined when TMDB does not know the id. Other failures throw. */
+export async function getTitle(id: number): Promise<Title | undefined> {
+  try {
+    return toTitle(await tmdbFetch<TmdbMovieDetails>(`/movie/${id}`, { append_to_response: "credits" }));
+  } catch (error) {
+    if (error instanceof TmdbError && error.status === 404) return undefined;
+    throw error;
+  }
 }
 
-export function getTitleBySlug(titles: Title[], slug: string): Title | undefined {
-  return titles.find((title) => title.slug === slug);
+export async function listGenres(): Promise<Genre[]> {
+  const { genres } = await tmdbFetch<TmdbGenreList>("/genre/movie/list");
+  return genres.map(toGenre);
 }
 
-export function filterByGenre(titles: Title[], genre: Genre | undefined): Title[] {
-  if (!genre) return titles;
-  return titles.filter((title) => title.genres.includes(genre));
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
 }
 
-const byName = (a: Title, b: Title) =>
-  a.name.localeCompare(b.name, "en", { sensitivity: "base" });
-
-const comparators: Record<SortKey, (a: Title, b: Title) => number> = {
-  rating: (a, b) => b.rating - a.rating || byName(a, b),
-  year: (a, b) => b.year - a.year || byName(a, b),
-  name: byName,
-};
-
-export function sortTitles(titles: Title[], key: SortKey): Title[] {
-  return [...titles].sort(comparators[key]);
+/** TMDB discover params per sort. Release date skips unreleased films and near-empty placeholder entries. */
+function sortParams(sort: SortKey): TmdbParams {
+  switch (sort) {
+    case "popularity":
+      return { sort_by: "popularity.desc" };
+    case "rating":
+      return { sort_by: "vote_average.desc", "vote_count.gte": 200 };
+    case "release":
+      return { sort_by: "primary_release_date.desc", "primary_release_date.lte": today(), "vote_count.gte": 50 };
+    case "title":
+      return { sort_by: "title.asc" };
+  }
 }
 
-export function searchTitles(titles: Title[], query: string): Title[] {
-  const needle = query.trim().toLowerCase();
-  if (!needle) return [];
-  return titles.filter((title) => title.name.toLowerCase().includes(needle));
+export async function discoverTitles({ genre, sort, page }: BrowseState): Promise<Paged<TitleSummary>> {
+  const response = await tmdbFetch<TmdbPaged<TmdbMovieListItem>>("/discover/movie", {
+    include_adult: false,
+    with_genres: genre,
+    page,
+    ...sortParams(sort),
+  });
+  return toPaged(response, toSummary);
 }
 
-export function listGenres(titles: Title[]): Genre[] {
-  const used = new Set(titles.flatMap((title) => title.genres));
-  return [...used].sort((a, b) => a.localeCompare(b));
+const NO_RESULTS: Paged<TitleSummary> = { results: [], page: 1, totalPages: 0, totalResults: 0 };
+
+/** Search movies by title. A blank query returns no results without calling TMDB. */
+export async function searchTitles(query: string, page: number): Promise<Paged<TitleSummary>> {
+  const trimmed = query.trim();
+  if (!trimmed) return NO_RESULTS;
+  const response = await tmdbFetch<TmdbPaged<TmdbMovieListItem>>("/search/movie", {
+    query: trimmed,
+    include_adult: false,
+    page,
+  });
+  return toPaged(response, toSummary);
 }

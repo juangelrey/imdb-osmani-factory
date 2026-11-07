@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { SiteHeader } from "@/components/site-header";
+import { TmdbAttribution } from "@/components/tmdb-attribution";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Reelbase",
-  description: "A small catalogue of invented movies.",
+  description: "Browse, search and save real movies from TMDB.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -15,7 +16,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <SiteHeader />
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>
         <footer className="border-t border-zinc-800 px-4 py-6 text-center text-xs text-zinc-500">
-          Reelbase is a sample app. Every title and person in it is invented.
+          <TmdbAttribution />
         </footer>
       </body>
     </html>

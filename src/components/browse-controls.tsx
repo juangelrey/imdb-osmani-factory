@@ -1,8 +1,13 @@
 import Link from "next/link";
-import { browseHref, type BrowseState } from "@/lib/catalog/browse-params";
-import type { Genre, SortKey } from "@/lib/catalog/types";
+import { SORT_KEYS, browseHref, type BrowseState, type SortKey } from "@/lib/catalog/browse-params";
+import type { Genre } from "@/lib/catalog/types";
 
-const SORT_LABELS: Record<SortKey, string> = { rating: "Rating", year: "Year", name: "Name" };
+const SORT_LABELS: Record<SortKey, string> = {
+  popularity: "Popular",
+  rating: "Top rated",
+  release: "Newest",
+  title: "Title",
+};
 
 interface BrowseControlsProps {
   genres: Genre[];
@@ -25,20 +30,21 @@ function Pill({ href, active, children }: { href: string; active: boolean; child
   );
 }
 
+/** Changing the genre or sort starts again from page 1. */
 export function BrowseControls({ genres, state }: BrowseControlsProps) {
   return (
     <div className="space-y-3">
       <nav aria-label="Genre">
         <ul className="flex flex-wrap gap-2">
           <li>
-            <Pill href={browseHref({ ...state, genre: undefined })} active={!state.genre}>
+            <Pill href={browseHref({ ...state, genre: undefined, page: 1 })} active={state.genre === undefined}>
               All
             </Pill>
           </li>
           {genres.map((genre) => (
-            <li key={genre}>
-              <Pill href={browseHref({ ...state, genre })} active={state.genre === genre}>
-                {genre}
+            <li key={genre.id}>
+              <Pill href={browseHref({ ...state, genre: genre.id, page: 1 })} active={state.genre === genre.id}>
+                {genre.name}
               </Pill>
             </li>
           ))}
@@ -47,9 +53,9 @@ export function BrowseControls({ genres, state }: BrowseControlsProps) {
       <nav aria-label="Sort" className="flex items-center gap-2 text-xs text-zinc-400">
         <span>Sort by</span>
         <ul className="flex flex-wrap gap-2">
-          {(Object.keys(SORT_LABELS) as SortKey[]).map((sort) => (
+          {SORT_KEYS.map((sort) => (
             <li key={sort}>
-              <Pill href={browseHref({ ...state, sort })} active={state.sort === sort}>
+              <Pill href={browseHref({ ...state, sort, page: 1 })} active={state.sort === sort}>
                 {SORT_LABELS[sort]}
               </Pill>
             </li>

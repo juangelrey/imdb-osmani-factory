@@ -3,15 +3,20 @@ import type { Title } from "@/lib/catalog/types";
 import { TitleDetails } from "./title-details";
 
 const title: Title = {
-  slug: "glass-harbor",
-  name: "Glass Harbor",
-  year: 2011,
-  runtime: 127,
-  genres: ["Drama", "Mystery"],
-  rating: 7.4,
-  synopsis: "A lighthouse keeper finds a door in the fog.",
-  director: "Ada Vell",
-  cast: ["Bo Lenn", "Cy Marrow"],
+  id: 603,
+  slug: "the-matrix",
+  name: "The Matrix",
+  year: 1999,
+  runtime: 136,
+  genres: [
+    { id: 28, name: "Action" },
+    { id: 878, name: "Science Fiction" },
+  ],
+  rating: 8.218,
+  synopsis: "A hacker learns the truth about his reality.",
+  posterUrl: "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
+  director: "Lana Wachowski",
+  cast: ["Keanu Reeves", "Laurence Fishburne"],
 };
 
 function fact(term: string) {
@@ -23,14 +28,29 @@ describe("TitleDetails", () => {
   it("renders every field inside an article", () => {
     render(<TitleDetails title={title} />);
     const article = screen.getByRole("article");
-    expect(within(article).getByRole("heading", { level: 1, name: "Glass Harbor" })).toBeInTheDocument();
-    expect(within(article).getByText(title.synopsis)).toBeInTheDocument();
-    expect(fact("Year")).toHaveTextContent("2011");
-    expect(fact("Runtime")).toHaveTextContent("2h 7m");
-    expect(fact("Genres")).toHaveTextContent("Drama, Mystery");
-    expect(fact("Rating")).toHaveTextContent("7.4 / 10");
-    expect(fact("Director")).toHaveTextContent("Ada Vell");
-    expect(fact("Cast")).toHaveTextContent("Bo Lenn, Cy Marrow");
+    expect(within(article).getByRole("heading", { level: 1, name: "The Matrix" })).toBeInTheDocument();
+    expect(within(article).getByText(title.synopsis!)).toBeInTheDocument();
+    expect(fact("Year")).toHaveTextContent("1999");
+    expect(fact("Runtime")).toHaveTextContent("2h 16m");
+    expect(fact("Genres")).toHaveTextContent("Action, Science Fiction");
+    expect(fact("Rating")).toHaveTextContent("8.2 / 10");
+    expect(fact("Director")).toHaveTextContent("Lana Wachowski");
+    expect(fact("Cast")).toHaveTextContent("Keanu Reeves, Laurence Fishburne");
+  });
+
+  it("shows the detail-size poster", () => {
+    const { container } = render(<TitleDetails title={title} />);
+    expect(container.querySelector("img")).toHaveAttribute("src", title.posterUrl);
+  });
+
+  it("hides fields TMDB does not have", () => {
+    const sparse: Title = { id: 1, slug: "untitled", name: "Untitled", genres: [], cast: [] };
+    const { container } = render(<TitleDetails title={sparse} />);
+    for (const term of ["Year", "Runtime", "Genres", "Rating", "Director", "Cast"]) {
+      expect(screen.queryByText(term, { selector: "dt" })).not.toBeInTheDocument();
+    }
+    expect(container).not.toHaveTextContent(/NaN|undefined/);
+    expect(container.querySelector("img")).not.toBeInTheDocument();
   });
 
   it("renders the actions slot", () => {

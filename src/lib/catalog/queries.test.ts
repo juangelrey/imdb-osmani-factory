@@ -1,123 +1,129 @@
-import {
-  filterByGenre,
-  getTitleBySlug,
-  listGenres,
-  listTitles,
-  searchTitles,
-  sortTitles,
-} from "./queries";
-import type { Title } from "./types";
+import details from "@/lib/tmdb/fixtures/movie-details.json";
+import discover from "@/lib/tmdb/fixtures/discover-movie.json";
+import genreList from "@/lib/tmdb/fixtures/genre-movie-list.json";
+import search from "@/lib/tmdb/fixtures/search-movie.json";
+import { TmdbError } from "@/lib/tmdb/client";
+import { discoverTitles, getTitle, listGenres, searchTitles } from "./queries";
 
-function makeTitle(overrides: Partial<Title> & Pick<Title, "slug" | "name">): Title {
-  return {
-    year: 2000,
-    runtime: 100,
-    genres: ["Drama"],
-    rating: 5,
-    synopsis: "A synopsis.",
-    director: "Ada Vell",
-    cast: ["Bo Lenn"],
-    ...overrides,
-  };
+function stubFetch(body: unknown, status = 200) {
+  const fetchMock = vi.fn(async () => Response.json(body, { status }));
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
 }
 
-const glass = makeTitle({ slug: "glass-harbor", name: "Glass Harbor", year: 2011, rating: 7.4, genres: ["Drama", "Mystery"] });
-const ember = makeTitle({ slug: "ember-road", name: "Ember Road", year: 2019, rating: 8.1, genres: ["Action"] });
-const quiet = makeTitle({ slug: "the-quiet-orbit", name: "The Quiet Orbit", year: 2004, rating: 7.4, genres: ["Sci-Fi", "Drama"] });
-const sample = [glass, ember, quiet];
+function requestedUrl(fetchMock: ReturnType<typeof stubFetch>) {
+  return new URL(String((fetchMock.mock.calls[0] as unknown[])[0]));
+}
 
-describe("listTitles", () => {
-  it("returns every seed title", () => {
-    const titles = listTitles();
-    expect(titles.length).toBeGreaterThanOrEqual(45);
-  });
-
-  it("returns a copy so callers cannot mutate the catalogue", () => {
-    const first = listTitles();
-    first.pop();
-    expect(listTitles()).toHaveLength(first.length + 1);
-  });
+beforeEach(() => {
+  vi.stubEnv("TMDB_READ_ACCESS_TOKEN", "test-token");
 });
 
-describe("getTitleBySlug", () => {
-  it("returns the title with that slug", () => {
-    expect(getTitleBySlug(sample, "ember-road")).toBe(ember);
-  });
-
-  it("returns undefined for an unknown slug", () => {
-    expect(getTitleBySlug(sample, "nope")).toBeUndefined();
-  });
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
 });
 
-describe("filterByGenre", () => {
-  it("keeps only titles that include the genre", () => {
-    expect(filterByGenre(sample, "Drama")).toEqual([glass, quiet]);
+describe("getTitle", () => {
+  it("fetches the movie with credits appended", async () => {
+    const fetchMock = stubFetch(details);
+    await getTitle(603);
+    const url = requestedUrl(fetchMock);
+    expect(url.pathname).toBe("/3/movie/603");
+    expect(url.searchParams.get("append_to_response")).toBe("credits");
   });
 
-  it("returns an empty list when no title has the genre", () => {
-    expect(filterByGenre(sample, "Western")).toEqual([]);
+  it("maps the response into a Title", async () => {
+    stubFetch(details);
+    const title = await getTitle(603);
+    expect(title).toMatchObject({ id: 603, slug: "the-matrix", name: "The Matrix", director: "Lana Wachowski" });
   });
 
-  it("returns all titles when no genre is given", () => {
-    expect(filterByGenre(sample, undefined)).toEqual(sample);
-  });
-});
-
-describe("sortTitles", () => {
-  it("sorts by rating, highest first, breaking ties by name", () => {
-    expect(sortTitles(sample, "rating").map((t) => t.slug)).toEqual([
-      "ember-road",
-      "glass-harbor",
-      "the-quiet-orbit",
-    ]);
+  it("returns undefined for an unknown id", async () => {
+    stubFetch({ success: false, status_code: 34 }, 404);
+    await expect(getTitle(999999999)).resolves.toBeUndefined();
   });
 
-  it("sorts by year, newest first", () => {
-    expect(sortTitles(sample, "year").map((t) => t.year)).toEqual([2019, 2011, 2004]);
-  });
-
-  it("sorts by name alphabetically, ignoring case", () => {
-    const lower = makeTitle({ slug: "apex", name: "apex" });
-    expect(sortTitles([...sample, lower], "name").map((t) => t.name)).toEqual([
-      "apex",
-      "Ember Road",
-      "Glass Harbor",
-      "The Quiet Orbit",
-    ]);
-  });
-
-  it("does not mutate the input array", () => {
-    const input = [...sample];
-    sortTitles(input, "year");
-    expect(input).toEqual(sample);
-  });
-});
-
-describe("searchTitles", () => {
-  it("matches title names case-insensitively", () => {
-    expect(searchTitles(sample, "HARBOR")).toEqual([glass]);
-  });
-
-  it("matches part of a name", () => {
-    expect(searchTitles(sample, "orb")).toEqual([quiet]);
-  });
-
-  it("ignores surrounding whitespace", () => {
-    expect(searchTitles(sample, "  ember  ")).toEqual([ember]);
-  });
-
-  it("returns nothing for a blank query", () => {
-    expect(searchTitles(sample, "   ")).toEqual([]);
-  });
-
-  it("does not match synopsis, cast or director", () => {
-    expect(searchTitles(sample, "Ada Vell")).toEqual([]);
-    expect(searchTitles(sample, "synopsis")).toEqual([]);
+  it("lets other TMDB errors reach the error boundary", async () => {
+    stubFetch({}, 503);
+    await expect(getTitle(603)).rejects.toBeInstanceOf(TmdbError);
   });
 });
 
 describe("listGenres", () => {
-  it("returns each genre used once, sorted alphabetically", () => {
-    expect(listGenres(sample)).toEqual(["Action", "Drama", "Mystery", "Sci-Fi"]);
+  it("returns TMDB's movie genres", async () => {
+    const fetchMock = stubFetch(genreList);
+    const genres = await listGenres();
+    expect(requestedUrl(fetchMock).pathname).toBe("/3/genre/movie/list");
+    expect(genres).toContainEqual({ id: 878, name: "Science Fiction" });
+  });
+});
+
+describe("discoverTitles", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("asks for a page of non-adult movies and maps the results", async () => {
+    const fetchMock = stubFetch(discover);
+    const page = await discoverTitles({ genre: undefined, sort: "popularity", page: 3 });
+    const url = requestedUrl(fetchMock);
+    expect(url.pathname).toBe("/3/discover/movie");
+    expect(url.searchParams.get("include_adult")).toBe("false");
+    expect(url.searchParams.get("page")).toBe("3");
+    expect(url.searchParams.has("with_genres")).toBe(false);
+    expect(page.results[0]).toMatchObject({ id: 27205, name: "Inception" });
+    expect(page.totalPages).toBe(500);
+  });
+
+  it("filters by genre", async () => {
+    const fetchMock = stubFetch(discover);
+    await discoverTitles({ genre: 878, sort: "popularity", page: 1 });
+    expect(requestedUrl(fetchMock).searchParams.get("with_genres")).toBe("878");
+  });
+
+  it.each([
+    ["popularity", { sort_by: "popularity.desc" }],
+    ["rating", { sort_by: "vote_average.desc", "vote_count.gte": "200" }],
+    ["title", { sort_by: "title.asc" }],
+  ] as const)("maps the %s sort", async (sort, expected) => {
+    const fetchMock = stubFetch(discover);
+    await discoverTitles({ genre: undefined, sort, page: 1 });
+    const params = requestedUrl(fetchMock).searchParams;
+    for (const [key, value] of Object.entries(expected)) expect(params.get(key)).toBe(value);
+    expect(params.has("primary_release_date.lte")).toBe(false);
+    if (sort !== "rating") expect(params.has("vote_count.gte")).toBe(false);
+  });
+
+  it("limits the release sort to films out by today with at least 50 votes", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-07T15:00:00Z"));
+    const fetchMock = stubFetch(discover);
+    await discoverTitles({ genre: undefined, sort: "release", page: 1 });
+    const params = requestedUrl(fetchMock).searchParams;
+    expect(params.get("sort_by")).toBe("primary_release_date.desc");
+    expect(params.get("primary_release_date.lte")).toBe("2026-11-07");
+    expect(params.get("vote_count.gte")).toBe("50");
+  });
+});
+
+describe("searchTitles", () => {
+  it("searches non-adult movies by the trimmed query and page", async () => {
+    const fetchMock = stubFetch(search);
+    const page = await searchTitles("  matrix ", 2);
+    const url = requestedUrl(fetchMock);
+    expect(url.pathname).toBe("/3/search/movie");
+    expect(url.searchParams.get("query")).toBe("matrix");
+    expect(url.searchParams.get("include_adult")).toBe("false");
+    expect(url.searchParams.get("page")).toBe("2");
+    expect(page.results.map(({ name }) => name)).toEqual(["The Matrix", "The Matrix Reloaded", "The Matrix Revolutions"]);
+    expect(page.totalResults).toBe(72);
+    expect(page.totalPages).toBe(4);
+  });
+
+  it("returns an empty page for a blank query without calling TMDB", async () => {
+    const fetchMock = stubFetch(search);
+    await expect(searchTitles("   ", 1)).resolves.toEqual({ results: [], page: 1, totalPages: 0, totalResults: 0 });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
