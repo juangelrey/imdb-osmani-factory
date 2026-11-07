@@ -1,7 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import { SiteHeader } from "./site-header";
 
-
 describe("SiteHeader", () => {
   it("renders a banner with navigation to home and the watchlist", () => {
     render(<SiteHeader />);

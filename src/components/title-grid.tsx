@@ -1,8 +1,8 @@
-import type { Title } from "@/lib/catalog/types";
+import type { TitleSummary } from "@/lib/catalog/types";
 import { TitleCard } from "./title-card";
 
 interface TitleGridProps {
-  titles: Title[];
+  titles: TitleSummary[];
   emptyMessage: string;
 }
 

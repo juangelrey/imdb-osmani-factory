@@ -34,3 +34,10 @@ export interface Title {
 export const SORT_KEYS = ["rating", "year", "name"] as const;
 
 export type SortKey = (typeof SORT_KEYS)[number];
+
+/** The fields a title card needs; small enough to pass to client components. */
+export type TitleSummary = Pick<Title, "slug" | "name" | "year" | "rating">;
+
+export function toSummary({ slug, name, year, rating }: Title): TitleSummary {
+  return { slug, name, year, rating };
+}

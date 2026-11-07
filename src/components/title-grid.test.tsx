@@ -20,7 +20,7 @@ describe("TitleGrid", () => {
     const link = screen.getByRole("link", { name: /Ember Road/ });
     expect(link).toHaveAttribute("href", "/title/ember-road");
     expect(screen.getByText("2019")).toBeInTheDocument();
-    expect(screen.getByLabelText("Rating 8.1 out of 10")).toBeInTheDocument();
+    expect(screen.getByText("Rating 8.1 out of 10")).toBeInTheDocument();
   });
 
   it("shows the empty message and no list when there are no titles", () => {

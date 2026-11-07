@@ -16,8 +16,11 @@ describe("WatchlistButton", () => {
     const button = screen.getByRole("button", { name: "Save to watchlist" });
     expect(button).toHaveAttribute("aria-pressed", "false");
 
+    expect(button).toHaveTextContent("Save to watchlist");
+
     await user.click(button);
     expect(button).toHaveAttribute("aria-pressed", "true");
+    expect(button).toHaveTextContent("Saved");
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual([SLUG]);
 
     await user.click(button);

@@ -10,6 +10,7 @@ export function WatchlistButton({ slug }: { slug: string }) {
     <button
       type="button"
       aria-pressed={saved}
+      aria-label="Save to watchlist"
       onClick={() => (saved ? remove(slug) : add(slug))}
       className={`inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-semibold transition ${
         saved
@@ -17,8 +18,7 @@ export function WatchlistButton({ slug }: { slug: string }) {
           : "border-zinc-600 text-zinc-100 hover:border-amber-400 hover:text-amber-300"
       }`}
     >
-      <span aria-hidden="true">{saved ? "★" : "☆"}</span>
-      Save to watchlist
+      <span aria-hidden="true">{saved ? "★ Saved" : "☆ Save to watchlist"}</span>
     </button>
   );
 }

@@ -1,8 +1,8 @@
 import Link from "next/link";
-import type { Title } from "@/lib/catalog/types";
+import type { TitleSummary } from "@/lib/catalog/types";
 import { Poster } from "./poster";
 
-export function TitleCard({ title }: { title: Title }) {
+export function TitleCard({ title }: { title: TitleSummary }) {
   return (
     <Link
       href={`/title/${title.slug}`}
@@ -12,7 +12,8 @@ export function TitleCard({ title }: { title: Title }) {
       <h2 className="mt-2 text-sm font-semibold leading-snug group-hover:text-amber-300">{title.name}</h2>
       <p className="mt-1 flex items-center justify-between text-xs text-zinc-400">
         <span>{title.year}</span>
-        <span aria-label={`Rating ${title.rating.toFixed(1)} out of 10`}>
+        <span>
+          <span className="sr-only">Rating {title.rating.toFixed(1)} out of 10</span>
           <span aria-hidden="true">★ {title.rating.toFixed(1)}</span>
         </span>
       </p>

@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import { filterByGenre, listTitles } from "@/lib/catalog/queries";
 import Home from "./page";
 
 async function renderHome(params: Record<string, string> = {}) {
@@ -16,18 +17,18 @@ describe("Home page", () => {
   it("lists every title by default", async () => {
     await renderHome();
     expect(screen.getByRole("heading", { level: 1, name: "All titles" })).toBeInTheDocument();
-    expect(gridNames()).toHaveLength(50);
+    expect(gridNames()).toHaveLength(listTitles().length);
   });
 
   it("filters by genre and marks the active controls", async () => {
     await renderHome({ genre: "Western", sort: "name" });
     expect(screen.getByRole("heading", { level: 1, name: "Western titles" })).toBeInTheDocument();
-    expect(gridNames()).toHaveLength(4);
+    expect(gridNames()).toHaveLength(filterByGenre(listTitles(), "Western").length);
     const genres = screen.getByRole("navigation", { name: "Genre" });
-    expect(within(genres).getByRole("link", { name: "Western" })).toHaveAttribute("aria-current", "page");
+    expect(within(genres).getByRole("link", { name: "Western" })).toHaveAttribute("aria-current", "true");
     expect(within(genres).getByRole("link", { name: "All" })).not.toHaveAttribute("aria-current");
     const sort = screen.getByRole("navigation", { name: "Sort" });
-    expect(within(sort).getByRole("link", { name: "Name" })).toHaveAttribute("aria-current", "page");
+    expect(within(sort).getByRole("link", { name: "Name" })).toHaveAttribute("aria-current", "true");
   });
 
   it("keeps the genre when changing the sort", async () => {

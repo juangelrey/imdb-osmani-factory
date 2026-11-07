@@ -13,7 +13,7 @@ function Pill({ href, active, children }: { href: string; active: boolean; child
   return (
     <Link
       href={href}
-      aria-current={active ? "page" : undefined}
+      aria-current={active ? "true" : undefined}
       className={`inline-block rounded-full border px-3 py-1 text-xs ${
         active
           ? "border-amber-400 bg-amber-400 font-semibold text-zinc-950"

@@ -54,6 +54,10 @@ describe("parseWatchlist", () => {
     expect(parseWatchlist(raw, known)).toEqual([]);
   });
 
+  it("keeps any string slug when no known set is given", () => {
+    expect(parseWatchlist('["anything",3,"anything"]')).toEqual(["anything"]);
+  });
+
   it("drops non-strings, unknown slugs and duplicates", () => {
     expect(parseWatchlist('["ember-road",7,null,"gone","ember-road",{"a":1}]', known)).toEqual(["ember-road"]);
   });

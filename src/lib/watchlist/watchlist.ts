@@ -4,8 +4,11 @@ export type WatchlistStorage = Pick<Storage, "getItem" | "setItem">;
 
 const EMPTY: readonly string[] = Object.freeze([]);
 
-/** Parse stored data. Anything missing, malformed or unknown reads as empty. */
-export function parseWatchlist(raw: string | null, knownSlugs: ReadonlySet<string>): string[] {
+/**
+ * Parse stored data. Anything missing or malformed reads as empty. When `knownSlugs` is given,
+ * slugs outside it are dropped.
+ */
+export function parseWatchlist(raw: string | null, knownSlugs?: ReadonlySet<string>): string[] {
   if (!raw) return [];
   let value: unknown;
   try {
@@ -14,7 +17,7 @@ export function parseWatchlist(raw: string | null, knownSlugs: ReadonlySet<strin
     return [];
   }
   if (!Array.isArray(value)) return [];
-  const slugs = value.filter((item): item is string => typeof item === "string" && knownSlugs.has(item));
+  const slugs = value.filter((item): item is string => typeof item === "string" && (!knownSlugs || knownSlugs.has(item)));
   return [...new Set(slugs)];
 }
 
@@ -42,7 +45,7 @@ function readRaw(storage: WatchlistStorage | undefined): string | null {
   }
 }
 
-export function readWatchlist(storage: WatchlistStorage | undefined, knownSlugs: ReadonlySet<string>): string[] {
+export function readWatchlist(storage: WatchlistStorage | undefined, knownSlugs?: ReadonlySet<string>): string[] {
   return parseWatchlist(readRaw(storage), knownSlugs);
 }
 
@@ -59,7 +62,8 @@ export function writeWatchlist(storage: WatchlistStorage | undefined, slugs: rea
 
 interface WatchlistStoreOptions {
   getStorage: () => WatchlistStorage | undefined;
-  knownSlugs: ReadonlySet<string>;
+  /** Optional: the client store omits it so the catalogue stays out of the browser bundle. */
+  knownSlugs?: ReadonlySet<string>;
   /** Where cross-tab `storage` events arrive; `window` in the browser. */
   events?: EventTarget;
 }

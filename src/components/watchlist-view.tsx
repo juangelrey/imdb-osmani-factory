@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
-import { getTitleBySlug, listTitles } from "@/lib/catalog/queries";
-import type { Title } from "@/lib/catalog/types";
+import type { TitleSummary } from "@/lib/catalog/types";
 import { useWatchlist } from "@/lib/watchlist/use-watchlist";
 import { TitleGrid } from "./title-grid";
 
@@ -18,7 +17,12 @@ function useHydrated() {
   );
 }
 
-export function WatchlistView() {
+interface WatchlistViewProps {
+  /** The catalogue, slimmed to card fields by the server page. */
+  titles: TitleSummary[];
+}
+
+export function WatchlistView({ titles }: WatchlistViewProps) {
   const hydrated = useHydrated();
   const { slugs } = useWatchlist();
 
@@ -30,12 +34,10 @@ export function WatchlistView() {
     );
   }
 
-  const catalogue = listTitles();
-  const titles = slugs
-    .map((slug) => getTitleBySlug(catalogue, slug))
-    .filter((title): title is Title => title !== undefined);
+  const bySlug = new Map(titles.map((title) => [title.slug, title]));
+  const saved = slugs.flatMap((slug) => bySlug.get(slug) ?? []);
 
-  if (titles.length === 0) {
+  if (saved.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-zinc-700 p-8 text-center">
         <p className="text-zinc-400">Your watchlist is empty.</p>
@@ -46,5 +48,5 @@ export function WatchlistView() {
     );
   }
 
-  return <TitleGrid titles={titles} emptyMessage="Your watchlist is empty." />;
+  return <TitleGrid titles={saved} emptyMessage="" />;
 }

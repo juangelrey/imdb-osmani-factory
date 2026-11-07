@@ -1,6 +1,13 @@
 import { render, screen } from "@testing-library/react";
+import { notFound } from "next/navigation";
 import { listTitles } from "@/lib/catalog/queries";
 import TitlePage, { dynamicParams, generateMetadata, generateStaticParams } from "./page";
+
+vi.mock("next/navigation", () => ({
+  notFound: vi.fn(() => {
+    throw new Error("not found");
+  }),
+}));
 
 const params = (slug: string) => ({ params: Promise.resolve({ slug }) });
 
@@ -22,7 +29,8 @@ describe("Title page", () => {
   });
 
   it("returns a 404 for an unknown slug", async () => {
-    await expect(TitlePage(params("does-not-exist"))).rejects.toThrow(/NEXT_HTTP_ERROR_FALLBACK;404/);
+    await expect(TitlePage(params("does-not-exist"))).rejects.toThrow("not found");
+    expect(notFound).toHaveBeenCalled();
   });
 });
 
