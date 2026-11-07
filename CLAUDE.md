@@ -16,7 +16,7 @@ GitHub Issues on `juangelrey/reelbase` is the tracker. Do not create `SPEC.md`,
 ## Agent skills
 
 `.claude/` holds a copy of the `agent-skills` skills so they work in cloud sessions, where plugins
-do not load. Commands: `/as-spec`, `/as-plan`, `/as-build`, `/as-test`, `/as-review`.
+do not load. Commands: `/as-spec`, `/as-plan`, `/as-build`, `/as-test`, `/as-review`, `/as-merge`.
 
 ## Cloud sessions
 
