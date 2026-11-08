@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { ViewTransition, type ReactElement } from "react";
+import type { TitleKind } from "@/lib/catalog/types";
 import { posterColors, posterInitials } from "./poster-art";
 
 const SIZES = {
@@ -30,13 +32,41 @@ interface PosterProps {
   className?: string;
   /** Alt text, for an image that is content rather than decoration (a profile photo). */
   alt?: string;
+  /**
+   * Names the poster for the shared-element morph: a grid card and the detail page with the same name morph into
+   * each other on navigation. It must be unique on the page, so build it with `posterTransitionName`.
+   */
+  transitionName?: string;
+}
+
+/** The morph name for a title's poster. Kind and id, because a movie and a show can share a TMDB id. */
+export function posterTransitionName(kind: TitleKind, id: number): string {
+  return `poster-${kind}-${id}`;
 }
 
 /**
  * The TMDB poster, or a generated gradient with initials when there is none.
  * Decorative unless `alt` is given; then the image or gradient is announced with that text.
  */
-export function Poster({ colorKey, name, posterUrl, size = "grid", className = "", alt }: PosterProps) {
+export function Poster({ transitionName, ...props }: PosterProps) {
+  const poster = <PosterArt {...props} />;
+  if (!transitionName) return poster;
+  // `default="none"` keeps the poster out of unrelated transitions; the explicit `share` keeps the morph.
+  return (
+    <ViewTransition name={transitionName} share="morph" default="none">
+      {poster}
+    </ViewTransition>
+  );
+}
+
+function PosterArt({
+  colorKey,
+  name,
+  posterUrl,
+  size = "grid",
+  className = "",
+  alt,
+}: Omit<PosterProps, "transitionName">): ReactElement {
   if (posterUrl) {
     return (
       <Image

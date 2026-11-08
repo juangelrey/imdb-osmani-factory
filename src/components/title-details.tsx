@@ -3,7 +3,7 @@ import { Fragment, type ReactNode } from "react";
 import { formatRuntime } from "@/lib/catalog/format";
 import { personHref } from "@/lib/catalog/map";
 import type { PersonLink, Title } from "@/lib/catalog/types";
-import { Poster } from "./poster";
+import { Poster, posterTransitionName } from "./poster";
 
 /** A labelled fact; an undefined value hides the row. */
 export type Fact = [term: string, value: ReactNode];
@@ -13,6 +13,8 @@ interface DetailsLayoutProps {
   colorKey: string;
   name: string;
   posterUrl?: string;
+  /** The poster's morph name, from `posterTransitionName`, matching the title's grid card. */
+  transitionName: string;
   synopsis?: string;
   facts: Fact[];
   /** Controls shown under the heading, such as the watchlist button. */
@@ -41,7 +43,15 @@ export function ratingFact(rating: number | undefined): string | undefined {
 }
 
 /** The detail page layout shared by movies and shows: poster, heading, actions, synopsis and facts. */
-export function DetailsLayout({ colorKey, name, posterUrl, synopsis, facts, actions }: DetailsLayoutProps) {
+export function DetailsLayout({
+  colorKey,
+  name,
+  posterUrl,
+  transitionName,
+  synopsis,
+  facts,
+  actions,
+}: DetailsLayoutProps) {
   return (
     <article className="grid gap-6 sm:grid-cols-[minmax(0,14rem)_1fr] sm:gap-8">
       <Poster
@@ -49,6 +59,7 @@ export function DetailsLayout({ colorKey, name, posterUrl, synopsis, facts, acti
         name={name}
         posterUrl={posterUrl}
         size="detail"
+        transitionName={transitionName}
         className="mx-auto w-40 text-5xl sm:w-full"
       />
       <div className="min-w-0 space-y-5">
@@ -95,6 +106,7 @@ export function TitleDetails({ title, actions }: TitleDetailsProps) {
       colorKey={title.slug}
       name={title.name}
       posterUrl={title.posterUrl}
+      transitionName={posterTransitionName("movie", title.id)}
       synopsis={title.synopsis}
       facts={facts}
       actions={actions}

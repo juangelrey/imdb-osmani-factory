@@ -7,6 +7,7 @@ describe("cardFromSummary", () => {
     ).toEqual({
       key: "movie-603",
       colorKey: "603",
+      transitionName: "poster-movie-603",
       href: "/title/603-the-matrix",
       name: "The Matrix",
       year: 1999,
@@ -21,6 +22,7 @@ describe("cardFromSummary", () => {
     expect(show.href).toBe("/tv/603-breaking-point");
     expect(show.key).toBe("tv-603");
     expect(show.key).not.toBe(movie.key);
+    expect(show.transitionName).not.toBe(movie.transitionName);
   });
 
   it("seeds a movie's fallback poster colours by id alone, as before TV, and a show's by kind and id", () => {
@@ -34,6 +36,7 @@ describe("cardFromEntry", () => {
     expect(cardFromEntry({ kind: "movie", id: 603, slug: "the-matrix", name: "The Matrix", rating: 8.2, posterPath: "/m.jpg" })).toEqual({
       key: "movie-603",
       colorKey: "603",
+      transitionName: "poster-movie-603",
       href: "/title/603-the-matrix",
       name: "The Matrix",
       year: undefined,
@@ -46,6 +49,7 @@ describe("cardFromEntry", () => {
     expect(cardFromEntry({ kind: "tv", id: 603, slug: "matrix-show", name: "Matrix Show", posterPath: "/s.jpg" })).toEqual({
       key: "tv-603",
       colorKey: "tv-603",
+      transitionName: "poster-tv-603",
       href: "/tv/603-matrix-show",
       name: "Matrix Show",
       year: undefined,

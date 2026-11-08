@@ -51,6 +51,52 @@
   animation-duration: 200ms;
 }
 
+/*
+ * Pagination (pagination.tsx tags its links): Next slides the content left, so the new page arrives from the right;
+ * Previous slides it right. The old page leaves quickly and the new one fades in behind it.
+ */
+::view-transition-old(.nav-forward),
+::view-transition-old(.nav-back) {
+  animation:
+    150ms ease-in both vt-fade reverse,
+    300ms ease-in-out both vt-slide reverse;
+}
+::view-transition-new(.nav-forward),
+::view-transition-new(.nav-back) {
+  animation:
+    150ms ease-out 100ms both vt-fade,
+    300ms ease-in-out both vt-slide;
+}
+::view-transition-old(.nav-forward),
+::view-transition-new(.nav-back) {
+  --vt-slide-offset: -60px;
+}
+::view-transition-new(.nav-forward),
+::view-transition-old(.nav-back) {
+  --vt-slide-offset: 60px;
+}
+
+@keyframes vt-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes vt-slide {
+  from {
+    translate: var(--vt-slide-offset);
+  }
+}
+
+/*
+ * Poster morph (poster.tsx): a card poster and the detail page poster share a name, so the browser moves and
+ * scales one into the other. Above the crossfading page, so the poster never fades behind it.
+ */
+::view-transition-group(.morph) {
+  animation-duration: 300ms;
+  animation-timing-function: ease-in-out;
+  z-index: 50;
+}
+
 /* The header and footer are named (site-header.tsx, layout.tsx) and never animate; the new one shows at once. */
 ::view-transition-group(site-header),
 ::view-transition-group(site-footer),

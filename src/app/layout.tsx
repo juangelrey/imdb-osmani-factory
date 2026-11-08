@@ -17,9 +17,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
           {/*
             Every navigation and every loading-skeleton reveal is a transition, so the page content crossfades
-            (the `page` class in globals.css). The header and footer have their own names and stay still.
+            (the `page` class in globals.css). Pagination tags its links, so Next and Previous slide instead.
+            The header and footer have their own names and stay still.
           */}
-          <ViewTransition default="page">{children}</ViewTransition>
+          <ViewTransition
+            default="page"
+            update={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "page" }}
+          >
+            {children}
+          </ViewTransition>
         </main>
         <footer
           className="border-t border-zinc-800 px-4 py-6 text-center text-xs text-zinc-500"
