@@ -18,6 +18,12 @@ describe("searchHref", () => {
     expect(searchHref("breaking", 1, "tv")).toBe("/search?q=breaking&type=tv");
     expect(searchHref("breaking", 3, "tv")).toBe("/search?q=breaking&type=tv&page=3");
   });
+
+  it("adds the sort only when it is not the default Recency", () => {
+    expect(searchHref("batman", 1, "movie", "recency")).toBe("/search?q=batman");
+    expect(searchHref("batman", 1, "movie", "relevance")).toBe("/search?q=batman&sort=relevance");
+    expect(searchHref("batman", 2, "tv", "relevance")).toBe("/search?q=batman&type=tv&sort=relevance&page=2");
+  });
 });
 
 describe("SearchResults", () => {
@@ -57,6 +63,17 @@ describe("SearchResults", () => {
     expect(screen.getByRole("link", { name: /Breaking Bad/ })).toHaveAttribute("href", "/tv/1396-breaking-bad");
     const pagination = screen.getByRole("navigation", { name: "Pagination" });
     expect(within(pagination).getByRole("link", { name: /Next/ })).toHaveAttribute("href", "/search?q=breaking&type=tv&page=2");
+  });
+
+  it("paginates keeping the sort", () => {
+    render(
+      <SearchResults query="batman" kind="tv" sort="relevance" results={paged([breakingBad], { totalPages: 6, totalResults: 117 })} />,
+    );
+    const pagination = screen.getByRole("navigation", { name: "Pagination" });
+    expect(within(pagination).getByRole("link", { name: /Next/ })).toHaveAttribute(
+      "href",
+      "/search?q=batman&type=tv&sort=relevance&page=2",
+    );
   });
 
   it("says no series match when a TV search finds nothing", () => {

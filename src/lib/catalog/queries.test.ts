@@ -17,8 +17,8 @@ function stubFetch(body: unknown, status = 200) {
   return fetchMock;
 }
 
-function requestedUrl(fetchMock: ReturnType<typeof stubFetch>) {
-  return new URL(String((fetchMock.mock.calls[0] as unknown[])[0]));
+function requestedUrl(fetchMock: { mock: { calls: unknown[][] } }) {
+  return new URL(String(fetchMock.mock.calls[0][0]));
 }
 
 beforeEach(() => {
@@ -308,10 +308,40 @@ describe("discoverShows", () => {
   });
 });
 
+/** A fake TMDB search: answers each `page` param with 20 items, every fifth one undated. */
+function stubSearchPages(kind: "movie" | "tv", totalPages: number) {
+  const fetchMock = vi.fn(async (input: string | URL) => {
+    const page = Number(new URL(String(input)).searchParams.get("page"));
+    const results = Array.from({ length: 20 }, (_, index) => {
+      const id = page * 100 + index;
+      // Dates scattered across pages, so a correct sort has to look past TMDB's own order.
+      const date = index % 5 === 4 ? "" : `${1960 + ((id * 37) % 70)}-0${1 + (index % 9)}-15`;
+      return kind === "movie"
+        ? { id, title: `Movie ${id}`, release_date: date, vote_average: 7, vote_count: 100, poster_path: null }
+        : { id, name: `Show ${id}`, first_air_date: date, vote_average: 7, vote_count: 100, poster_path: null };
+    });
+    return Response.json({ page, results, total_pages: totalPages, total_results: totalPages * 20 - 3 });
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+}
+
+function requestedPages(fetchMock: ReturnType<typeof stubSearchPages>) {
+  return fetchMock.mock.calls.map(([input]) => new URL(String(input)).searchParams.get("page"));
+}
+
+/** Result years in page order must run newest first, with undated results last. */
+function expectNewestFirst(years: (number | undefined)[]) {
+  const dated = years.filter((year) => year !== undefined);
+  expect(dated).toEqual([...dated].sort((a, b) => b - a));
+  expect(years.slice(dated.length).every((year) => year === undefined)).toBe(true);
+}
+
 describe("searchTitles", () => {
-  it("searches non-adult movies by the trimmed query and page", async () => {
+  it("searches non-adult movies by relevance with TMDB's paging, in one call", async () => {
     const fetchMock = stubFetch(search);
-    const page = await searchTitles("  matrix ", 2);
+    const page = await searchTitles("  matrix ", 2, "relevance");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     const url = requestedUrl(fetchMock);
     expect(url.pathname).toBe("/3/search/movie");
     expect(url.searchParams.get("query")).toBe("matrix");
@@ -322,17 +352,52 @@ describe("searchTitles", () => {
     expect(page.totalPages).toBe(4);
   });
 
+  it("sorts by recency across the first 5 TMDB pages, fetching page 1 first", async () => {
+    const fetchMock = stubSearchPages("movie", 9);
+    const page1 = await searchTitles("batman", 1, "recency");
+    expect(fetchMock).toHaveBeenCalledTimes(5);
+    expect(requestedPages(fetchMock)[0]).toBe("1");
+    expect(new Set(requestedPages(fetchMock))).toEqual(new Set(["1", "2", "3", "4", "5"]));
+    expect(requestedUrl(fetchMock).searchParams.get("query")).toBe("batman");
+    expect(page1).toMatchObject({ page: 1, totalPages: 5, totalResults: 100 });
+
+    const pages = [page1];
+    for (const number of [2, 3, 4, 5]) pages.push(await searchTitles("batman", number, "recency"));
+    expect(pages.map(({ page }) => page)).toEqual([1, 2, 3, 4, 5]);
+    const years = pages.flatMap(({ results }) => results.map(({ year }) => year));
+    expect(years).toHaveLength(100);
+    expect(years.filter((year) => year === undefined)).toHaveLength(20);
+    expectNewestFirst(years);
+  });
+
+  it("makes only as many calls as TMDB has pages when there are fewer than 5", async () => {
+    const fetchMock = stubSearchPages("movie", 2);
+    const page = await searchTitles("batman", 1, "recency");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(page).toMatchObject({ totalPages: 2, totalResults: 40 });
+  });
+
+  it("returns an empty page past the window without calling TMDB", async () => {
+    const fetchMock = stubSearchPages("movie", 9);
+    const page = await searchTitles("batman", 6, "recency");
+    expect(page.results).toEqual([]);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("returns an empty page for a blank query without calling TMDB", async () => {
     const fetchMock = stubFetch(search);
-    await expect(searchTitles("   ", 1)).resolves.toEqual({ results: [], page: 1, totalPages: 0, totalResults: 0 });
+    const empty = { results: [], page: 1, totalPages: 0, totalResults: 0 };
+    await expect(searchTitles("   ", 1, "relevance")).resolves.toEqual(empty);
+    await expect(searchTitles("   ", 1, "recency")).resolves.toEqual(empty);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 
 describe("searchShows", () => {
-  it("searches non-adult TV series by the trimmed query and page", async () => {
+  it("searches non-adult TV series by relevance with TMDB's paging, in one call", async () => {
     const fetchMock = stubFetch(searchTv);
-    const page = await searchShows("  breaking ", 2);
+    const page = await searchShows("  breaking ", 2, "relevance");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     const url = requestedUrl(fetchMock);
     expect(url.pathname).toBe("/3/search/tv");
     expect(url.searchParams.get("query")).toBe("breaking");
@@ -347,9 +412,22 @@ describe("searchShows", () => {
     expect(page.totalPages).toBe(6);
   });
 
+  it("sorts TV by first air date across the window, newest first, undated last", async () => {
+    const fetchMock = stubSearchPages("tv", 3);
+    const page = await searchShows("breaking", 1, "recency");
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(requestedUrl(fetchMock).pathname).toBe("/3/search/tv");
+    expect(page).toMatchObject({ totalPages: 3, totalResults: 60 });
+    expect(page.results.every(({ kind }) => kind === "tv")).toBe(true);
+    const pages = [page, await searchShows("breaking", 2, "recency"), await searchShows("breaking", 3, "recency")];
+    expectNewestFirst(pages.flatMap(({ results }) => results.map(({ year }) => year)));
+  });
+
   it("returns an empty page for a blank query without calling TMDB", async () => {
     const fetchMock = stubFetch(searchTv);
-    await expect(searchShows("   ", 1)).resolves.toEqual({ results: [], page: 1, totalPages: 0, totalResults: 0 });
+    const empty = { results: [], page: 1, totalPages: 0, totalResults: 0 };
+    await expect(searchShows("   ", 1, "relevance")).resolves.toEqual(empty);
+    await expect(searchShows("   ", 1, "recency")).resolves.toEqual(empty);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
