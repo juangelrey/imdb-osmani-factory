@@ -1,5 +1,5 @@
 ---
-description: Break work into small verifiable tasks with acceptance criteria and dependency ordering
+description: Break work into small verifiable tasks with acceptance criteria and a dependency graph
 disable-model-invocation: true
 ---
 
@@ -8,7 +8,7 @@ Invoke the planning-and-task-breakdown skill.
 Read the open `prd` issue and the relevant codebase sections. Then:
 
 1. Enter plan mode — read only, no code changes
-2. Identify the dependency graph between components
+2. Map the dependency graph, with a `Blocked by` only where the skill's Step 2 allows one
 3. Slice work vertically (one complete path per task, not horizontal layers)
 4. Write tasks with acceptance criteria
 5. Add checkpoints between phases
