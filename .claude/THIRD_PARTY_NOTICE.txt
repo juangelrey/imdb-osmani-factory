@@ -1,6 +1,7 @@
-Files in .claude/skills, .claude/commands, .claude/agents and .claude/references are copied from
-https://github.com/addyosmani/agent-skills (plugin version 0.6.15). Changes: commands renamed with an
-as- prefix, plugin namespaces removed, paths adjusted, one browser-testing reference removed.
+Files in .claude/skills and .claude/agents are adapted from
+https://github.com/addyosmani/agent-skills (plugin version 0.6.15). Changes: heavily adapted and
+trimmed to this project; several skills and reference files removed or merged; the commands merged into
+as- skills and rewritten around GitHub issues.
 
 MIT License
 
