@@ -1,13 +1,9 @@
 ---
 name: doubt-driven-development
-description: Subjects a high-risk decision to a fresh-context adversarial review before it stands. Use when /as-build flags a ticket as high-risk or irreversible, or when the user asks to stress-test a decision, plan or piece of code.
+description: Subjects a high-risk decision to a fresh-context adversarial review before it stands. Use when /as-build flags a ticket as high-risk, or when the user asks to stress-test a decision, plan or piece of code.
 ---
 
 # Doubt-Driven Development
-
-## When It Applies
-
-- A ticket that step 6 of `.claude/skills/as-build/autonomous.md` flags as high-risk or irreversible
 
 Run it from the main session, since step 3 spawns a subagent.
 

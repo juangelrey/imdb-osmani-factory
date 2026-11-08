@@ -1,6 +1,6 @@
 ---
 name: as-build
-description: Build tickets test-first and open a PR. No argument: next ticket. "auto": whole plan, you merge. "dark": whole plan in parallel, merged if two-way.
+description: 'Build tickets test-first and open a PR. No argument: next ticket. "auto": whole plan, you merge. "dark": whole plan in parallel, merged if two-way.'
 disable-model-invocation: true
 ---
 
@@ -10,25 +10,26 @@ disable-model-invocation: true
 |---|---|---|---|
 | `/as-build` | the next ready ticket | nothing up front | one PR for that ticket, which the user merges |
 | `/as-build auto` | the whole plan, written first if none exists, each ticket in a fresh subagent | the plan once, plus any blocker or high-risk ticket | one PR for the plan, which the user merges |
-| `/as-build dark` | same as `auto`, but ready tickets run in parallel, each in its own worktree | same as `auto` | the same PR, merged by a fresh subagent if its door is two-way, otherwise left for the user |
+| `/as-build dark` | same as `auto`, but ready tickets run in parallel, each in its own worktree | the plan once; parked tickets wait for the user | the same PR, merged by a fresh subagent if its door is two-way, otherwise left for the user |
 
 `$ARGUMENTS` selects the mode: `auto` and `dark` follow `autonomous.md` in this folder, and empty or anything else runs Default.
 
 ## Default: one task
 
-A ticket is ready when it is open, has no `needs-human` label and no open PR, and every ticket in its `Blocked by` is closed. In `auto` and `dark`, a ticket is on the work branch when a commit there ends its body with `Part of #N`; it then counts as closed for its dependents and is no longer ready itself.
+Fetch the remote first: `main` in this skill means the remote's latest `main`.
 
-Pick the first ready ticket in the open `plan` issue's Task List. Then:
+A ticket is ready when it is open, has no `needs-human` label and no open PR whose body closes it, and every ticket in its `Blocked by` is closed. In `auto` and `dark`, a ticket is on the work branch when a commit on the work branch, and not on `main`, has its `Implements #N` line; it then counts as closed for its dependents and is no longer ready itself.
+
+Start from a clean working tree: if it has uncommitted changes, stop and ask the user how to handle them, so ticket commits never absorb unrelated work. Pick the first ready ticket in the open `plan` issue's Task List. Then:
 
 1. Create the branch per `.claude/skills/git-workflow-and-versioning/references/branch-naming.md`
-2. Invoke the as-test skill, then read the ticket's acceptance criteria
-3. Write a failing test for the expected behavior (RED)
-4. Implement the minimum code to pass the test (GREEN)
-5. Run the project's test, typecheck and lint scripts; all pass
-6. Commit with a message per the git-workflow-and-versioning skill
-7. Spawn the `code-reviewer` agent on the diff against `main`, naming the ticket. Fix every Critical and Required finding, re-run step 5, commit, and spawn it once more. If it still returns REQUEST CHANGES, stop and report the findings without opening a PR
-8. Run the project's build script; it passes. Then push the branch and open a PR to `main`, using the PR body below
-9. Stop. Leave the ticket open, because merging the PR closes it
+2. Install dependencies as the project's CI does
+3. Build the ticket's acceptance criteria with the as-test skill
+4. Run the checks the project's CI runs; all pass
+5. Commit with a message per the git-workflow-and-versioning skill
+6. Spawn the `code-reviewer` agent on the diff against `main`, naming the ticket. If it returns REQUEST CHANGES, fix every Critical and Required finding, re-run step 4, commit, and spawn it once more. If it still returns REQUEST CHANGES, push the branch unless it already has an open PR, then stop and report the findings without opening a PR
+7. Push the branch and open a PR to `main`, using the PR body below
+8. Stop. Leave the ticket open, because merging the PR closes it
 
 ## PR body
 
@@ -46,6 +47,6 @@ Closes #N
 - [what to verify by hand in the preview deployment]
 ```
 
-A two-way door is cheap to reverse. A one-way door is destructive or hard to reverse. When unsure, call it one-way. Blast radius is what the change could affect if it is wrong. Manual check is what a person should verify in the preview deployment before merging, drawn from the acceptance criteria, for what tests cannot cover.
+The PR closes each ticket it implements with its own `Closes #N` line. When every other ticket in the plan's Task List is closed, or closed by an open PR's body, it also closes the `plan` issue and its `prd` the same way.
 
-If any step fails, follow the debugging-and-error-recovery skill.
+A change is high-risk when it touches auth or permissions, destructive data migrations, deleting user data, payments, deploys, secrets, or anything `git revert` can't undo. A one-way door is a high-risk change, or one that touches persisted data shapes (including a key or format change, since a revert does not repair data already written), dependencies, CI, deploy or framework config, environment variables, or the agent instructions (`.claude/`, `CLAUDE.md`, `AGENTS.md`), or that removes or renames a public route. Any other change is a two-way door: cheap to reverse. When unsure, call it one-way. Blast radius is what the change could affect if it is wrong. Manual check is what a person should verify in the preview deployment before merging, drawn from the acceptance criteria, for what tests cannot cover.

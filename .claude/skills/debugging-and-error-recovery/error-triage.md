@@ -6,7 +6,7 @@ Test fails after code change:
 │   ├── Test is outdated → Update the test
 │   └── Code has a bug  → Fix the code
 ├── Did you change unrelated code? → Likely a side effect: shared state, imports, globals
-└── Test was already flaky? → Timing, order dependence, unrestored mocks
+└── Test was already flaky? → treat it as state-dependent (Reproduce, in SKILL.md)
 
 Build or typecheck fails:
 ├── Type error       → Read the error, check the types at the cited location
@@ -16,8 +16,6 @@ Build or typecheck fails:
 
 Runtime error:
 ├── Cannot read properties of undefined → trace where the value comes from
-├── Hydration mismatch → server and client render differently (browser-only APIs like
-│                        localStorage read during render)
 └── Unexpected behavior, no error → assert the data at each step in a test
 ```
 

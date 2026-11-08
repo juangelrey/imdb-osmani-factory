@@ -2,8 +2,8 @@
 
 ## Agent skills
 
-`.claude/` holds our own skills, adapted from agent-skills. Use them over any `agent-skills:` plugin
-skill with the same name.
+`.claude/` holds our own skills and agents, adapted from agent-skills. Use them over any
+`agent-skills:` plugin skill or agent that does the same job, whatever its name.
 
 ## Cloud sessions
 
