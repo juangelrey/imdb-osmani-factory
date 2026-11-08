@@ -3,6 +3,7 @@ import { formatShortDate } from "@/lib/catalog/format";
 import { titleHref } from "@/lib/catalog/map";
 import type { CareerEntry, CareerYear } from "@/lib/catalog/types";
 import { Poster } from "./poster";
+import { TitlePreview } from "./title-preview";
 
 interface CareerTimelineProps {
   career: CareerYear[];
@@ -49,7 +50,10 @@ interface TimelineEntryProps {
   yearMarker?: string;
 }
 
-function TimelineEntry({ entry: { title, releaseDate, upcoming, roles }, yearMarker }: TimelineEntryProps) {
+function TimelineEntry({
+  entry: { title, releaseDate, upcoming, roles, synopsis, previewPosterUrl },
+  yearMarker,
+}: TimelineEntryProps) {
   const date = releaseDate && formatShortDate(releaseDate);
 
   return (
@@ -74,13 +78,23 @@ function TimelineEntry({ entry: { title, releaseDate, upcoming, roles }, yearMar
         />
       </div>
       <div className="flex min-w-0 items-center gap-3">
-        <Poster
+        <TitlePreview
           colorKey={title.slug}
           name={title.name}
-          posterUrl={title.posterUrl}
-          size="thumb"
-          className="w-10 shrink-0"
-        />
+          href={titleHref(title)}
+          year={title.year}
+          rating={title.rating}
+          synopsis={synopsis}
+          posterUrl={previewPosterUrl}
+        >
+          <Poster
+            colorKey={title.slug}
+            name={title.name}
+            posterUrl={title.posterUrl}
+            size="thumb"
+            className="w-10 shrink-0"
+          />
+        </TitlePreview>
         <div className="min-w-0">
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <Link

@@ -16,7 +16,7 @@ export const MAX_PAGES = 500;
 
 const CAST_LIMIT = 10;
 
-export type PosterSize = "w92" | "w342" | "w500";
+export type PosterSize = "w92" | "w185" | "w342" | "w500";
 export type ProfileSize = "h632";
 
 /** URL slug for a name; `fallback` is used when nothing Latin is left, e.g. "千と千尋の神隠し". */
@@ -151,6 +151,8 @@ export function toCareer(credits: TmdbPersonMovieCredits, today: string): Career
       releaseDate: film.release_date || undefined,
       upcoming: Boolean(film.release_date && film.release_date > today),
       roles: [],
+      synopsis: film.overview?.trim() || undefined,
+      previewPosterUrl: posterUrl(film.poster_path, "w185"),
     };
     if (!entry.roles.includes(role)) entry.roles.push(role);
     byFilm.set(film.id, entry);

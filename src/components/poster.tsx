@@ -8,16 +8,18 @@ const SIZES = {
   profile: { width: 421, height: 632 },
   /** A TMDB w92 poster, for career timeline rows. */
   thumb: { width: 92, height: 138 },
+  /** A TMDB w185 poster, for the career preview card. */
+  preview: { width: 185, height: 278 },
 } as const;
 
 /**
- * Sizes that fill their container. A thumbnail has no built-in width, so the caller's width
+ * Sizes that fill their container. A thumbnail or preview has no built-in width, so the caller's width
  * class applies; with both, Tailwind's `w-full` would win and the thumbnail would stretch.
  */
 const FILL: ReadonlySet<keyof typeof SIZES> = new Set(["grid", "detail", "profile"]);
 
 /** Sizes shown in long lists, below the fold: their images load lazily. */
-const LAZY: ReadonlySet<keyof typeof SIZES> = new Set(["grid", "thumb"]);
+const LAZY: ReadonlySet<keyof typeof SIZES> = new Set(["grid", "thumb", "preview"]);
 
 interface PosterProps {
   /** Seeds the fallback gradient. */
@@ -52,7 +54,7 @@ export function Poster({ colorKey, name, posterUrl, size = "grid", className = "
   return (
     <div
       {...(alt ? { role: "img", "aria-label": alt } : { "aria-hidden": true })}
-      className={`flex aspect-[2/3] items-center justify-center rounded-md ${size === "thumb" ? "text-xs" : "text-4xl"} font-black tracking-wider text-white/90 shadow-inner ${className}`}
+      className={`flex aspect-[2/3] items-center justify-center rounded-md ${size === "thumb" ? "text-xs" : size === "preview" ? "text-2xl" : "text-4xl"} font-black tracking-wider text-white/90 shadow-inner ${className}`}
       style={{ backgroundImage: `linear-gradient(160deg, ${from}, ${to})` }}
     >
       {posterInitials(name)}

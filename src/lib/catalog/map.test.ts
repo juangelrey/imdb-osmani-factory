@@ -216,7 +216,7 @@ describe("toCareer", () => {
     ]);
   });
 
-  it("maps each film to a summary with a w92 thumbnail and its release date", () => {
+  it("maps each film to a summary with a w92 thumbnail, its release date, and a w185 preview poster and synopsis", () => {
     const [, , unforgiven] = toCareer((person as TmdbPersonDetails).movie_credits, TODAY);
     expect(unforgiven).toEqual({
       year: 1992,
@@ -234,9 +234,21 @@ describe("toCareer", () => {
           releaseDate: "1992-08-07",
           upcoming: false,
           roles: ["Director", "as Bill Munny"],
+          synopsis:
+            "William Munny, a retired outlaw turned pig farmer, takes on one last job to collect a bounty.",
+          previewPosterUrl: "https://image.tmdb.org/t/p/w185/54roTwbX9fltg85zjsmrooXAs12.jpg",
         },
       ],
     });
+  });
+
+  it("leaves the preview poster, synopsis and rating undefined when TMDB has none", () => {
+    const blank = { ...film(1, "Bare", "2001-01-01"), overview: " ", vote_average: 0, vote_count: 0 };
+    const [year] = toCareer({ cast: [{ ...blank, character: "Ann" }], crew: [] }, TODAY);
+    const [entry] = year.entries;
+    expect(entry.previewPosterUrl).toBeUndefined();
+    expect(entry.synopsis).toBeUndefined();
+    expect(entry.title.rating).toBeUndefined();
   });
 
   it("ignores crew jobs other than Director, including Co-Director", () => {

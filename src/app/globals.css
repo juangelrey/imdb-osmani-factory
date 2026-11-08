@@ -1,1 +1,32 @@
 @import "tailwindcss";
+
+/*
+ * The career preview card (title-preview.tsx), a popover in the top layer. Without CSS anchor
+ * positioning, the component sets `top` and `left` itself.
+ */
+.title-preview {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+}
+
+@supports (anchor-name: --a) {
+  /* Right of the thumbnail; else flipped up; else below or above it, centred in the viewport. */
+  .title-preview {
+    position-area: right span-bottom;
+    margin-inline-start: 0.75rem;
+    position-try-fallbacks: flip-block, --title-preview-below, --title-preview-above;
+  }
+}
+
+@position-try --title-preview-below {
+  position-area: bottom span-all;
+  justify-self: center;
+  margin: 0.75rem 0 0;
+}
+
+@position-try --title-preview-above {
+  position-area: top span-all;
+  justify-self: center;
+  margin: 0 0 0.75rem;
+}

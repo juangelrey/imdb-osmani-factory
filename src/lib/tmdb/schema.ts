@@ -61,6 +61,8 @@ export interface TmdbMovieDetails {
 /** A film in a person's `movie_credits`, carrying the movie's own fields. */
 export interface TmdbPersonMovieCredit extends TmdbMovieListItem {
   adult: boolean;
+  /** The film's synopsis; may be "" or missing. */
+  overview?: string | null;
   /** Present on live responses next to `adult`; softcore films are excluded like adult ones. */
   softcore?: boolean;
 }

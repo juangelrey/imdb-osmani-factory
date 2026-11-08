@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import type { CareerYear } from "@/lib/catalog/types";
 import { CareerTimeline } from "./career-timeline";
 
@@ -41,6 +41,8 @@ const career: CareerYear[] = [
         releaseDate: "1992-08-07",
         upcoming: false,
         roles: ["Director", "as William Munny"],
+        synopsis: "A retired outlaw takes on one last job.",
+        previewPosterUrl: "https://image.tmdb.org/t/p/w185/54roTwbX9fltg85zjsmrooXAs12.jpg",
       },
     ],
   },
@@ -108,6 +110,16 @@ describe("CareerTimeline", () => {
     const badges = screen.getAllByText("Upcoming");
     expect(badges).toHaveLength(1);
     expect(badges[0].closest("li")).toHaveTextContent("Next One");
+  });
+
+  it("makes each thumbnail open a preview card with the w185 poster, synopsis and an Open link", () => {
+    render(<CareerTimeline career={career} />);
+    expect(screen.getAllByRole("button", { name: /^Preview / })).toHaveLength(3);
+    fireEvent.click(screen.getByRole("button", { name: "Preview Unforgiven" }));
+    const card = screen.getByRole("dialog", { name: "Unforgiven" });
+    expect(card.querySelector("img")).toHaveAttribute("src", expect.stringContaining("/w185/"));
+    expect(card).toHaveTextContent("A retired outlaw takes on one last job.");
+    expect(within(card).getByRole("link", { name: "Open" })).toHaveAttribute("href", "/title/33-unforgiven");
   });
 
   it("renders nothing without credits", () => {

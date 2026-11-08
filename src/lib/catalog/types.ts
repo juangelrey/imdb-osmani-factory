@@ -78,6 +78,10 @@ export interface CareerEntry {
   upcoming: boolean;
   /** "Director" first, then "as <character>" (or "Actor") in billing order. */
   roles: string[];
+  /** The film's synopsis, for the preview card. The card's rating is `title.rating`. */
+  synopsis?: string;
+  /** Preview-card-size (w185) poster URL. */
+  previewPosterUrl?: string;
 }
 
 /** A year of a person's career; undated films form a "TBA" group with no year. */
