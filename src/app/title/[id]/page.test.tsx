@@ -1,7 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { notFound, permanentRedirect } from "next/navigation";
 import details from "@/lib/tmdb/fixtures/movie-details.json";
+import sparse from "@/lib/tmdb/fixtures/movie-details-sparse.json";
 import { STORAGE_KEY } from "@/lib/watchlist/watchlist";
 import TitlePage, { dynamicParams, generateMetadata, generateStaticParams, revalidate } from "./page";
 
@@ -55,7 +56,24 @@ describe("Title page", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const url = new URL(String((fetchMock.mock.calls[0] as unknown[])[0]));
     expect(url.pathname).toBe("/3/movie/603");
-    expect(url.searchParams.get("append_to_response")).toBe("credits");
+    expect(url.searchParams.get("append_to_response")).toBe("credits,recommendations");
+  });
+
+  it("suggests up to 12 recommended movies below the details, linking to their pages", async () => {
+    stubTmdb(details);
+    render(await TitlePage(params("603-the-matrix")));
+    const section = screen.getByRole("region", { name: "If you liked The Matrix, you might also like…" });
+    const links = within(section).getAllByRole("link");
+    expect(links).toHaveLength(12);
+    expect(links[0]).toHaveAttribute("href", "/title/604-the-matrix-reloaded");
+    expect(within(section).queryByText("Adult Feature")).not.toBeInTheDocument();
+  });
+
+  it("shows no recommendations section for a movie without any", async () => {
+    stubTmdb(sparse);
+    render(await TitlePage(params("1184918-untitled-short")));
+    expect(screen.getByRole("heading", { level: 1, name: "Untitled Short" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: /you might also like/ })).not.toBeInTheDocument();
   });
 
   it("names the page after the title", async () => {

@@ -5,11 +5,12 @@ import genreList from "@/lib/tmdb/fixtures/genre-movie-list.json";
 import genreTvList from "@/lib/tmdb/fixtures/genre-tv-list.json";
 import search from "@/lib/tmdb/fixtures/search-movie.json";
 import searchTv from "@/lib/tmdb/fixtures/search-tv.json";
+import searchPerson from "@/lib/tmdb/fixtures/search-person.json";
 import person from "@/lib/tmdb/fixtures/person-details.json";
 import tvDetails from "@/lib/tmdb/fixtures/tv-details.json";
 import tvSeason from "@/lib/tmdb/fixtures/tv-season.json";
 import { TmdbError } from "@/lib/tmdb/client";
-import { discoverShows, discoverTitles, getPerson, getShow, getTitle, listGenres, searchShows, searchTitles } from "./queries";
+import { discoverShows, discoverTitles, getPerson, getShow, getTitle, listGenres, searchPeople, searchShows, searchTitles } from "./queries";
 
 function stubFetch(body: unknown, status = 200) {
   const fetchMock = vi.fn(async () => Response.json(body, { status }));
@@ -17,8 +18,8 @@ function stubFetch(body: unknown, status = 200) {
   return fetchMock;
 }
 
-function requestedUrl(fetchMock: ReturnType<typeof stubFetch>) {
-  return new URL(String((fetchMock.mock.calls[0] as unknown[])[0]));
+function requestedUrl(fetchMock: { mock: { calls: unknown[][] } }) {
+  return new URL(String(fetchMock.mock.calls[0][0]));
 }
 
 beforeEach(() => {
@@ -31,12 +32,20 @@ afterEach(() => {
 });
 
 describe("getTitle", () => {
-  it("fetches the movie with credits appended", async () => {
+  it("fetches the movie with credits and recommendations appended, in one request", async () => {
     const fetchMock = stubFetch(details);
     await getTitle(603);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     const url = requestedUrl(fetchMock);
     expect(url.pathname).toBe("/3/movie/603");
-    expect(url.searchParams.get("append_to_response")).toBe("credits");
+    expect(url.searchParams.get("append_to_response")).toBe("credits,recommendations");
+  });
+
+  it("maps the appended recommendations, dropping adult titles", async () => {
+    stubFetch(details);
+    const title = await getTitle(603);
+    expect(title?.recommendations).toHaveLength(12);
+    expect(title?.recommendations.map(({ id }) => id)).not.toContain(990001);
   });
 
   it("maps the response into a Title", async () => {
@@ -72,15 +81,23 @@ function requestedUrls(fetchMock: { mock: { calls: unknown[][] } }) {
 }
 
 describe("getShow", () => {
-  it("makes exactly one request for the show with credits and season 1 appended, in English", async () => {
+  it("makes exactly one request for the show with credits, recommendations and season 1 appended, in English", async () => {
     const fetchMock = stubFetch({ ...tvDetails, "season/1": tvSeason });
     const show = await getShow(1396);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const url = requestedUrl(fetchMock);
     expect(url.pathname).toBe("/3/tv/1396");
-    expect(url.searchParams.get("append_to_response")).toBe("credits,season/1");
+    expect(url.searchParams.get("append_to_response")).toBe("credits,recommendations,season/1");
     expect(url.searchParams.get("language")).toBe("en-US");
     expect(show?.season).toMatchObject({ number: 1, name: "Season 1" });
+  });
+
+  it("maps the appended recommendations, dropping adult and softcore shows", async () => {
+    stubFetch({ ...tvDetails, "season/1": tvSeason });
+    const show = await getShow(1396);
+    expect(show?.recommendations).toHaveLength(12);
+    expect(show?.recommendations.map(({ id }) => id)).not.toContain(990101);
+    expect(show?.recommendations.map(({ id }) => id)).not.toContain(990102);
   });
 
   it("appends the requested season to the same request", async () => {
@@ -88,7 +105,7 @@ describe("getShow", () => {
     const fetchMock = stubFetch({ ...tvDetails, "season/2": seasonTwo });
     const show = await getShow(1396, 2);
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(requestedUrl(fetchMock).searchParams.get("append_to_response")).toBe("credits,season/2");
+    expect(requestedUrl(fetchMock).searchParams.get("append_to_response")).toBe("credits,recommendations,season/2");
     expect(show?.season?.number).toBe(2);
   });
 
@@ -97,8 +114,9 @@ describe("getShow", () => {
     const show = await getShow(1396, 99);
     const urls = requestedUrls(fetchMock);
     expect(urls.map(({ pathname }) => pathname)).toEqual(["/3/tv/1396", "/3/tv/1396/season/1"]);
-    expect(urls[0].searchParams.get("append_to_response")).toBe("credits,season/99");
+    expect(urls[0].searchParams.get("append_to_response")).toBe("credits,recommendations,season/99");
     expect(show?.season?.number).toBe(1);
+    expect(show?.recommendations).toHaveLength(12);
   });
 
   it("falls back to the first listed season when there is no season 1", async () => {
@@ -308,10 +326,40 @@ describe("discoverShows", () => {
   });
 });
 
+/** A fake TMDB search: answers each `page` param with 20 items, every fifth one undated. */
+function stubSearchPages(kind: "movie" | "tv", totalPages: number) {
+  const fetchMock = vi.fn(async (input: string | URL) => {
+    const page = Number(new URL(String(input)).searchParams.get("page"));
+    const results = Array.from({ length: 20 }, (_, index) => {
+      const id = page * 100 + index;
+      // Dates scattered across pages, so a correct sort has to look past TMDB's own order.
+      const date = index % 5 === 4 ? "" : `${1960 + ((id * 37) % 70)}-0${1 + (index % 9)}-15`;
+      return kind === "movie"
+        ? { id, title: `Movie ${id}`, release_date: date, vote_average: 7, vote_count: 100, poster_path: null }
+        : { id, name: `Show ${id}`, first_air_date: date, vote_average: 7, vote_count: 100, poster_path: null };
+    });
+    return Response.json({ page, results, total_pages: totalPages, total_results: totalPages * 20 - 3 });
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+}
+
+function requestedPages(fetchMock: ReturnType<typeof stubSearchPages>) {
+  return fetchMock.mock.calls.map(([input]) => new URL(String(input)).searchParams.get("page"));
+}
+
+/** Result years in page order must run newest first, with undated results last. */
+function expectNewestFirst(years: (number | undefined)[]) {
+  const dated = years.filter((year) => year !== undefined);
+  expect(dated).toEqual([...dated].sort((a, b) => b - a));
+  expect(years.slice(dated.length).every((year) => year === undefined)).toBe(true);
+}
+
 describe("searchTitles", () => {
-  it("searches non-adult movies by the trimmed query and page", async () => {
+  it("searches non-adult movies by relevance with TMDB's paging, in one call", async () => {
     const fetchMock = stubFetch(search);
-    const page = await searchTitles("  matrix ", 2);
+    const page = await searchTitles("  matrix ", 2, "relevance");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     const url = requestedUrl(fetchMock);
     expect(url.pathname).toBe("/3/search/movie");
     expect(url.searchParams.get("query")).toBe("matrix");
@@ -322,17 +370,94 @@ describe("searchTitles", () => {
     expect(page.totalPages).toBe(4);
   });
 
+  it("sorts by recency across the first 5 TMDB pages, fetching page 1 first", async () => {
+    const fetchMock = stubSearchPages("movie", 9);
+    const page1 = await searchTitles("batman", 1, "recency");
+    expect(fetchMock).toHaveBeenCalledTimes(5);
+    expect(requestedPages(fetchMock)[0]).toBe("1");
+    expect(new Set(requestedPages(fetchMock))).toEqual(new Set(["1", "2", "3", "4", "5"]));
+    expect(requestedUrl(fetchMock).searchParams.get("query")).toBe("batman");
+    expect(page1).toMatchObject({ page: 1, totalPages: 5, totalResults: 100 });
+
+    const pages = [page1];
+    for (const number of [2, 3, 4, 5]) pages.push(await searchTitles("batman", number, "recency"));
+    expect(pages.map(({ page }) => page)).toEqual([1, 2, 3, 4, 5]);
+    const years = pages.flatMap(({ results }) => results.map(({ year }) => year));
+    expect(years).toHaveLength(100);
+    expect(years.filter((year) => year === undefined)).toHaveLength(20);
+    expectNewestFirst(years);
+  });
+
+  it("sorts by rating over the same 5-page window, highest first", async () => {
+    const fetchMock = vi.fn(async (input: string | URL) => {
+      const page = Number(new URL(String(input)).searchParams.get("page"));
+      const results = Array.from({ length: 20 }, (_, index) => {
+        const id = page * 100 + index;
+        // Ratings scattered across pages, so a correct sort has to look past TMDB's own order.
+        const vote_average = ((id * 37) % 100) / 10;
+        return { id, title: `Movie ${id}`, release_date: "2000-01-01", vote_average, vote_count: 100, poster_path: null };
+      });
+      return Response.json({ page, results, total_pages: 9, total_results: 177 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const page1 = await searchTitles("batman", 1, "rating");
+    expect(fetchMock).toHaveBeenCalledTimes(5);
+    expect(page1).toMatchObject({ page: 1, totalPages: 5, totalResults: 100 });
+    const pages = [page1];
+    for (const number of [2, 3, 4, 5]) pages.push(await searchTitles("batman", number, "rating"));
+    const ratings = pages.flatMap(({ results }) => results.map(({ rating }) => rating ?? 0));
+    expect(ratings).toHaveLength(100);
+    expect(ratings).toEqual([...ratings].sort((a, b) => b - a));
+  });
+
+  it("makes only as many calls as TMDB has pages when there are fewer than 5", async () => {
+    const fetchMock = stubSearchPages("movie", 2);
+    const page = await searchTitles("batman", 1, "recency");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(page).toMatchObject({ totalPages: 2, totalResults: 40 });
+  });
+
+  it("lists a title once when TMDB repeats it on a later page", async () => {
+    const fetchMock = vi.fn(async (input: string | URL) => {
+      const page = Number(new URL(String(input)).searchParams.get("page"));
+      // Page 2 repeats the last two titles of page 1, as TMDB does when its order shifts between calls.
+      const results = (page === 1 ? [1, 2, 3] : [2, 3, 4]).map((id) => ({
+        id,
+        title: `Movie ${id}`,
+        release_date: `200${id}-01-01`,
+        vote_average: 7,
+        vote_count: 100,
+        poster_path: null,
+      }));
+      return Response.json({ page, results, total_pages: 2, total_results: 6 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const page = await searchTitles("batman", 1, "recency");
+    expect(page.results.map(({ id }) => id)).toEqual([4, 3, 2, 1]);
+    expect(page).toMatchObject({ totalPages: 1, totalResults: 4 });
+  });
+
+  it("returns an empty page past the window without calling TMDB", async () => {
+    const fetchMock = stubSearchPages("movie", 9);
+    const page = await searchTitles("batman", 6, "recency");
+    expect(page.results).toEqual([]);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("returns an empty page for a blank query without calling TMDB", async () => {
     const fetchMock = stubFetch(search);
-    await expect(searchTitles("   ", 1)).resolves.toEqual({ results: [], page: 1, totalPages: 0, totalResults: 0 });
+    const empty = { results: [], page: 1, totalPages: 0, totalResults: 0 };
+    await expect(searchTitles("   ", 1, "relevance")).resolves.toEqual(empty);
+    await expect(searchTitles("   ", 1, "recency")).resolves.toEqual(empty);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 
 describe("searchShows", () => {
-  it("searches non-adult TV series by the trimmed query and page", async () => {
+  it("searches non-adult TV series by relevance with TMDB's paging, in one call", async () => {
     const fetchMock = stubFetch(searchTv);
-    const page = await searchShows("  breaking ", 2);
+    const page = await searchShows("  breaking ", 2, "relevance");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     const url = requestedUrl(fetchMock);
     expect(url.pathname).toBe("/3/search/tv");
     expect(url.searchParams.get("query")).toBe("breaking");
@@ -347,9 +472,48 @@ describe("searchShows", () => {
     expect(page.totalPages).toBe(6);
   });
 
+  it("sorts TV by first air date across the window, newest first, undated last", async () => {
+    const fetchMock = stubSearchPages("tv", 3);
+    const page = await searchShows("breaking", 1, "recency");
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(requestedUrl(fetchMock).pathname).toBe("/3/search/tv");
+    expect(page).toMatchObject({ totalPages: 3, totalResults: 60 });
+    expect(page.results.every(({ kind }) => kind === "tv")).toBe(true);
+    const pages = [page, await searchShows("breaking", 2, "recency"), await searchShows("breaking", 3, "recency")];
+    expectNewestFirst(pages.flatMap(({ results }) => results.map(({ year }) => year)));
+  });
+
   it("returns an empty page for a blank query without calling TMDB", async () => {
     const fetchMock = stubFetch(searchTv);
-    await expect(searchShows("   ", 1)).resolves.toEqual({ results: [], page: 1, totalPages: 0, totalResults: 0 });
+    const empty = { results: [], page: 1, totalPages: 0, totalResults: 0 };
+    await expect(searchShows("   ", 1, "relevance")).resolves.toEqual(empty);
+    await expect(searchShows("   ", 1, "recency")).resolves.toEqual(empty);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("searchPeople", () => {
+  it("searches non-adult people with TMDB's paging, in one call", async () => {
+    const fetchMock = stubFetch(searchPerson);
+    const page = await searchPeople("  nolan ", 2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const url = requestedUrl(fetchMock);
+    expect(url.pathname).toBe("/3/search/person");
+    expect(url.searchParams.get("query")).toBe("nolan");
+    expect(url.searchParams.get("include_adult")).toBe("false");
+    expect(url.searchParams.get("page")).toBe("2");
+    expect(page).toMatchObject({ totalPages: 3, totalResults: 52 });
+  });
+
+  it("keeps TMDB's order and skips adult profiles", async () => {
+    stubFetch(searchPerson);
+    const page = await searchPeople("nolan", 1);
+    expect(page.results.map(({ name }) => name)).toEqual(["Christopher Nolan", "Jonathan Nolan", "Kathleen Nolan"]);
+  });
+
+  it("returns an empty page for a blank query without calling TMDB", async () => {
+    const fetchMock = stubFetch(searchPerson);
+    await expect(searchPeople("   ", 1)).resolves.toEqual({ results: [], page: 1, totalPages: 0, totalResults: 0 });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
-import type { Paged, TitleSummary } from "@/lib/catalog/types";
+import type { Paged, PersonSummary, TitleSummary } from "@/lib/catalog/types";
 import { SearchResults, searchHref } from "./search-results";
 
 const matrix: TitleSummary = { kind: "movie", id: 603, slug: "the-matrix", name: "The Matrix", year: 1999, rating: 8.2 };
@@ -17,6 +17,18 @@ describe("searchHref", () => {
     expect(searchHref("the matrix", 2, "movie")).toBe("/search?q=the+matrix&page=2");
     expect(searchHref("breaking", 1, "tv")).toBe("/search?q=breaking&type=tv");
     expect(searchHref("breaking", 3, "tv")).toBe("/search?q=breaking&type=tv&page=3");
+  });
+
+  it("adds the sort only when it is not the default Recency", () => {
+    expect(searchHref("batman", 1, "movie", "recency")).toBe("/search?q=batman");
+    expect(searchHref("batman", 1, "movie", "relevance")).toBe("/search?q=batman&sort=relevance");
+    expect(searchHref("batman", 2, "tv", "relevance")).toBe("/search?q=batman&type=tv&sort=relevance&page=2");
+  });
+
+  it("keeps type=person and never adds a sort to a people search", () => {
+    expect(searchHref("nolan", 1, "person")).toBe("/search?q=nolan&type=person");
+    expect(searchHref("nolan", 2, "person", "relevance")).toBe("/search?q=nolan&type=person&page=2");
+    expect(searchHref("nolan", 3, "person", "rating")).toBe("/search?q=nolan&type=person&page=3");
   });
 });
 
@@ -59,8 +71,54 @@ describe("SearchResults", () => {
     expect(within(pagination).getByRole("link", { name: /Next/ })).toHaveAttribute("href", "/search?q=breaking&type=tv&page=2");
   });
 
+  it("paginates keeping the sort", () => {
+    render(
+      <SearchResults query="batman" kind="tv" sort="relevance" results={paged([breakingBad], { totalPages: 6, totalResults: 117 })} />,
+    );
+    const pagination = screen.getByRole("navigation", { name: "Pagination" });
+    expect(within(pagination).getByRole("link", { name: /Next/ })).toHaveAttribute(
+      "href",
+      "/search?q=batman&type=tv&sort=relevance&page=2",
+    );
+  });
+
   it("says no series match when a TV search finds nothing", () => {
     render(<SearchResults query="zzz" kind="tv" results={paged([])} />);
     expect(screen.getByText("No series match “zzz”.")).toBeInTheDocument();
+  });
+});
+
+describe("SearchResults for people", () => {
+  const nolan: PersonSummary = { id: 525, slug: "christopher-nolan", name: "Christopher Nolan", knownFor: "Directing" };
+
+  function people(results: PersonSummary[], extra: Partial<Paged<PersonSummary>> = {}): Paged<PersonSummary> {
+    return { results, page: 1, totalPages: results.length ? 1 : 0, totalResults: results.length, ...extra };
+  }
+
+  it("lists person cards linking to person pages, with TMDB's count", () => {
+    render(<SearchResults query="nolan" kind="person" results={people([nolan], { totalResults: 52 })} />);
+    expect(screen.getByText("52 results for “nolan”")).toBeInTheDocument();
+    const grid = screen.getByRole("list", { name: "People" });
+    expect(within(grid).getByRole("link", { name: /Christopher Nolan/ })).toHaveAttribute("href", "/person/525-christopher-nolan");
+    expect(screen.queryByRole("list", { name: "Titles" })).not.toBeInTheDocument();
+  });
+
+  it("says no people match when nothing does", () => {
+    render(<SearchResults query="zzz" kind="person" results={people([])} />);
+    expect(screen.getByText("No people match “zzz”.")).toBeInTheDocument();
+  });
+
+  it("asks for a name when the query is blank", () => {
+    render(<SearchResults query="  " kind="person" results={people([])} />);
+    expect(screen.getByText("Type a name in the search box to find people.")).toBeInTheDocument();
+    expect(screen.queryByRole("list")).not.toBeInTheDocument();
+  });
+
+  it("paginates keeping type=person and without a sort", () => {
+    render(
+      <SearchResults query="nolan" kind="person" sort="relevance" results={people([nolan], { totalPages: 3, totalResults: 52 })} />,
+    );
+    const pagination = screen.getByRole("navigation", { name: "Pagination" });
+    expect(within(pagination).getByRole("link", { name: /Next/ })).toHaveAttribute("href", "/search?q=nolan&type=person&page=2");
   });
 });

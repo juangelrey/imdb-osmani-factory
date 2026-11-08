@@ -21,6 +21,15 @@ export interface TmdbMovieListItem {
   genre_ids?: number[];
 }
 
+/** Flags TMDB puts on list items in `recommendations`; adult and softcore titles are skipped. */
+export interface TmdbAdultFlags {
+  adult?: boolean;
+  softcore?: boolean;
+}
+
+/** A title's `recommendations`, appended to its details request: one page of the same kind of title. */
+export type TmdbRecommendations<T> = TmdbPaged<T & TmdbAdultFlags>;
+
 export interface TmdbPaged<T> {
   page: number;
   results: T[];
@@ -56,6 +65,8 @@ export interface TmdbMovieDetails {
     cast: TmdbCastMember[];
     crew: TmdbCrewMember[];
   };
+  /** Present when requested through `append_to_response`. */
+  recommendations?: TmdbRecommendations<TmdbMovieListItem>;
 }
 
 /** Fields every row of a person's `combined_credits` carries, movie or TV. */
@@ -115,6 +126,16 @@ export interface TmdbPersonDetails {
   combined_credits: TmdbPersonCombinedCredits;
 }
 
+/** A person as it appears in `/search/person` results, in TMDB's popularity order. */
+export interface TmdbPersonListItem {
+  id: number;
+  name: string;
+  adult: boolean;
+  /** e.g. "Acting" or "Directing"; may be "" or null. */
+  known_for_department: string | null;
+  profile_path: string | null;
+}
+
 /** A TV show as it appears in TV discover and search results. */
 export interface TmdbTvListItem {
   id: number;
@@ -161,8 +182,8 @@ export interface TmdbSeason {
 }
 
 /**
- * `GET /tv/{id}?append_to_response=credits,season/{n}`. TMDB leaves `season/{n}` out when the show
- * has no season `n`.
+ * `GET /tv/{id}?append_to_response=credits,recommendations,season/{n}`. TMDB leaves `season/{n}` out when
+ * the show has no season `n`.
  */
 export interface TmdbTvDetails {
   id: number;
@@ -189,5 +210,7 @@ export interface TmdbTvDetails {
   credits: {
     cast: TmdbCastMember[];
   };
+  /** Present when requested through `append_to_response`. */
+  recommendations?: TmdbRecommendations<TmdbTvListItem>;
   [season: `season/${number}`]: TmdbSeason | undefined;
 }

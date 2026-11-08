@@ -1,23 +1,29 @@
 import Link from "next/link";
-import type { TitleKind } from "@/lib/catalog/types";
+import type { SearchKind } from "@/lib/catalog/search-params";
 
-const KINDS: { kind: TitleKind; label: string }[] = [
-  { kind: "movie", label: "Movies" },
-  { kind: "tv", label: "TV" },
-];
+const LABELS: Record<SearchKind, string> = { movie: "Movies", tv: "TV", person: "People" };
 
-interface MediaSwitchProps {
-  current: TitleKind;
-  /** The URL for each kind. Callers decide what to keep (the query, the sort) and what to reset (the page). */
-  hrefForKind: (kind: TitleKind) => string;
+/** "Movies or TV", "Movies, TV or People": the switch's accessible name, from the kinds it shows. */
+function navLabel(kinds: readonly SearchKind[]): string {
+  const labels = kinds.map((kind) => LABELS[kind]);
+  return labels.length < 2 ? labels.join("") : `${labels.slice(0, -1).join(", ")} or ${labels.at(-1)}`;
 }
 
-/** Movies / TV links, the current kind marked `aria-current`. Shared by search and browse. */
-export function MediaSwitch({ current, hrefForKind }: MediaSwitchProps) {
+interface MediaSwitchProps<K extends SearchKind> {
+  /** The kinds to offer, in order: browse shows Movies and TV, search adds People. */
+  kinds: readonly K[];
+  /** The kind on view; a kind not in `kinds` marks none. */
+  current: SearchKind;
+  /** The URL for each kind. Callers decide what to keep (the query, the sort) and what to reset (the page). */
+  hrefForKind: (kind: K) => string;
+}
+
+/** Links to each kind, the current one marked `aria-current`. Shared by search and browse. */
+export function MediaSwitch<K extends SearchKind>({ kinds, current, hrefForKind }: MediaSwitchProps<K>) {
   return (
-    <nav aria-label="Movies or TV">
+    <nav aria-label={navLabel(kinds)}>
       <ul className="inline-flex rounded-md border border-zinc-700 p-0.5 text-sm">
-        {KINDS.map(({ kind, label }) => {
+        {kinds.map((kind) => {
           const selected = kind === current;
           return (
             <li key={kind}>
@@ -28,7 +34,7 @@ export function MediaSwitch({ current, hrefForKind }: MediaSwitchProps) {
                   selected ? "bg-amber-400/15 text-amber-200" : "text-zinc-300 hover:text-amber-300"
                 }`}
               >
-                {label}
+                {LABELS[kind]}
               </Link>
             </li>
           );

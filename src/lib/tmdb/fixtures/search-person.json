@@ -1,0 +1,11 @@
+{
+  "page": 1,
+  "results": [
+    { "adult": false, "gender": 2, "id": 525, "known_for_department": "Directing", "name": "Christopher Nolan", "original_name": "Christopher Nolan", "popularity": 8.63, "profile_path": "/xuAIuYSmsUzKlUMBFGVZaWsY3DZ.jpg", "known_for": [] },
+    { "adult": false, "gender": 2, "id": 527, "known_for_department": "Writing", "name": "Jonathan Nolan", "original_name": "Jonathan Nolan", "popularity": 3.12, "profile_path": "/qgTOwfg2B4C0ZFGAP4EnRZ7domo.jpg", "known_for": [] },
+    { "adult": true, "gender": 1, "id": 990002, "known_for_department": "Acting", "name": "Adult Profile", "original_name": "Adult Profile", "popularity": 1.5, "profile_path": "/adult.jpg", "known_for": [] },
+    { "adult": false, "gender": 0, "id": 3001234, "known_for_department": "", "name": "Kathleen Nolan", "original_name": "Kathleen Nolan", "popularity": 0.4, "profile_path": null, "known_for": [] }
+  ],
+  "total_pages": 3,
+  "total_results": 52
+}

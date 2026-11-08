@@ -6,18 +6,31 @@ import type {
   TmdbMovieListItem,
   TmdbPaged,
   TmdbPersonDetails,
+  TmdbPersonListItem,
   TmdbSeason,
   TmdbTvDetails,
   TmdbTvListItem,
 } from "@/lib/tmdb/schema";
 import type { BrowseState, SortKey } from "./browse-params";
-import { defaultSeason, toGenre, toPaged, toPerson, toShow, toShowSummary, toSummary, toTitle } from "./map";
-import type { Genre, Paged, Person, Show, ShowSummary, Title, TitleKind, TitleSummary } from "./types";
+import {
+  defaultSeason,
+  toGenre,
+  toPaged,
+  toPerson,
+  toPersonSearchPage,
+  toShow,
+  toShowSummary,
+  toSummary,
+  toTitle,
+} from "./map";
+import type { SearchSortKey } from "./search-params";
+import { SEARCH_WINDOW_PAGES, sortSearchItems, windowPage, type SearchItem } from "./search-sort";
+import type { Genre, Paged, Person, PersonSummary, Show, ShowSummary, Title, TitleKind, TitleSummary } from "./types";
 
-/** A movie with credits, or undefined when TMDB does not know the id. Other failures throw. */
+/** A movie with credits and recommendations in one request, or undefined when TMDB does not know the id. Other failures throw. */
 export async function getTitle(id: number): Promise<Title | undefined> {
   try {
-    return toTitle(await tmdbFetch<TmdbMovieDetails>(`/movie/${id}`, { append_to_response: "credits" }));
+    return toTitle(await tmdbFetch<TmdbMovieDetails>(`/movie/${id}`, { append_to_response: "credits,recommendations" }));
   } catch (error) {
     if (error instanceof TmdbError && error.status === 404) return undefined;
     throw error;
@@ -25,14 +38,14 @@ export async function getTitle(id: number): Promise<Title | undefined> {
 }
 
 /**
- * A TV show with credits and the episodes of season `season` (default 1) in one request, or undefined when
+ * A TV show with credits, recommendations and the episodes of season `season` (default 1) in one request, or undefined when
  * TMDB does not know the id or flags the show adult or softcore. When the show has no such season, one more
  * request fetches its default season (season 1, else the first listed). Other failures throw.
  */
 export async function getShow(id: number, season = 1): Promise<Show | undefined> {
   let show: TmdbTvDetails;
   try {
-    show = await tmdbFetch<TmdbTvDetails>(`/tv/${id}`, { append_to_response: `credits,season/${season}` });
+    show = await tmdbFetch<TmdbTvDetails>(`/tv/${id}`, { append_to_response: `credits,recommendations,season/${season}` });
   } catch (error) {
     if (error instanceof TmdbError && error.status === 404) return undefined;
     throw error;
@@ -112,26 +125,55 @@ export async function discoverShows({ genre, sort, page }: BrowseState): Promise
 
 const NO_RESULTS: Paged<never> = { results: [], page: 1, totalPages: 0, totalResults: 0 };
 
-/** Search movies by title. A blank query returns no results without calling TMDB. */
-export async function searchTitles(query: string, page: number): Promise<Paged<TitleSummary>> {
+/**
+ * One page of a TMDB search. Relevance is TMDB's own page: one call. Any other sort fetches page 1, then
+ * the rest of the first `SEARCH_WINDOW_PAGES` pages in parallel, sorts the raw items (they carry the full
+ * date, which summaries reduce to a year) and pages through that window: at most 5 calls. A blank query,
+ * or a sorted page past the window, returns no results without calling TMDB.
+ */
+async function search<T extends SearchItem, U>(
+  path: string,
+  query: string,
+  page: number,
+  sort: SearchSortKey,
+  map: (item: T) => U,
+): Promise<Paged<U>> {
   const trimmed = query.trim();
   if (!trimmed) return NO_RESULTS;
-  const response = await tmdbFetch<TmdbPaged<TmdbMovieListItem>>("/search/movie", {
-    query: trimmed,
-    include_adult: false,
-    page,
-  });
-  return toPaged(response, toSummary);
+  const fetchPage = (number: number) =>
+    tmdbFetch<TmdbPaged<T>>(path, { query: trimmed, include_adult: false, page: number });
+  if (sort === "relevance") return toPaged(await fetchPage(page), map);
+  if (page > SEARCH_WINDOW_PAGES) return { ...NO_RESULTS, page };
+
+  const first = await fetchPage(1);
+  const lastPage = Math.min(first.total_pages, SEARCH_WINDOW_PAGES);
+  const rest = await Promise.all(Array.from({ length: Math.max(lastPage - 1, 0) }, (_, index) => fetchPage(index + 2)));
+  // TMDB can repeat a title on a later page when its order shifts between calls; keep the first.
+  const unique = new Map<number, T>();
+  for (const item of [first, ...rest].flatMap(({ results }) => results)) if (!unique.has(item.id)) unique.set(item.id, item);
+  const items = sortSearchItems([...unique.values()], sort);
+  const window = windowPage(items, page);
+  return { ...window, results: window.results.map(map) };
 }
 
-/** Search TV series by name. A blank query returns no results without calling TMDB. */
-export async function searchShows(query: string, page: number): Promise<Paged<ShowSummary>> {
+/** Search movies by title, in the given sort. */
+export async function searchTitles(query: string, page: number, sort: SearchSortKey): Promise<Paged<TitleSummary>> {
+  return search<TmdbMovieListItem, TitleSummary>("/search/movie", query, page, sort, toSummary);
+}
+
+/** Search TV series by name, in the given sort (Recency is by first air date). */
+export async function searchShows(query: string, page: number, sort: SearchSortKey): Promise<Paged<ShowSummary>> {
+  return search<TmdbTvListItem, ShowSummary>("/search/tv", query, page, sort, toShowSummary);
+}
+
+/**
+ * Search people by name: TMDB's own order (popularity) and paging, one call per page, adult profiles
+ * skipped. A blank query returns no results without calling TMDB.
+ */
+export async function searchPeople(query: string, page: number): Promise<Paged<PersonSummary>> {
   const trimmed = query.trim();
   if (!trimmed) return NO_RESULTS;
-  const response = await tmdbFetch<TmdbPaged<TmdbTvListItem>>("/search/tv", {
-    query: trimmed,
-    include_adult: false,
-    page,
-  });
-  return toPaged(response, toShowSummary);
+  return toPersonSearchPage(
+    await tmdbFetch<TmdbPaged<TmdbPersonListItem>>("/search/person", { query: trimmed, include_adult: false, page }),
+  );
 }

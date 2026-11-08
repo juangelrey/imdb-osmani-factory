@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { EpisodeList } from "@/components/episode-list";
+import { Recommendations } from "@/components/recommendations";
 import { SeasonPicker } from "@/components/season-picker";
 import { ShowDetails } from "@/components/show-details";
 import { WatchlistButton } from "@/components/watchlist-button";
@@ -50,6 +51,7 @@ export default async function ShowPage({ params, searchParams }: ShowPageProps) 
           <EpisodeList season={show.season} today={today()} />
         </div>
       )}
+      <Recommendations name={show.name} titles={show.recommendations} />
     </div>
   );
 }

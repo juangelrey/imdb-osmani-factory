@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
+import { Recommendations } from "@/components/recommendations";
 import { TitleDetails } from "@/components/title-details";
 import { WatchlistButton } from "@/components/watchlist-button";
 import { parseTitleParam, titleHref } from "@/lib/catalog/map";
@@ -34,5 +35,10 @@ export default async function TitlePage({ params }: TitlePageProps) {
   const { title, canonical } = await findTitle((await params).id);
   if (!title) notFound();
   if (!canonical) permanentRedirect(titleHref(title));
-  return <TitleDetails title={title} actions={<WatchlistButton entry={entryFromTitle(title)} />} />;
+  return (
+    <div className="space-y-10">
+      <TitleDetails title={title} actions={<WatchlistButton entry={entryFromTitle(title)} />} />
+      <Recommendations name={title.name} titles={title.recommendations} />
+    </div>
+  );
 }

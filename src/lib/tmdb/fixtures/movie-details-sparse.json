@@ -11,5 +11,6 @@
   "credits": {
     "cast": [],
     "crew": [{ "id": 4870211, "name": "Sam Ortiz", "job": "Producer", "department": "Production" }]
-  }
+  },
+  "recommendations": { "page": 1, "results": [], "total_pages": 0, "total_results": 0 }
 }

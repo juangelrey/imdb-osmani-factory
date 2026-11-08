@@ -41,5 +41,27 @@
       { "id": 1223197, "name": "Laura Fraser", "character": "Lydia Rodarte-Quayle", "order": 9 },
       { "id": 1046460, "name": "Jesse Plemons", "character": "Todd Alquist", "order": 10 }
     ]
+  },
+  "recommendations": {
+    "page": 1,
+    "results": [
+      { "adult": false, "softcore": false, "media_type": "tv", "id": 60059, "name": "Better Call Saul", "first_air_date": "2015-02-08", "vote_average": 8.7, "vote_count": 7073, "poster_path": "/fC2HDm5t0kHl7mTm7jxMR31b7by.jpg" },
+      { "adult": false, "softcore": false, "media_type": "tv", "id": 80968, "name": "Narcos: Mexico", "first_air_date": "2018-11-16", "vote_average": 7.9, "vote_count": 1565, "poster_path": "/aXwMx8OvRFMfI1RmkbJm6Bq1jVg.jpg" },
+      { "adult": true, "softcore": false, "media_type": "tv", "id": 990101, "name": "Adult Series", "first_air_date": "2019-01-01", "vote_average": 5.0, "vote_count": 12, "poster_path": "/adultSeries.jpg" },
+      { "adult": false, "softcore": false, "media_type": "tv", "id": 71694, "name": "Snowfall", "first_air_date": "2017-07-05", "vote_average": 8.4, "vote_count": 827, "poster_path": "/y7ntzl7msiaS6o7dvDbNG7XFYcR.jpg" },
+      { "adult": false, "softcore": false, "media_type": "tv", "id": 63351, "name": "Narcos", "first_air_date": "2015-08-28", "vote_average": 8.1, "vote_count": 3542, "poster_path": "/rTmal9fDbwh5F0waol2hq35U4ah.jpg" },
+      { "adult": false, "softcore": true, "media_type": "tv", "id": 990102, "name": "Softcore Series", "first_air_date": "2020-01-01", "vote_average": 4.0, "vote_count": 8, "poster_path": "/softcoreSeries.jpg" },
+      { "adult": false, "softcore": false, "media_type": "tv", "id": 128904, "name": "Dark Winds", "first_air_date": "2022-06-12", "vote_average": 7.5, "vote_count": 222, "poster_path": "/kDlrMN0P9ByrEH2GoRbBFeZHbcf.jpg" },
+      { "adult": false, "softcore": false, "media_type": "tv", "id": 66025, "name": "Animal Kingdom", "first_air_date": "2016-06-14", "vote_average": 7.8, "vote_count": 586, "poster_path": "/rzvdKrnSRKPFI0pgqMQknDPpRC9.jpg" },
+      { "adult": false, "softcore": false, "media_type": "tv", "id": 66676, "name": "Queen of the South", "first_air_date": "2016-06-23", "vote_average": 7.6, "vote_count": 482, "poster_path": "/rzdC5EHkkKJE6OPVdh6gT1pR1c9.jpg" },
+      { "adult": false, "softcore": false, "media_type": "tv", "id": 40008, "name": "Hannibal", "first_air_date": "2013-04-04", "vote_average": 8.3, "vote_count": 3125, "poster_path": null },
+      { "adult": false, "softcore": false, "media_type": "tv", "id": 81358, "name": "Mr Inbetween", "first_air_date": "2018-09-25", "vote_average": 8.3, "vote_count": 383, "poster_path": "/1FkONly4j7hxi6Pz5CmuhRN1Ops.jpg" },
+      { "adult": false, "softcore": false, "media_type": "tv", "id": 194764, "name": "The Penguin", "first_air_date": "2024-09-19", "vote_average": 8.4, "vote_count": 1571, "poster_path": "/vOWcqC4oDQws1doDWLO7d3dh5qc.jpg" },
+      { "adult": false, "softcore": false, "media_type": "tv", "id": 137893, "name": "Griselda", "first_air_date": "2024-01-25", "vote_average": 7.2, "vote_count": 428, "poster_path": "/nhEtK1lJKb3kqBtDBDXynGr3hJL.jpg" },
+      { "adult": false, "softcore": false, "media_type": "tv", "id": 71715, "name": "Good Girls", "first_air_date": "2018-02-26", "vote_average": 7.8, "vote_count": 726, "poster_path": "/wpgg6G3UHXepH2Zgpt4W60d6gxR.jpg" },
+      { "adult": false, "softcore": false, "media_type": "tv", "id": 126116, "name": "Time", "first_air_date": "2021-06-06", "vote_average": 7.6, "vote_count": 295, "poster_path": "/ozngyBGF4uuxIrs1ZpE8rbPus8S.jpg" }
+    ],
+    "total_pages": 35,
+    "total_results": 696
   }
 }

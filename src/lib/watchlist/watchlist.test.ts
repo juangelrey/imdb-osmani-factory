@@ -62,6 +62,7 @@ describe("entryFromTitle", () => {
         posterUrl: "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
         directors: [{ id: 9340, slug: "lana-wachowski", name: "Lana Wachowski" }],
         cast: [{ id: 6384, slug: "keanu-reeves", name: "Keanu Reeves" }],
+        recommendations: [{ kind: "movie", id: 604, slug: "the-matrix-reloaded", name: "The Matrix Reloaded" }],
       }),
     ).toEqual(matrix);
   });
@@ -83,6 +84,7 @@ describe("entryFromShow", () => {
         creators: [],
         cast: [],
         seasons: [],
+        recommendations: [{ kind: "tv", id: 1396, slug: "breaking-bad", name: "Breaking Bad" }],
       }),
     ).toEqual({ kind: "tv", id: 603, slug: "matrix-show", name: "Matrix Show", year: 2020, rating: 7.1, posterPath: "/s.jpg" });
   });

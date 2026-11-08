@@ -23,6 +23,8 @@ export interface Title {
   directors: PersonLink[];
   /** Top-billed cast, at most 10. */
   cast: PersonLink[];
+  /** TMDB's recommended movies, at most 12, adult ones left out; empty when there are none. */
+  recommendations: TitleSummary[];
 }
 
 /** Whether a summary is a movie (`/title`) or a TV show (`/tv`). A movie and a show can share an id. */
@@ -75,6 +77,8 @@ export interface Show {
   seasons: SeasonSummary[];
   /** The selected season with its episodes; undefined when the show has no seasons. */
   season?: Season;
+  /** TMDB's recommended shows, at most 12, adult ones left out; empty when there are none. */
+  recommendations: TitleSummary[];
 }
 
 /** A season as the picker lists it. */
@@ -118,6 +122,14 @@ export interface PersonLink {
   id: number;
   slug: string;
   name: string;
+}
+
+/** A person as a search result card shows it. Fields TMDB may omit are optional. */
+export interface PersonSummary extends PersonLink {
+  /** TMDB's department, e.g. "Acting" or "Directing". */
+  knownFor?: string;
+  /** Card-size (w185) photo URL. */
+  profileUrl?: string;
 }
 
 /** A person as the person page shows it. Fields TMDB may omit are optional. */
