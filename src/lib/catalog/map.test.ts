@@ -4,6 +4,8 @@ import discover from "@/lib/tmdb/fixtures/discover-movie.json";
 import genreList from "@/lib/tmdb/fixtures/genre-movie-list.json";
 import person from "@/lib/tmdb/fixtures/person-details.json";
 import sparsePerson from "@/lib/tmdb/fixtures/person-details-sparse.json";
+import tvDetails from "@/lib/tmdb/fixtures/tv-details.json";
+import tvSparse from "@/lib/tmdb/fixtures/tv-details-sparse.json";
 import type {
   TmdbMovieDetails,
   TmdbMovieListItem,
@@ -11,20 +13,25 @@ import type {
   TmdbPersonCastCredit,
   TmdbPersonCrewCredit,
   TmdbPersonDetails,
+  TmdbTvDetails,
 } from "@/lib/tmdb/schema";
 import {
   MAX_PAGES,
   parsePersonParam,
+  parseShowParam,
   parseTitleParam,
   personHref,
   posterUrl,
   profileUrl,
+  showHref,
   slugify,
   titleHref,
   toCareer,
   toGenre,
   toPaged,
   toPerson,
+  toShow,
+  toShowSummary,
   toSummary,
   toTitle,
 } from "./map";
@@ -32,6 +39,8 @@ import {
 const matrix = details as TmdbMovieDetails;
 const sparseMovie = sparse as TmdbMovieDetails;
 const discoverPage = discover as TmdbPaged<TmdbMovieListItem>;
+const breakingBad = tvDetails as TmdbTvDetails;
+const sparseShow = tvSparse as TmdbTvDetails;
 
 describe("slugify", () => {
   it("lowercases and hyphenates", () => {
@@ -230,6 +239,7 @@ describe("toCareer", () => {
             year: 1992,
             rating: 7.9,
             posterUrl: "https://image.tmdb.org/t/p/w92/54roTwbX9fltg85zjsmrooXAs12.jpg",
+            kind: "movie",
           },
           releaseDate: "1992-08-07",
           upcoming: false,
@@ -470,6 +480,7 @@ describe("toSummary", () => {
       year: 1999,
       rating: 8.218,
       posterUrl: "https://image.tmdb.org/t/p/w342/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
+      kind: "movie",
     });
   });
 
@@ -499,5 +510,125 @@ describe("toPaged", () => {
     expect(MAX_PAGES).toBe(500);
     expect(toPaged(discoverPage, toSummary).totalPages).toBe(500);
     expect(toPaged({ ...discoverPage, total_pages: 4 }, toSummary).totalPages).toBe(4);
+  });
+});
+
+describe("showHref and parseShowParam", () => {
+  it("builds /tv/<id>-<slug>", () => {
+    expect(showHref({ id: 1396, slug: "breaking-bad" })).toBe("/tv/1396-breaking-bad");
+  });
+
+  it("parses the id and slug with the shared id-slug parser", () => {
+    expect(parseShowParam("1396-breaking-bad")).toEqual({ id: 1396, slug: "breaking-bad" });
+    expect(parseShowParam("1396")).toEqual({ id: 1396, slug: "" });
+    expect(parseShowParam).toBe(parseTitleParam);
+  });
+
+  it.each(["abc", "0", "01396-breaking-bad", "-1396", ""])("rejects %j", (param) => {
+    expect(parseShowParam(param)).toBeUndefined();
+  });
+});
+
+describe("toShow", () => {
+  it("maps every field of the full fixture", () => {
+    const show = toShow(breakingBad);
+    expect(show).toMatchObject({
+      id: 1396,
+      slug: "breaking-bad",
+      name: "Breaking Bad",
+      year: 2008,
+      years: "2008–2013",
+      seasonCount: 5,
+      episodeCount: 62,
+      genres: [
+        { id: 18, name: "Drama" },
+        { id: 80, name: "Crime" },
+      ],
+      rating: 8.9,
+      synopsis: expect.stringContaining("chemistry teacher"),
+      posterUrl: "https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
+      posterPath: "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
+      creators: [{ id: 66633, slug: "vince-gilligan", name: "Vince Gilligan" }],
+    });
+  });
+
+  it("keeps the top 10 cast in billing order", () => {
+    const cast = toShow(breakingBad).cast;
+    expect(cast).toHaveLength(10);
+    expect(cast[0]).toEqual({ id: 17419, slug: "bryan-cranston", name: "Bryan Cranston" });
+    expect(cast.at(-1)?.name).toBe("Laura Fraser");
+  });
+
+  it("leaves every optional field empty for the sparse fixture", () => {
+    expect(toShow(sparseShow)).toEqual({
+      id: 299999,
+      slug: "untitled-pilot",
+      name: "Untitled Pilot",
+      year: undefined,
+      years: undefined,
+      seasonCount: undefined,
+      episodeCount: undefined,
+      genres: [],
+      rating: undefined,
+      synopsis: undefined,
+      posterUrl: undefined,
+      posterPath: undefined,
+      creators: [],
+      cast: [],
+    });
+  });
+
+  it("falls back to a 'show' slug when nothing Latin is left", () => {
+    expect(toShow({ ...breakingBad, name: "半沢直樹" }).slug).toBe("show");
+  });
+});
+
+describe("toShow year range", () => {
+  it("spans first to last air year for an ended show", () => {
+    expect(toShow(breakingBad).years).toBe("2008–2013");
+  });
+
+  it("is open-ended while the show is running", () => {
+    expect(toShow({ ...breakingBad, first_air_date: "2019-04-14", last_air_date: "2025-06-01", in_production: true }).years).toBe(
+      "2019–",
+    );
+  });
+
+  it("is a single year when the show began and ended in the same year", () => {
+    expect(toShow({ ...breakingBad, first_air_date: "2019-01-10", last_air_date: "2019-03-02" }).years).toBe("2019");
+    expect(toShow({ ...breakingBad, first_air_date: "2019-01-10", last_air_date: null }).years).toBe("2019");
+  });
+
+  it("is undefined without a first air date, as in the sparse fixture", () => {
+    expect(toShow(sparseShow).years).toBeUndefined();
+    expect(toShow({ ...sparseShow, in_production: true }).years).toBeUndefined();
+  });
+});
+
+describe("toShowSummary", () => {
+  it("maps a TV list item into a tv-kind summary with a grid-size poster", () => {
+    expect(
+      toShowSummary({
+        id: 1396,
+        name: "Breaking Bad",
+        first_air_date: "2008-01-20",
+        vote_average: 8.9,
+        vote_count: 15000,
+        poster_path: "/bb.jpg",
+      }),
+    ).toEqual({
+      kind: "tv",
+      id: 1396,
+      slug: "breaking-bad",
+      name: "Breaking Bad",
+      year: 2008,
+      rating: 8.9,
+      posterUrl: "https://image.tmdb.org/t/p/w342/bb.jpg",
+    });
+  });
+
+  it("leaves a missing year, poster and unvoted rating undefined", () => {
+    const summary = toShowSummary({ id: 9, name: "Pilot", first_air_date: "", vote_average: 0, vote_count: 0, poster_path: null });
+    expect(summary).toMatchObject({ year: undefined, rating: undefined, posterUrl: undefined });
   });
 });

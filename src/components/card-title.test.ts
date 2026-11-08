@@ -3,7 +3,7 @@ import { cardFromEntry, cardFromSummary } from "./card-title";
 describe("cardFromSummary", () => {
   it("links to the canonical TMDB title URL and keeps the poster", () => {
     expect(
-      cardFromSummary({ id: 603, slug: "the-matrix", name: "The Matrix", year: 1999, rating: 8.2, posterUrl: "https://image.tmdb.org/t/p/w342/m.jpg" }),
+      cardFromSummary({ kind: "movie", id: 603, slug: "the-matrix", name: "The Matrix", year: 1999, rating: 8.2, posterUrl: "https://image.tmdb.org/t/p/w342/m.jpg" }),
     ).toEqual({
       key: "603",
       href: "/title/603-the-matrix",

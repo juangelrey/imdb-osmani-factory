@@ -6,10 +6,11 @@ import type {
   TmdbMovieListItem,
   TmdbPaged,
   TmdbPersonDetails,
+  TmdbTvDetails,
 } from "@/lib/tmdb/schema";
 import type { BrowseState, SortKey } from "./browse-params";
-import { toGenre, toPaged, toPerson, toSummary, toTitle } from "./map";
-import type { Genre, Paged, Person, Title, TitleSummary } from "./types";
+import { toGenre, toPaged, toPerson, toShow, toSummary, toTitle } from "./map";
+import type { Genre, Paged, Person, Show, Title, TitleSummary } from "./types";
 
 /** A movie with credits, or undefined when TMDB does not know the id. Other failures throw. */
 export async function getTitle(id: number): Promise<Title | undefined> {
@@ -19,6 +20,21 @@ export async function getTitle(id: number): Promise<Title | undefined> {
     if (error instanceof TmdbError && error.status === 404) return undefined;
     throw error;
   }
+}
+
+/**
+ * A TV show with credits in one request, or undefined when TMDB does not know the id or flags the show
+ * adult or softcore. Other failures throw.
+ */
+export async function getShow(id: number): Promise<Show | undefined> {
+  let show: TmdbTvDetails;
+  try {
+    show = await tmdbFetch<TmdbTvDetails>(`/tv/${id}`, { append_to_response: "credits" });
+  } catch (error) {
+    if (error instanceof TmdbError && error.status === 404) return undefined;
+    throw error;
+  }
+  return show.adult || show.softcore ? undefined : toShow(show);
 }
 
 /**

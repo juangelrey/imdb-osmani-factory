@@ -1,0 +1,37 @@
+{
+  "id": 1396,
+  "name": "Breaking Bad",
+  "adult": false,
+  "first_air_date": "2008-01-20",
+  "last_air_date": "2013-09-29",
+  "in_production": false,
+  "number_of_seasons": 5,
+  "number_of_episodes": 62,
+  "genres": [
+    { "id": 18, "name": "Drama" },
+    { "id": 80, "name": "Crime" }
+  ],
+  "vote_average": 8.9,
+  "vote_count": 15000,
+  "overview": "A high school chemistry teacher diagnosed with cancer turns to making and selling methamphetamine to secure his family's future.",
+  "poster_path": "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
+  "created_by": [
+    { "id": 66633, "name": "Vince Gilligan" }
+  ],
+  "credits": {
+    "cast": [
+      { "id": 11, "name": "Cast Member Eleven", "character": "Extra", "order": 11 },
+      { "id": 17419, "name": "Bryan Cranston", "character": "Walter White", "order": 0 },
+      { "id": 84497, "name": "Aaron Paul", "character": "Jesse Pinkman", "order": 1 },
+      { "id": 134531, "name": "Anna Gunn", "character": "Skyler White", "order": 2 },
+      { "id": 14329, "name": "Dean Norris", "character": "Hank Schrader", "order": 3 },
+      { "id": 1217934, "name": "Betsy Brandt", "character": "Marie Schrader", "order": 4 },
+      { "id": 209674, "name": "RJ Mitte", "character": "Walter White Jr.", "order": 5 },
+      { "id": 59410, "name": "Bob Odenkirk", "character": "Saul Goodman", "order": 6 },
+      { "id": 92495, "name": "Giancarlo Esposito", "character": "Gus Fring", "order": 7 },
+      { "id": 783, "name": "Jonathan Banks", "character": "Mike Ehrmantraut", "order": 8 },
+      { "id": 1223197, "name": "Laura Fraser", "character": "Lydia Rodarte-Quayle", "order": 9 },
+      { "id": 1046460, "name": "Jesse Plemons", "character": "Todd Alquist", "order": 10 }
+    ]
+  }
+}

@@ -8,7 +8,7 @@ const career: CareerYear[] = [
     label: "TBA",
     entries: [
       {
-        title: { id: 77, slug: "announced", name: "Announced" },
+        title: { kind: "movie", id: 77, slug: "announced", name: "Announced" },
         upcoming: false,
         roles: ["Actor"],
       },
@@ -19,7 +19,7 @@ const career: CareerYear[] = [
     label: "2027",
     entries: [
       {
-        title: { id: 55, slug: "next-one", name: "Next One", year: 2027 },
+        title: { kind: "movie", id: 55, slug: "next-one", name: "Next One", year: 2027 },
         releaseDate: "2027-03-01",
         upcoming: true,
         roles: ["Director"],
@@ -32,6 +32,7 @@ const career: CareerYear[] = [
     entries: [
       {
         title: {
+          kind: "movie",
           id: 33,
           slug: "unforgiven",
           name: "Unforgiven",

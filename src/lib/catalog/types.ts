@@ -25,8 +25,12 @@ export interface Title {
   cast: PersonLink[];
 }
 
-/** The fields a title card needs. */
+/** Whether a summary is a movie (`/title`) or a TV show (`/tv`). A movie and a show can share an id. */
+export type TitleKind = "movie" | "tv";
+
+/** The fields a title card needs. Identity is `kind` + `id`, never the id alone. */
 export interface TitleSummary {
+  kind: TitleKind;
   id: number;
   slug: string;
   name: string;
@@ -34,6 +38,36 @@ export interface TitleSummary {
   rating?: number;
   /** Grid-size poster URL. */
   posterUrl?: string;
+}
+
+/** A TV show as a card shows it. */
+export interface ShowSummary extends TitleSummary {
+  kind: "tv";
+}
+
+/** A TV show as the TV page shows it. Fields TMDB may omit are optional. */
+export interface Show {
+  id: number;
+  slug: string;
+  name: string;
+  /** The first air year. */
+  year?: number;
+  /** "2008–2013", "2019–" while running, or "2019" for a single year; undefined without a first air date. */
+  years?: string;
+  seasonCount?: number;
+  episodeCount?: number;
+  genres: Genre[];
+  /** Average rating from 0 to 10; undefined when nobody has voted. */
+  rating?: number;
+  synopsis?: string;
+  /** Detail-size poster URL. */
+  posterUrl?: string;
+  /** TMDB's poster path, kept so snapshots can build any poster size later. */
+  posterPath?: string;
+  /** The show's creators, in TMDB order, once each; empty when there are none. */
+  creators: PersonLink[];
+  /** Top-billed cast, at most 10. */
+  cast: PersonLink[];
 }
 
 export interface Paged<T> {

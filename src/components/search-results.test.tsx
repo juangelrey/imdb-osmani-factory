@@ -2,8 +2,8 @@ import { render, screen, within } from "@testing-library/react";
 import type { Paged, TitleSummary } from "@/lib/catalog/types";
 import { SearchResults } from "./search-results";
 
-const matrix: TitleSummary = { id: 603, slug: "the-matrix", name: "The Matrix", year: 1999, rating: 8.2 };
-const reloaded: TitleSummary = { id: 604, slug: "the-matrix-reloaded", name: "The Matrix Reloaded", year: 2003, rating: 7.1 };
+const matrix: TitleSummary = { kind: "movie", id: 603, slug: "the-matrix", name: "The Matrix", year: 1999, rating: 8.2 };
+const reloaded: TitleSummary = { kind: "movie", id: 604, slug: "the-matrix-reloaded", name: "The Matrix Reloaded", year: 2003, rating: 7.1 };
 
 function paged(results: TitleSummary[], extra: Partial<Paged<TitleSummary>> = {}): Paged<TitleSummary> {
   return { results, page: 1, totalPages: results.length ? 1 : 0, totalResults: results.length, ...extra };

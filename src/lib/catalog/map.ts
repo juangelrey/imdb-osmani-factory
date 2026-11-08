@@ -1,4 +1,5 @@
 import type {
+  TmdbCastMember,
   TmdbCrewMember,
   TmdbGenre,
   TmdbMovieDetails,
@@ -7,9 +8,22 @@ import type {
   TmdbPersonDetails,
   TmdbPersonMovieCredit,
   TmdbPersonMovieCredits,
+  TmdbTvDetails,
+  TmdbTvListItem,
 } from "@/lib/tmdb/schema";
 import { ageOn, formatDate } from "./format";
-import type { CareerEntry, CareerYear, Genre, Paged, Person, PersonLink, Title, TitleSummary } from "./types";
+import type {
+  CareerEntry,
+  CareerYear,
+  Genre,
+  Paged,
+  Person,
+  PersonLink,
+  Show,
+  ShowSummary,
+  Title,
+  TitleSummary,
+} from "./types";
 
 /** TMDB serves at most this many pages for discover and search. */
 export const MAX_PAGES = 500;
@@ -34,6 +48,10 @@ export function titleHref({ id, slug }: { id: number; slug: string }): string {
   return `/title/${id}-${slug}`;
 }
 
+export function showHref({ id, slug }: { id: number; slug: string }): string {
+  return `/tv/${id}-${slug}`;
+}
+
 export function personHref({ id, slug }: { id: number; slug: string }): string {
   return `/person/${id}-${slug}`;
 }
@@ -49,6 +67,9 @@ function parseIdSlugParam(param: string): { id: number; slug: string } | undefin
 
 /** Parse a `/title/[id]` route param shaped "<id>-<slug>" or "<id>". */
 export const parseTitleParam = parseIdSlugParam;
+
+/** Parse a `/tv/[id]` route param shaped "<id>-<slug>" or "<id>". */
+export const parseShowParam = parseIdSlugParam;
 
 /** Parse a `/person/[id]` route param shaped "<id>-<slug>" or "<id>". */
 export const parsePersonParam = parseIdSlugParam;
@@ -70,7 +91,7 @@ function rating({ vote_average, vote_count }: { vote_average: number; vote_count
   return vote_count > 0 ? vote_average : undefined;
 }
 
-function releaseYear(date: string | undefined): number | undefined {
+function releaseYear(date: string | null | undefined): number | undefined {
   const match = /^(\d{4})-/.exec(date ?? "");
   return match ? Number(match[1]) : undefined;
 }
@@ -86,6 +107,14 @@ function directors(crew: TmdbCrewMember[]): PersonLink[] {
     if (person.job === "Director" && !byId.has(person.id)) byId.set(person.id, toPersonLink(person));
   }
   return [...byId.values()];
+}
+
+/** The top-billed cast, at most `CAST_LIMIT`, in billing order. */
+function topCast(cast: TmdbCastMember[]): PersonLink[] {
+  return [...cast]
+    .sort((a, b) => a.order - b.order)
+    .slice(0, CAST_LIMIT)
+    .map(toPersonLink);
 }
 
 export function toGenre({ id, name }: TmdbGenre): Genre {
@@ -105,10 +134,37 @@ export function toTitle(movie: TmdbMovieDetails): Title {
     posterUrl: posterUrl(movie.poster_path, "w500"),
     posterPath: movie.poster_path || undefined,
     directors: directors(movie.credits.crew),
-    cast: [...movie.credits.cast]
-      .sort((a, b) => a.order - b.order)
-      .slice(0, CAST_LIMIT)
-      .map(toPersonLink),
+    cast: topCast(movie.credits.cast),
+  };
+}
+
+/** "2008–2013" for an ended show, "2019–" while running, "2019" for a single year; undefined without a first air date. */
+function airYears(show: TmdbTvDetails): string | undefined {
+  const first = releaseYear(show.first_air_date);
+  if (first === undefined) return undefined;
+  if (show.in_production) return `${first}–`;
+  const last = releaseYear(show.last_air_date);
+  return last !== undefined && last > first ? `${first}–${last}` : String(first);
+}
+
+export function toShow(show: TmdbTvDetails): Show {
+  const creators = new Map<number, PersonLink>();
+  for (const creator of show.created_by) if (!creators.has(creator.id)) creators.set(creator.id, toPersonLink(creator));
+  return {
+    id: show.id,
+    slug: slugify(show.name, "show"),
+    name: show.name,
+    year: releaseYear(show.first_air_date),
+    years: airYears(show),
+    seasonCount: show.number_of_seasons || undefined,
+    episodeCount: show.number_of_episodes || undefined,
+    genres: show.genres.map(toGenre),
+    rating: rating(show),
+    synopsis: show.overview?.trim() || undefined,
+    posterUrl: posterUrl(show.poster_path, "w500"),
+    posterPath: show.poster_path || undefined,
+    creators: [...creators.values()],
+    cast: topCast(show.credits.cast),
   };
 }
 
@@ -185,12 +241,25 @@ function groupByYearDesc(entries: CareerEntry[]): CareerYear[] {
 
 export function toSummary(movie: TmdbMovieListItem): TitleSummary {
   return {
+    kind: "movie",
     id: movie.id,
     slug: slugify(movie.title),
     name: movie.title,
     year: releaseYear(movie.release_date),
     rating: rating(movie),
     posterUrl: posterUrl(movie.poster_path, "w342"),
+  };
+}
+
+export function toShowSummary(show: TmdbTvListItem): ShowSummary {
+  return {
+    kind: "tv",
+    id: show.id,
+    slug: slugify(show.name, "show"),
+    name: show.name,
+    year: releaseYear(show.first_air_date),
+    rating: rating(show),
+    posterUrl: posterUrl(show.poster_path, "w342"),
   };
 }
 

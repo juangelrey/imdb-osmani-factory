@@ -97,3 +97,48 @@ export interface TmdbPersonDetails {
   profile_path: string | null;
   movie_credits: TmdbPersonMovieCredits;
 }
+
+/** A TV show as it appears in TV discover and search results. */
+export interface TmdbTvListItem {
+  id: number;
+  name: string;
+  /** "YYYY-MM-DD", or "" when unknown. */
+  first_air_date?: string;
+  vote_average: number;
+  vote_count: number;
+  poster_path: string | null;
+  genre_ids?: number[];
+}
+
+/** A creator in a show's `created_by`. */
+export interface TmdbTvCreator {
+  /** The TMDB person id. */
+  id: number;
+  name: string;
+}
+
+/** `GET /tv/{id}?append_to_response=credits`. */
+export interface TmdbTvDetails {
+  id: number;
+  name: string;
+  adult: boolean;
+  /** Present on live responses next to `adult`; softcore shows are excluded like adult ones. */
+  softcore?: boolean;
+  /** "YYYY-MM-DD", or "" / null when unknown. */
+  first_air_date?: string | null;
+  /** The latest aired episode's date, or null when nothing has aired. */
+  last_air_date?: string | null;
+  /** True while the show is still running. */
+  in_production: boolean;
+  number_of_seasons?: number | null;
+  number_of_episodes?: number | null;
+  genres: TmdbGenre[];
+  vote_average: number;
+  vote_count: number;
+  overview: string | null;
+  poster_path: string | null;
+  created_by: TmdbTvCreator[];
+  credits: {
+    cast: TmdbCastMember[];
+  };
+}

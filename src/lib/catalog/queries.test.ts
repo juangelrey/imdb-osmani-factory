@@ -3,8 +3,9 @@ import discover from "@/lib/tmdb/fixtures/discover-movie.json";
 import genreList from "@/lib/tmdb/fixtures/genre-movie-list.json";
 import search from "@/lib/tmdb/fixtures/search-movie.json";
 import person from "@/lib/tmdb/fixtures/person-details.json";
+import tvDetails from "@/lib/tmdb/fixtures/tv-details.json";
 import { TmdbError } from "@/lib/tmdb/client";
-import { discoverTitles, getPerson, getTitle, listGenres, searchTitles } from "./queries";
+import { discoverTitles, getPerson, getShow, getTitle, listGenres, searchTitles } from "./queries";
 
 function stubFetch(body: unknown, status = 200) {
   const fetchMock = vi.fn(async () => Response.json(body, { status }));
@@ -49,6 +50,38 @@ describe("getTitle", () => {
   it("lets other TMDB errors reach the error boundary", async () => {
     stubFetch({}, 503);
     await expect(getTitle(603)).rejects.toBeInstanceOf(TmdbError);
+  });
+});
+
+describe("getShow", () => {
+  it("makes exactly one request for the show with credits appended, in English", async () => {
+    const fetchMock = stubFetch(tvDetails);
+    await getShow(1396);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const url = requestedUrl(fetchMock);
+    expect(url.pathname).toBe("/3/tv/1396");
+    expect(url.searchParams.get("append_to_response")).toBe("credits");
+    expect(url.searchParams.get("language")).toBe("en-US");
+  });
+
+  it("maps the response into a Show", async () => {
+    stubFetch(tvDetails);
+    await expect(getShow(1396)).resolves.toMatchObject({ id: 1396, slug: "breaking-bad", years: "2008–2013" });
+  });
+
+  it("returns undefined for an unknown id", async () => {
+    stubFetch({ success: false, status_code: 34 }, 404);
+    await expect(getShow(999999999)).resolves.toBeUndefined();
+  });
+
+  it.each([{ adult: true }, { softcore: true }])("returns undefined for a show flagged %o", async (flag) => {
+    stubFetch({ ...tvDetails, ...flag });
+    await expect(getShow(1396)).resolves.toBeUndefined();
+  });
+
+  it("lets other TMDB errors reach the error boundary", async () => {
+    stubFetch({}, 503);
+    await expect(getShow(1396)).rejects.toBeInstanceOf(TmdbError);
   });
 });
 
