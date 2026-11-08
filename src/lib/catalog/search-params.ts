@@ -17,3 +17,14 @@ export function parseSearchSort(value: SearchParamValue): SearchSortKey {
   const sort = firstParam(value) ?? "";
   return (SEARCH_SORT_KEYS as readonly string[]).includes(sort) ? (sort as SearchSortKey) : DEFAULT_SEARCH_SORT;
 }
+
+/** The `type` param on search, in switch order. Browse (`/`) keeps its own `parseKind`: it has no People. */
+export const SEARCH_KINDS = ["movie", "tv", "person"] as const;
+
+export type SearchKind = (typeof SEARCH_KINDS)[number];
+
+/** The `type` param on search: "tv" or "person", else movie (the default, so links without `type` behave as before). */
+export function parseSearchKind(value: SearchParamValue): SearchKind {
+  const kind = firstParam(value);
+  return kind === "tv" || kind === "person" ? kind : "movie";
+}

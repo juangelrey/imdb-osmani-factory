@@ -5,11 +5,12 @@ import genreList from "@/lib/tmdb/fixtures/genre-movie-list.json";
 import genreTvList from "@/lib/tmdb/fixtures/genre-tv-list.json";
 import search from "@/lib/tmdb/fixtures/search-movie.json";
 import searchTv from "@/lib/tmdb/fixtures/search-tv.json";
+import searchPerson from "@/lib/tmdb/fixtures/search-person.json";
 import person from "@/lib/tmdb/fixtures/person-details.json";
 import tvDetails from "@/lib/tmdb/fixtures/tv-details.json";
 import tvSeason from "@/lib/tmdb/fixtures/tv-season.json";
 import { TmdbError } from "@/lib/tmdb/client";
-import { discoverShows, discoverTitles, getPerson, getShow, getTitle, listGenres, searchShows, searchTitles } from "./queries";
+import { discoverShows, discoverTitles, getPerson, getShow, getTitle, listGenres, searchPeople, searchShows, searchTitles } from "./queries";
 
 function stubFetch(body: unknown, status = 200) {
   const fetchMock = vi.fn(async () => Response.json(body, { status }));
@@ -467,6 +468,32 @@ describe("searchShows", () => {
     const empty = { results: [], page: 1, totalPages: 0, totalResults: 0 };
     await expect(searchShows("   ", 1, "relevance")).resolves.toEqual(empty);
     await expect(searchShows("   ", 1, "recency")).resolves.toEqual(empty);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("searchPeople", () => {
+  it("searches non-adult people with TMDB's paging, in one call", async () => {
+    const fetchMock = stubFetch(searchPerson);
+    const page = await searchPeople("  nolan ", 2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const url = requestedUrl(fetchMock);
+    expect(url.pathname).toBe("/3/search/person");
+    expect(url.searchParams.get("query")).toBe("nolan");
+    expect(url.searchParams.get("include_adult")).toBe("false");
+    expect(url.searchParams.get("page")).toBe("2");
+    expect(page).toMatchObject({ totalPages: 3, totalResults: 52 });
+  });
+
+  it("keeps TMDB's order and skips adult profiles", async () => {
+    stubFetch(searchPerson);
+    const page = await searchPeople("nolan", 1);
+    expect(page.results.map(({ name }) => name)).toEqual(["Christopher Nolan", "Jonathan Nolan", "Kathleen Nolan"]);
+  });
+
+  it("returns an empty page for a blank query without calling TMDB", async () => {
+    const fetchMock = stubFetch(searchPerson);
+    await expect(searchPeople("   ", 1)).resolves.toEqual({ results: [], page: 1, totalPages: 0, totalResults: 0 });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

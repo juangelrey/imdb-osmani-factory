@@ -2,6 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import { redirect } from "next/navigation";
 import search from "@/lib/tmdb/fixtures/search-movie.json";
 import searchTv from "@/lib/tmdb/fixtures/search-tv.json";
+import searchPerson from "@/lib/tmdb/fixtures/search-person.json";
 import SearchPage from "./page";
 
 vi.mock("next/navigation", () => ({
@@ -180,5 +181,72 @@ describe("Search page", () => {
     await expect(SearchPage({ searchParams: Promise.resolve({ q: "breaking", type: "tv", page: "99" }) })).rejects.toThrow(
       "redirect /search?q=breaking&type=tv",
     );
+  });
+
+  it("searches people with type=person in one call, linking each card to its person page", async () => {
+    const fetchMock = stubTmdb(searchPerson);
+    render(await SearchPage({ searchParams: Promise.resolve({ q: "nolan", type: "person" }) }));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const url = requestedUrl(fetchMock);
+    expect(url.pathname).toBe("/3/search/person");
+    expect(url.searchParams.get("include_adult")).toBe("false");
+    const grid = screen.getByRole("list", { name: "People" });
+    const hrefs = within(grid)
+      .getAllByRole("link")
+      .map((link) => link.getAttribute("href"));
+    // TMDB's order, with the adult profile left out.
+    expect(hrefs).toEqual(["/person/525-christopher-nolan", "/person/527-jonathan-nolan", "/person/3001234-kathleen-nolan"]);
+  });
+
+  it("shows no sort control for people, even with a sort in the URL", async () => {
+    stubTmdb(searchPerson);
+    render(await SearchPage({ searchParams: Promise.resolve({ q: "nolan", type: "person", sort: "rating" }) }));
+    expect(screen.queryByRole("navigation", { name: "Sort results" })).not.toBeInTheDocument();
+  });
+
+  it("pages people like TV search, one TMDB call per page, keeping type=person", async () => {
+    const fetchMock = stubTmdb({ ...searchPerson, page: 2 });
+    render(await SearchPage({ searchParams: Promise.resolve({ q: "nolan", type: "person", page: "2" }) }));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(requestedUrl(fetchMock).searchParams.get("page")).toBe("2");
+    const pagination = screen.getByRole("navigation", { name: "Pagination" });
+    expect(within(pagination).getByRole("link", { name: /Previous/ })).toHaveAttribute("href", "/search?q=nolan&type=person");
+    expect(within(pagination).getByRole("link", { name: /Next/ })).toHaveAttribute("href", "/search?q=nolan&type=person&page=3");
+  });
+
+  it("says so when no people match", async () => {
+    stubTmdb({ page: 1, results: [], total_pages: 0, total_results: 0 });
+    render(await SearchPage({ searchParams: Promise.resolve({ q: "zzzz", type: "person" }) }));
+    expect(screen.getByText("No people match “zzzz”.")).toBeInTheDocument();
+  });
+
+  it("shows no people for a page of adult profiles only", async () => {
+    stubTmdb({ page: 1, results: [searchPerson.results[2]], total_pages: 1, total_results: 1 });
+    render(await SearchPage({ searchParams: Promise.resolve({ q: "adult", type: "person" }) }));
+    expect(screen.queryByRole("list", { name: "People" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Adult Profile/ })).not.toBeInTheDocument();
+  });
+
+  it("makes no TMDB call for a blank people search", async () => {
+    const fetchMock = stubTmdb(searchPerson);
+    render(await SearchPage({ searchParams: Promise.resolve({ q: "  ", type: "person" }) }));
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.queryByRole("list", { name: "People" })).not.toBeInTheDocument();
+  });
+
+  it("sends a people page past the last one back to page 1, keeping type=person", async () => {
+    stubTmdb({ page: 99, results: [], total_pages: 3, total_results: 52 });
+    await expect(SearchPage({ searchParams: Promise.resolve({ q: "nolan", type: "person", page: "99" }) })).rejects.toThrow(
+      "redirect /search?q=nolan&type=person",
+    );
+  });
+
+  it("links Movies and TV from the People view keeping the query, with neither marked", async () => {
+    stubTmdb(searchPerson);
+    render(await SearchPage({ searchParams: Promise.resolve({ q: "nolan", type: "person" }) }));
+    const nav = screen.getByRole("navigation", { name: "Movies or TV" });
+    expect(within(nav).getByRole("link", { name: "Movies" })).toHaveAttribute("href", "/search?q=nolan");
+    expect(within(nav).getByRole("link", { name: "TV" })).toHaveAttribute("href", "/search?q=nolan&type=tv");
+    expect(within(nav).queryByRole("link", { current: "page" })).not.toBeInTheDocument();
   });
 });
