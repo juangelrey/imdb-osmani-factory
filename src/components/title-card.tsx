@@ -9,7 +9,7 @@ export function TitleCard({ title }: { title: CardTitle }) {
       className="group block rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-400"
     >
       <Poster
-        colorKey={title.key}
+        colorKey={title.colorKey}
         name={title.name}
         posterUrl={title.posterUrl}
         className="transition group-hover:brightness-110"

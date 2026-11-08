@@ -6,6 +6,7 @@ describe("cardFromSummary", () => {
       cardFromSummary({ kind: "movie", id: 603, slug: "the-matrix", name: "The Matrix", year: 1999, rating: 8.2, posterUrl: "https://image.tmdb.org/t/p/w342/m.jpg" }),
     ).toEqual({
       key: "movie-603",
+      colorKey: "603",
       href: "/title/603-the-matrix",
       name: "The Matrix",
       year: 1999,
@@ -21,12 +22,18 @@ describe("cardFromSummary", () => {
     expect(show.key).toBe("tv-603");
     expect(show.key).not.toBe(movie.key);
   });
+
+  it("seeds a movie's fallback poster colours by id alone, as before TV, and a show's by kind and id", () => {
+    expect(cardFromSummary({ kind: "movie", id: 603, slug: "the-matrix", name: "The Matrix" }).colorKey).toBe("603");
+    expect(cardFromSummary({ kind: "tv", id: 603, slug: "breaking-point", name: "Breaking Point" }).colorKey).toBe("tv-603");
+  });
 });
 
 describe("cardFromEntry", () => {
   it("builds the grid poster from the saved poster path", () => {
     expect(cardFromEntry({ id: 603, slug: "the-matrix", name: "The Matrix", rating: 8.2, posterPath: "/m.jpg" })).toEqual({
       key: "movie-603",
+      colorKey: "603",
       href: "/title/603-the-matrix",
       name: "The Matrix",
       year: undefined,

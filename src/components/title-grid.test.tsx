@@ -3,7 +3,8 @@ import type { CardTitle } from "./card-title";
 import { TitleGrid } from "./title-grid";
 
 const matrix: CardTitle = {
-  key: "603",
+  key: "movie-603",
+  colorKey: "603",
   href: "/title/603-the-matrix",
   name: "The Matrix",
   year: 1999,

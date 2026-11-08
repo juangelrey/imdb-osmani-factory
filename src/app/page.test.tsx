@@ -1,7 +1,9 @@
 import { render, screen, within } from "@testing-library/react";
 import { redirect } from "next/navigation";
 import discover from "@/lib/tmdb/fixtures/discover-movie.json";
+import discoverTv from "@/lib/tmdb/fixtures/discover-tv.json";
 import genreList from "@/lib/tmdb/fixtures/genre-movie-list.json";
+import genreTvList from "@/lib/tmdb/fixtures/genre-tv-list.json";
 import Home from "./page";
 
 function stubTmdb(discoverBody: unknown = discover) {
@@ -9,14 +11,16 @@ function stubTmdb(discoverBody: unknown = discover) {
     const { pathname } = new URL(String(input));
     if (pathname === "/3/genre/movie/list") return Response.json(genreList);
     if (pathname === "/3/discover/movie") return Response.json(discoverBody);
+    if (pathname === "/3/genre/tv/list") return Response.json(genreTvList);
+    if (pathname === "/3/discover/tv") return Response.json(discoverTv);
     return Response.json({}, { status: 404 });
   });
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
 }
 
-function discoverUrl(fetchMock: ReturnType<typeof stubTmdb>) {
-  const call = fetchMock.mock.calls.find(([input]) => String(input).includes("/discover/movie"));
+function discoverUrl(fetchMock: ReturnType<typeof stubTmdb>, kind = "movie") {
+  const call = fetchMock.mock.calls.find(([input]) => String(input).includes(`/discover/${kind}`));
   return new URL(String(call![0]));
 }
 
@@ -112,5 +116,86 @@ describe("Home page", () => {
     await renderHome({ genre: "37" });
     expect(screen.getByText("No titles match this genre. Try another one, or show all titles.")).toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "Pagination" })).not.toBeInTheDocument();
+  });
+
+  it("shows the Movies / TV switch above the browse controls, with Movies current by default", async () => {
+    const fetchMock = stubTmdb();
+    await renderHome({ genre: "878", sort: "rating", page: "2" });
+    const paths = fetchMock.mock.calls.map(([input]) => new URL(String(input)).pathname);
+    expect(paths).toEqual(["/3/genre/movie/list", "/3/discover/movie"]);
+    const media = screen.getByRole("navigation", { name: "Movies or TV" });
+    expect(within(media).getByRole("link", { name: "Movies" })).toHaveAttribute("aria-current", "page");
+    // Switching kind resets the genre (ids differ per kind) and the page, and keeps the sort.
+    expect(within(media).getByRole("link", { name: "TV" })).toHaveAttribute("href", "/?type=tv&sort=rating");
+    const genres = screen.getByRole("navigation", { name: "Genre" });
+    expect(media.compareDocumentPosition(genres) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("browses TV series with the TV genres in two TMDB calls", async () => {
+    const fetchMock = stubTmdb();
+    await renderHome({ type: "tv" });
+    const paths = fetchMock.mock.calls.map(([input]) => new URL(String(input)).pathname);
+    expect(paths).toEqual(["/3/genre/tv/list", "/3/discover/tv"]);
+    expect(screen.getByRole("heading", { level: 1, name: "All series" })).toBeInTheDocument();
+    expect(gridNames()).toEqual(["Breaking Bad", "Stranger Things", "Breaking Point"]);
+    expect(screen.getByRole("link", { name: /Breaking Bad/ })).toHaveAttribute("href", "/tv/1396-breaking-bad");
+    const genres = screen.getByRole("navigation", { name: "Genre" });
+    expect(within(genres).getAllByRole("link")).toHaveLength(genreTvList.genres.length + 1);
+    expect(within(genres).getByRole("link", { name: "Sci-Fi & Fantasy" })).toHaveAttribute("href", "/?type=tv&genre=10765");
+    const media = screen.getByRole("navigation", { name: "Movies or TV" });
+    expect(within(media).getByRole("link", { name: "TV" })).toHaveAttribute("aria-current", "page");
+    expect(within(media).getByRole("link", { name: "Movies" })).toHaveAttribute("href", "/");
+  });
+
+  it("titles a TV genre as series, sorts by first air date and keeps type in the controls", async () => {
+    const fetchMock = stubTmdb();
+    await renderHome({ type: "tv", genre: "10765", sort: "release", page: "2" });
+    expect(screen.getByRole("heading", { level: 1, name: "Sci-Fi & Fantasy series" })).toBeInTheDocument();
+    const params = discoverUrl(fetchMock, "tv").searchParams;
+    expect(params.get("with_genres")).toBe("10765");
+    expect(params.get("sort_by")).toBe("first_air_date.desc");
+    const sort = screen.getByRole("navigation", { name: "Sort" });
+    expect(within(sort).getByRole("link", { name: "Top rated" })).toHaveAttribute("href", "/?type=tv&genre=10765&sort=rating");
+    const media = screen.getByRole("navigation", { name: "Movies or TV" });
+    expect(within(media).getByRole("link", { name: "Movies" })).toHaveAttribute("href", "/?sort=release");
+  });
+
+  it("drops a movie genre id on the TV browse", async () => {
+    const fetchMock = stubTmdb();
+    await renderHome({ type: "tv", genre: "878" });
+    expect(screen.getByRole("heading", { level: 1, name: "All series" })).toBeInTheDocument();
+    expect(discoverUrl(fetchMock, "tv").searchParams.has("with_genres")).toBe(false);
+  });
+
+  it("keeps type in TV pagination links", async () => {
+    stubTmdb();
+    await renderHome({ type: "tv", genre: "18" });
+    const pagination = screen.getByRole("navigation", { name: "Pagination" });
+    expect(within(pagination).getByRole("link", { name: /Next/ })).toHaveAttribute("href", "/?type=tv&genre=18&page=2");
+  });
+
+  it("sends a TV page past the last one back to page 1, keeping type", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: URL | string) =>
+        new URL(String(input)).pathname === "/3/genre/tv/list"
+          ? Response.json(genreTvList)
+          : Response.json({ page: 400, results: [], total_pages: 30, total_results: 600 }),
+      ),
+    );
+    await expect(Home({ searchParams: Promise.resolve({ type: "tv", page: "400" }) })).rejects.toThrow("redirect /?type=tv");
+  });
+
+  it("says no series match an empty TV genre", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: URL | string) =>
+        new URL(String(input)).pathname === "/3/genre/tv/list"
+          ? Response.json(genreTvList)
+          : Response.json({ page: 1, results: [], total_pages: 0, total_results: 0 }),
+      ),
+    );
+    await renderHome({ type: "tv", genre: "37" });
+    expect(screen.getByText("No series match this genre. Try another one, or show all series.")).toBeInTheDocument();
   });
 });

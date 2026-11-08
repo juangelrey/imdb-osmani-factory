@@ -1,13 +1,15 @@
 import details from "@/lib/tmdb/fixtures/movie-details.json";
 import discover from "@/lib/tmdb/fixtures/discover-movie.json";
+import discoverTv from "@/lib/tmdb/fixtures/discover-tv.json";
 import genreList from "@/lib/tmdb/fixtures/genre-movie-list.json";
+import genreTvList from "@/lib/tmdb/fixtures/genre-tv-list.json";
 import search from "@/lib/tmdb/fixtures/search-movie.json";
 import searchTv from "@/lib/tmdb/fixtures/search-tv.json";
 import person from "@/lib/tmdb/fixtures/person-details.json";
 import tvDetails from "@/lib/tmdb/fixtures/tv-details.json";
 import tvSeason from "@/lib/tmdb/fixtures/tv-season.json";
 import { TmdbError } from "@/lib/tmdb/client";
-import { discoverTitles, getPerson, getShow, getTitle, listGenres, searchShows, searchTitles } from "./queries";
+import { discoverShows, discoverTitles, getPerson, getShow, getTitle, listGenres, searchShows, searchTitles } from "./queries";
 
 function stubFetch(body: unknown, status = 200) {
   const fetchMock = vi.fn(async () => Response.json(body, { status }));
@@ -200,6 +202,13 @@ describe("listGenres", () => {
     expect(requestedUrl(fetchMock).pathname).toBe("/3/genre/movie/list");
     expect(genres).toContainEqual({ id: 878, name: "Science Fiction" });
   });
+
+  it("returns TMDB's TV genres for the tv kind", async () => {
+    const fetchMock = stubFetch(genreTvList);
+    const genres = await listGenres("tv");
+    expect(requestedUrl(fetchMock).pathname).toBe("/3/genre/tv/list");
+    expect(genres).toContainEqual({ id: 10765, name: "Sci-Fi & Fantasy" });
+  });
 });
 
 describe("discoverTitles", () => {
@@ -209,7 +218,7 @@ describe("discoverTitles", () => {
 
   it("asks for a page of non-adult movies and maps the results", async () => {
     const fetchMock = stubFetch(discover);
-    const page = await discoverTitles({ genre: undefined, sort: "popularity", page: 3 });
+    const page = await discoverTitles({ kind: "movie", genre: undefined, sort: "popularity", page: 3 });
     const url = requestedUrl(fetchMock);
     expect(url.pathname).toBe("/3/discover/movie");
     expect(url.searchParams.get("include_adult")).toBe("false");
@@ -221,7 +230,7 @@ describe("discoverTitles", () => {
 
   it("filters by genre", async () => {
     const fetchMock = stubFetch(discover);
-    await discoverTitles({ genre: 878, sort: "popularity", page: 1 });
+    await discoverTitles({ kind: "movie", genre: 878, sort: "popularity", page: 1 });
     expect(requestedUrl(fetchMock).searchParams.get("with_genres")).toBe("878");
   });
 
@@ -231,7 +240,7 @@ describe("discoverTitles", () => {
     ["title", { sort_by: "title.asc" }],
   ] as const)("maps the %s sort", async (sort, expected) => {
     const fetchMock = stubFetch(discover);
-    await discoverTitles({ genre: undefined, sort, page: 1 });
+    await discoverTitles({ kind: "movie", genre: undefined, sort, page: 1 });
     const params = requestedUrl(fetchMock).searchParams;
     for (const [key, value] of Object.entries(expected)) expect(params.get(key)).toBe(value);
     expect(params.has("primary_release_date.lte")).toBe(false);
@@ -242,11 +251,60 @@ describe("discoverTitles", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-11-07T15:00:00Z"));
     const fetchMock = stubFetch(discover);
-    await discoverTitles({ genre: undefined, sort: "release", page: 1 });
+    await discoverTitles({ kind: "movie", genre: undefined, sort: "release", page: 1 });
     const params = requestedUrl(fetchMock).searchParams;
     expect(params.get("sort_by")).toBe("primary_release_date.desc");
     expect(params.get("primary_release_date.lte")).toBe("2026-11-07");
     expect(params.get("vote_count.gte")).toBe("50");
+  });
+});
+
+describe("discoverShows", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("asks for a page of non-adult series and maps the results to shows", async () => {
+    const fetchMock = stubFetch(discoverTv);
+    const page = await discoverShows({ kind: "tv", genre: undefined, sort: "popularity", page: 3 });
+    const url = requestedUrl(fetchMock);
+    expect(url.pathname).toBe("/3/discover/tv");
+    expect(url.searchParams.get("include_adult")).toBe("false");
+    expect(url.searchParams.get("page")).toBe("3");
+    expect(url.searchParams.get("sort_by")).toBe("popularity.desc");
+    expect(url.searchParams.has("with_genres")).toBe(false);
+    expect(page.results[0]).toMatchObject({ kind: "tv", id: 1396, slug: "breaking-bad", name: "Breaking Bad", year: 2008 });
+    expect(page.totalPages).toBe(500);
+  });
+
+  it("filters by a TV genre", async () => {
+    const fetchMock = stubFetch(discoverTv);
+    await discoverShows({ kind: "tv", genre: 10765, sort: "popularity", page: 1 });
+    expect(requestedUrl(fetchMock).searchParams.get("with_genres")).toBe("10765");
+  });
+
+  it.each([
+    ["rating", { sort_by: "vote_average.desc", "vote_count.gte": "200" }],
+    ["title", { sort_by: "name.asc" }],
+  ] as const)("maps the %s sort to TV params", async (sort, expected) => {
+    const fetchMock = stubFetch(discoverTv);
+    await discoverShows({ kind: "tv", genre: undefined, sort, page: 1 });
+    const params = requestedUrl(fetchMock).searchParams;
+    for (const [key, value] of Object.entries(expected)) expect(params.get(key)).toBe(value);
+    expect(params.has("first_air_date.lte")).toBe(false);
+    expect(params.has("primary_release_date.lte")).toBe(false);
+  });
+
+  it("maps the release sort to first_air_date, limited to series aired by today with at least 50 votes", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-07T15:00:00Z"));
+    const fetchMock = stubFetch(discoverTv);
+    await discoverShows({ kind: "tv", genre: undefined, sort: "release", page: 1 });
+    const params = requestedUrl(fetchMock).searchParams;
+    expect(params.get("sort_by")).toBe("first_air_date.desc");
+    expect(params.get("first_air_date.lte")).toBe("2026-11-07");
+    expect(params.get("vote_count.gte")).toBe("50");
+    expect(params.has("primary_release_date.lte")).toBe(false);
   });
 });
 
