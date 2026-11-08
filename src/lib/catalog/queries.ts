@@ -27,14 +27,14 @@ export async function getTitle(id: number): Promise<Title | undefined> {
 }
 
 /**
- * A TV show with credits and the episodes of season `season` (default 1) in one request, or undefined when
+ * A TV show with credits, recommendations and the episodes of season `season` (default 1) in one request, or undefined when
  * TMDB does not know the id or flags the show adult or softcore. When the show has no such season, one more
  * request fetches its default season (season 1, else the first listed). Other failures throw.
  */
 export async function getShow(id: number, season = 1): Promise<Show | undefined> {
   let show: TmdbTvDetails;
   try {
-    show = await tmdbFetch<TmdbTvDetails>(`/tv/${id}`, { append_to_response: `credits,season/${season}` });
+    show = await tmdbFetch<TmdbTvDetails>(`/tv/${id}`, { append_to_response: `credits,recommendations,season/${season}` });
   } catch (error) {
     if (error instanceof TmdbError && error.status === 404) return undefined;
     throw error;

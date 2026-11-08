@@ -275,6 +275,7 @@ export function toShow(show: TmdbTvDetails, season?: TmdbSeason): Show {
     cast: topCast(show.credits.cast),
     seasons: toSeasonSummaries(show.seasons ?? []),
     season: season && toSeason(season),
+    recommendations: toRecommendations(show.recommendations, toShowSummary),
   };
 }
 

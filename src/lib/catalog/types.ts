@@ -77,6 +77,8 @@ export interface Show {
   seasons: SeasonSummary[];
   /** The selected season with its episodes; undefined when the show has no seasons. */
   season?: Season;
+  /** TMDB's recommended shows, at most 12, adult ones left out; empty when there are none. */
+  recommendations: TitleSummary[];
 }
 
 /** A season as the picker lists it. */

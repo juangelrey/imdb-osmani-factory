@@ -84,6 +84,7 @@ describe("entryFromShow", () => {
         creators: [],
         cast: [],
         seasons: [],
+        recommendations: [{ kind: "tv", id: 1396, slug: "breaking-bad", name: "Breaking Bad" }],
       }),
     ).toEqual({ kind: "tv", id: 603, slug: "matrix-show", name: "Matrix Show", year: 2020, rating: 7.1, posterPath: "/s.jpg" });
   });

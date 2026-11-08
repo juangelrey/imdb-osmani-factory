@@ -1,7 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { notFound, permanentRedirect } from "next/navigation";
 import details from "@/lib/tmdb/fixtures/tv-details.json";
+import sparse from "@/lib/tmdb/fixtures/tv-details-sparse.json";
 import tvSeason from "@/lib/tmdb/fixtures/tv-season.json";
 import { STORAGE_KEY } from "@/lib/watchlist/watchlist";
 import ShowPage, * as page from "./page";
@@ -64,7 +65,34 @@ describe("TV page", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const url = new URL(String((fetchMock.mock.calls[0] as unknown[])[0]));
     expect(url.pathname).toBe("/3/tv/1396");
-    expect(url.searchParams.get("append_to_response")).toBe("credits,season/1");
+    expect(url.searchParams.get("append_to_response")).toBe("credits,recommendations,season/1");
+  });
+
+  it("suggests up to 12 recommended shows below the episode list, linking to their TV pages", async () => {
+    stubTmdb(withSeasonOne);
+    render(await ShowPage(params("1396-breaking-bad")));
+    const section = screen.getByRole("region", { name: "If you liked Breaking Bad, you might also like…" });
+    const links = within(section).getAllByRole("link");
+    expect(links).toHaveLength(12);
+    expect(links[0]).toHaveAttribute("href", "/tv/60059-better-call-saul");
+    expect(within(section).queryByText("Adult Series")).not.toBeInTheDocument();
+    expect(within(section).queryByText("Softcore Series")).not.toBeInTheDocument();
+    const episode = screen.getByRole("heading", { level: 3, name: "1. Pilot" });
+    expect(episode.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("keeps the recommendations when the season comes from the fallback request", async () => {
+    stubTmdbPaths({ "/3/tv/1396": details, "/3/tv/1396/season/1": tvSeason });
+    render(await ShowPage(params("1396-breaking-bad", { season: "99" })));
+    const section = screen.getByRole("region", { name: /you might also like/ });
+    expect(within(section).getAllByRole("link")).toHaveLength(12);
+  });
+
+  it("shows no recommendations section for a show without any", async () => {
+    stubTmdb(sparse);
+    render(await ShowPage(params("299999-untitled-pilot")));
+    expect(screen.getByRole("heading", { level: 1, name: "Untitled Pilot" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: /you might also like/ })).not.toBeInTheDocument();
   });
 
   it("offers the watchlist button, saving a snapshot of the show", async () => {
@@ -116,7 +144,7 @@ describe("TV page", () => {
     const fetchMock = stubTmdb(withSeasonOne);
     render(await ShowPage(params("1396-breaking-bad", { season })));
     const url = new URL(String((fetchMock.mock.calls[0] as unknown[])[0]));
-    expect(url.searchParams.get("append_to_response")).toBe("credits,season/1");
+    expect(url.searchParams.get("append_to_response")).toBe("credits,recommendations,season/1");
     expect(screen.getByRole("link", { current: "page" })).toHaveTextContent("Season 1");
   });
 

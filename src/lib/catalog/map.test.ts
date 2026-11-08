@@ -829,7 +829,34 @@ describe("toShow", () => {
       cast: [],
       seasons: [],
       season: undefined,
+      recommendations: [],
     });
+  });
+
+  it("keeps the first 12 recommendations as show summaries, skipping adult and softcore ones", () => {
+    const recommendations = toShow(breakingBad).recommendations;
+    expect(recommendations).toHaveLength(12);
+    expect(recommendations[0]).toEqual({
+      kind: "tv",
+      id: 60059,
+      slug: "better-call-saul",
+      name: "Better Call Saul",
+      year: 2015,
+      rating: 8.7,
+      posterUrl: "https://image.tmdb.org/t/p/w342/fC2HDm5t0kHl7mTm7jxMR31b7by.jpg",
+    });
+    const ids = recommendations.map(({ id }) => id);
+    expect(ids).not.toContain(990101);
+    expect(ids).not.toContain(990102);
+    expect(recommendations.at(-1)?.name).toBe("Good Girls");
+  });
+
+  it("leaves a recommended show's missing poster undefined", () => {
+    expect(toShow(breakingBad).recommendations.find(({ id }) => id === 40008)?.posterUrl).toBeUndefined();
+  });
+
+  it("keeps the recommendations when the season comes from a separate request", () => {
+    expect(toShow(breakingBad, tvSeason as TmdbSeason).recommendations).toHaveLength(12);
   });
 
   it("falls back to a 'show' slug when nothing Latin is left", () => {

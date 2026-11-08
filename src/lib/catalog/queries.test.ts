@@ -80,15 +80,23 @@ function requestedUrls(fetchMock: { mock: { calls: unknown[][] } }) {
 }
 
 describe("getShow", () => {
-  it("makes exactly one request for the show with credits and season 1 appended, in English", async () => {
+  it("makes exactly one request for the show with credits, recommendations and season 1 appended, in English", async () => {
     const fetchMock = stubFetch({ ...tvDetails, "season/1": tvSeason });
     const show = await getShow(1396);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const url = requestedUrl(fetchMock);
     expect(url.pathname).toBe("/3/tv/1396");
-    expect(url.searchParams.get("append_to_response")).toBe("credits,season/1");
+    expect(url.searchParams.get("append_to_response")).toBe("credits,recommendations,season/1");
     expect(url.searchParams.get("language")).toBe("en-US");
     expect(show?.season).toMatchObject({ number: 1, name: "Season 1" });
+  });
+
+  it("maps the appended recommendations, dropping adult and softcore shows", async () => {
+    stubFetch({ ...tvDetails, "season/1": tvSeason });
+    const show = await getShow(1396);
+    expect(show?.recommendations).toHaveLength(12);
+    expect(show?.recommendations.map(({ id }) => id)).not.toContain(990101);
+    expect(show?.recommendations.map(({ id }) => id)).not.toContain(990102);
   });
 
   it("appends the requested season to the same request", async () => {
@@ -96,7 +104,7 @@ describe("getShow", () => {
     const fetchMock = stubFetch({ ...tvDetails, "season/2": seasonTwo });
     const show = await getShow(1396, 2);
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(requestedUrl(fetchMock).searchParams.get("append_to_response")).toBe("credits,season/2");
+    expect(requestedUrl(fetchMock).searchParams.get("append_to_response")).toBe("credits,recommendations,season/2");
     expect(show?.season?.number).toBe(2);
   });
 
@@ -105,8 +113,9 @@ describe("getShow", () => {
     const show = await getShow(1396, 99);
     const urls = requestedUrls(fetchMock);
     expect(urls.map(({ pathname }) => pathname)).toEqual(["/3/tv/1396", "/3/tv/1396/season/1"]);
-    expect(urls[0].searchParams.get("append_to_response")).toBe("credits,season/99");
+    expect(urls[0].searchParams.get("append_to_response")).toBe("credits,recommendations,season/99");
     expect(show?.season?.number).toBe(1);
+    expect(show?.recommendations).toHaveLength(12);
   });
 
   it("falls back to the first listed season when there is no season 1", async () => {
