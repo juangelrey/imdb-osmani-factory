@@ -5,7 +5,15 @@
  * palette the components were written for. Light remaps the zinc and amber variables Tailwind's utilities read, so
  * components keep their classes: zinc is inverted, and the light amber shades used for text and accents take darker
  * amber values. Text pairs meet WCAG AA (4.5:1) on the page and card backgrounds; zinc-500 is darkened for that.
+ *
+ * `strong` is the brightest text colour, for hover states: white in Dark, the darkest zinc in Light. Use it instead
+ * of `white`, which stays white in both themes (the initials on poster placeholders rely on that). Sky is only the
+ * TMDB attribution link; Light takes the darker sky shades.
  */
+@theme {
+  --color-strong: var(--color-white);
+}
+
 :root {
   color-scheme: dark;
 }
@@ -26,6 +34,9 @@
   --color-amber-200: oklch(41.4% 0.112 45.904);
   --color-amber-300: oklch(47.3% 0.137 46.201);
   --color-amber-400: oklch(55.5% 0.163 48.998);
+  --color-sky-300: oklch(44.3% 0.11 240.79);
+  --color-sky-400: oklch(50% 0.134 242.749);
+  --color-strong: var(--color-zinc-50);
 }
 
 /*

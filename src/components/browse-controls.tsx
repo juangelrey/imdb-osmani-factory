@@ -22,7 +22,7 @@ function Pill({ href, active, children }: { href: string; active: boolean; child
       className={`inline-block rounded-full border px-3 py-1 text-xs ${
         active
           ? "border-amber-400 bg-amber-400 font-semibold text-zinc-950"
-          : "border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-white"
+          : "border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-strong"
       }`}
     >
       {children}
