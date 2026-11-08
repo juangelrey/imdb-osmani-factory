@@ -31,5 +31,26 @@
       { "id": 9339, "name": "Lilly Wachowski", "job": "Director", "department": "Directing" },
       { "id": 9341, "name": "Don Davis", "job": "Original Music Composer", "department": "Sound" }
     ]
+  },
+  "recommendations": {
+    "page": 1,
+    "results": [
+      { "adult": false, "softcore": false, "media_type": "movie", "id": 604, "title": "The Matrix Reloaded", "release_date": "2003-05-15", "vote_average": 7.0, "vote_count": 11092, "poster_path": "/9TGHDvWrqKBzwDxDodHYXEmOE6J.jpg" },
+      { "adult": false, "softcore": false, "media_type": "movie", "id": 605, "title": "The Matrix Revolutions", "release_date": "2003-11-05", "vote_average": 6.7, "vote_count": 9622, "poster_path": "/t1wm4PgOQ8e4z1C6tk1yDYrps4Y.jpg" },
+      { "adult": true, "softcore": false, "media_type": "movie", "id": 990001, "title": "Adult Feature", "release_date": "2001-01-01", "vote_average": 5.0, "vote_count": 12, "poster_path": "/adultPoster.jpg" },
+      { "adult": false, "softcore": false, "media_type": "movie", "id": 550, "title": "Fight Club", "release_date": "1999-10-15", "vote_average": 8.4, "vote_count": 30521, "poster_path": "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg" },
+      { "adult": false, "softcore": false, "media_type": "movie", "id": 27205, "title": "Inception", "release_date": "2010-07-15", "vote_average": 8.4, "vote_count": 37603, "poster_path": "/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg" },
+      { "adult": false, "softcore": false, "media_type": "movie", "id": 280, "title": "Terminator 2: Judgment Day", "release_date": "1991-07-03", "vote_average": 8.1, "vote_count": 13241, "poster_path": "/5M0j0B18abtBI5gi2RhfjjurTqb.jpg" },
+      { "adult": false, "softcore": false, "media_type": "movie", "id": 155, "title": "The Dark Knight", "release_date": "2008-07-16", "vote_average": 8.5, "vote_count": 33851, "poster_path": "/qJ2tW6WMUDux911r6m7haRef0WH.jpg" },
+      { "adult": false, "softcore": false, "media_type": "movie", "id": 680, "title": "Pulp Fiction", "release_date": "1994-09-10", "vote_average": 8.5, "vote_count": 28312, "poster_path": "/vQWk5YBFWF4bZaofAbv0tShwBvQ.jpg" },
+      { "adult": false, "softcore": false, "media_type": "movie", "id": 157336, "title": "Interstellar", "release_date": "2014-11-05", "vote_average": 8.5, "vote_count": 36822, "poster_path": "/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg" },
+      { "adult": false, "softcore": false, "media_type": "movie", "id": 105, "title": "Back to the Future", "release_date": "1985-07-03", "vote_average": 8.3, "vote_count": 20154, "poster_path": "/fNOH9f1aA7XRTzl1sAOx9iF553Q.jpg" },
+      { "adult": false, "softcore": false, "media_type": "movie", "id": 98, "title": "Gladiator", "release_date": "2000-05-04", "vote_average": 8.2, "vote_count": 19903, "poster_path": "/ty8TGRuvJLPUmAR1H1nRIsgwvim.jpg" },
+      { "adult": false, "softcore": false, "media_type": "movie", "id": 77, "title": "Memento", "release_date": "2000-10-11", "vote_average": 8.2, "vote_count": 14915, "poster_path": null },
+      { "adult": false, "softcore": false, "media_type": "movie", "id": 13, "title": "Forrest Gump", "release_date": "1994-06-23", "vote_average": 8.5, "vote_count": 28046, "poster_path": "/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg" },
+      { "adult": false, "softcore": false, "media_type": "movie", "id": 7299, "title": "Equilibrium", "release_date": "2002-12-06", "vote_average": 7.2, "vote_count": 3980, "poster_path": "/9ewlzdpBBhodYWfNc2FWv6J4tqu.jpg" }
+    ],
+    "total_pages": 1,
+    "total_results": 14
   }
 }

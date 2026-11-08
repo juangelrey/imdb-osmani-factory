@@ -22,6 +22,7 @@ const title: Title = {
     { id: 6384, slug: "keanu-reeves", name: "Keanu Reeves" },
     { id: 2975, slug: "laurence-fishburne", name: "Laurence Fishburne" },
   ],
+  recommendations: [],
 };
 
 function fact(term: string) {
@@ -78,7 +79,7 @@ describe("TitleDetails", () => {
   });
 
   it("hides fields TMDB does not have", () => {
-    const sparse: Title = { id: 1, slug: "untitled", name: "Untitled", genres: [], directors: [], cast: [] };
+    const sparse: Title = { id: 1, slug: "untitled", name: "Untitled", genres: [], directors: [], cast: [], recommendations: [] };
     const { container } = render(<TitleDetails title={sparse} />);
     for (const term of ["Year", "Runtime", "Genres", "Rating", "Director", "Directors", "Cast"]) {
       expect(screen.queryByText(term, { selector: "dt" })).not.toBeInTheDocument();

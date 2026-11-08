@@ -16,10 +16,10 @@ import type { SearchSortKey } from "./search-params";
 import { SEARCH_WINDOW_PAGES, sortSearchItems, windowPage, type SearchItem } from "./search-sort";
 import type { Genre, Paged, Person, Show, ShowSummary, Title, TitleKind, TitleSummary } from "./types";
 
-/** A movie with credits, or undefined when TMDB does not know the id. Other failures throw. */
+/** A movie with credits and recommendations in one request, or undefined when TMDB does not know the id. Other failures throw. */
 export async function getTitle(id: number): Promise<Title | undefined> {
   try {
-    return toTitle(await tmdbFetch<TmdbMovieDetails>(`/movie/${id}`, { append_to_response: "credits" }));
+    return toTitle(await tmdbFetch<TmdbMovieDetails>(`/movie/${id}`, { append_to_response: "credits,recommendations" }));
   } catch (error) {
     if (error instanceof TmdbError && error.status === 404) return undefined;
     throw error;
