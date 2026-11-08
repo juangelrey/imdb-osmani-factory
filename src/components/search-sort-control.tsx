@@ -29,7 +29,7 @@ export function SearchSortControl({ current, hrefForSort }: SearchSortControlPro
                 className={`inline-block rounded-full border px-3 py-1 text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 ${
                   active
                     ? "border-amber-400 bg-amber-400 font-semibold text-zinc-950"
-                    : "border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-white"
+                    : "border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-strong"
                 }`}
               >
                 {SORT_LABELS[sort]}

@@ -34,7 +34,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           </ViewTransition>
         </main>
         <footer
-          className="border-t border-zinc-800 px-4 py-6 text-center text-xs text-zinc-500"
+          className="border-t border-zinc-800 px-4 py-6 text-center text-xs text-zinc-400"
           style={{ viewTransitionName: "site-footer" }}
         >
           <TmdbAttribution />
