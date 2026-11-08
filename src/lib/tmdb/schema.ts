@@ -172,8 +172,8 @@ export interface TmdbSeason {
 }
 
 /**
- * `GET /tv/{id}?append_to_response=credits,season/{n}`. TMDB leaves `season/{n}` out when the show
- * has no season `n`.
+ * `GET /tv/{id}?append_to_response=credits,recommendations,season/{n}`. TMDB leaves `season/{n}` out when
+ * the show has no season `n`.
  */
 export interface TmdbTvDetails {
   id: number;
@@ -200,5 +200,7 @@ export interface TmdbTvDetails {
   credits: {
     cast: TmdbCastMember[];
   };
+  /** Present when requested through `append_to_response`. */
+  recommendations?: TmdbRecommendations<TmdbTvListItem>;
   [season: `season/${number}`]: TmdbSeason | undefined;
 }
