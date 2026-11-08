@@ -46,10 +46,10 @@ export async function getShow(id: number, season = 1): Promise<Show | undefined>
 }
 
 /**
- * A person with their movie credits in one request, or undefined when TMDB does not know the id
- * or flags the person adult. Other failures throw.
+ * A person with their combined credits (movies and TV) in one request, or undefined when TMDB does not
+ * know the id or flags the person adult. Other failures throw. `today` is "YYYY-MM-DD"; it decides which
+ * titles in the career are upcoming.
  */
-/** `today` is "YYYY-MM-DD"; it decides which titles in the career are upcoming. */
 export async function getPerson(id: number, today: string): Promise<Person | undefined> {
   let person: TmdbPersonDetails;
   try {

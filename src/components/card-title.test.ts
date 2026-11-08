@@ -1,4 +1,5 @@
 import { cardFromEntry, cardFromSummary } from "./card-title";
+import { titleColorKey } from "./poster";
 
 describe("cardFromSummary", () => {
   it("links to the canonical TMDB title URL and keeps the poster", () => {
@@ -28,6 +29,11 @@ describe("cardFromSummary", () => {
   it("seeds a movie's fallback poster colours by id alone, as before TV, and a show's by kind and id", () => {
     expect(cardFromSummary({ kind: "movie", id: 603, slug: "the-matrix", name: "The Matrix" }).colorKey).toBe("603");
     expect(cardFromSummary({ kind: "tv", id: 603, slug: "breaking-point", name: "Breaking Point" }).colorKey).toBe("tv-603");
+  });
+
+  it("uses the same colour key as the detail page, so the gradient keeps its colours through the morph", () => {
+    expect(cardFromSummary({ kind: "movie", id: 603, slug: "the-matrix", name: "The Matrix" }).colorKey).toBe(titleColorKey("movie", 603));
+    expect(cardFromSummary({ kind: "tv", id: 603, slug: "breaking-point", name: "Breaking Point" }).colorKey).toBe(titleColorKey("tv", 603));
   });
 });
 

@@ -45,6 +45,14 @@ export function posterTransitionName(kind: TitleKind, id: number): string {
 }
 
 /**
+ * The fallback gradient's colour key for a title: the id alone for a movie (as before TV, so its colours stay),
+ * kind and id for a show. Cards and detail pages both use it, so the gradient keeps its colours through the morph.
+ */
+export function titleColorKey(kind: TitleKind, id: number): string {
+  return kind === "movie" ? String(id) : `${kind}-${id}`;
+}
+
+/**
  * The TMDB poster, or a generated gradient with initials when there is none.
  * Decorative unless `alt` is given; then the image or gradient is announced with that text.
  */

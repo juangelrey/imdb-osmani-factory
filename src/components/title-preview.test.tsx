@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { onTestFinished } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { TitlePreview } from "./title-preview";
 
@@ -26,6 +27,84 @@ const card = (name = "Unforgiven") => screen.queryByRole("dialog", { name });
 
 describe("TitlePreview", () => {
   const user = () => userEvent.setup();
+  const showPopover = vi.fn();
+  const hidePopover = vi.fn();
+
+  // jsdom has no Popover API; stub it so the component takes the same path as a browser.
+  beforeEach(() => {
+    showPopover.mockReset();
+    hidePopover.mockReset();
+    Object.assign(HTMLElement.prototype, { showPopover, hidePopover });
+  });
+  afterEach(() => {
+    const proto = HTMLElement.prototype as Partial<Record<"showPopover" | "hidePopover", unknown>>;
+    delete proto.showPopover;
+    delete proto.hidePopover;
+  });
+
+  it("shows the card as a manual popover, so the browser never light-dismisses it on the click that opened it", async () => {
+    const u = user();
+    renderPreview();
+    await u.click(trigger());
+    const dialog = screen.getByRole("dialog", { name: "Unforgiven" });
+    expect((dialog as HTMLElement & { popover?: string }).popover).toBe("manual");
+    expect(showPopover).toHaveBeenCalledTimes(1);
+    expect(showPopover.mock.contexts[0]).toBe(dialog);
+  });
+
+  it("opens on a quick click and stays open", async () => {
+    const u = user();
+    renderPreview();
+    await u.click(trigger());
+    await act(() => wait(500));
+    expect(card()).toBeInTheDocument();
+  });
+
+  it("stays open when the thumbnail is clicked while the card is open from hover", async () => {
+    const u = user();
+    renderPreview();
+    await u.hover(trigger());
+    await act(() => wait(350));
+    expect(card()).toBeInTheDocument();
+    await u.click(trigger());
+    await act(() => wait(500));
+    expect(card()).toBeInTheDocument();
+    expect(hidePopover).not.toHaveBeenCalled();
+  });
+
+  it("closes on Escape from inside the card, returning focus to the thumbnail without reopening", async () => {
+    const u = user();
+    renderPreview();
+    await u.tab();
+    await u.tab();
+    expect(screen.getByRole("link", { name: "Open" })).toHaveFocus();
+    await u.keyboard("{Escape}");
+    expect(trigger()).toHaveFocus();
+    expect(card()).toBeNull();
+    expect(trigger()).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it.each([
+    ["scroll", () => fireEvent.scroll(window)],
+    ["resize", () => fireEvent(window, new Event("resize"))],
+  ])("closes on %s where the card is placed without anchor positioning", async (_, event) => {
+    const supports = vi.spyOn(CSS, "supports").mockReturnValue(false);
+    onTestFinished(() => supports.mockRestore());
+    const u = user();
+    renderPreview();
+    await u.click(trigger());
+    expect(card()).toBeInTheDocument();
+    act(event);
+    expect(card()).toBeNull();
+  });
+
+  it("stays open on scroll where CSS anchor positioning keeps the card on its thumbnail", async () => {
+    const u = user();
+    renderPreview();
+    await u.click(trigger());
+    act(() => fireEvent.scroll(window));
+    expect(card()).toBeInTheDocument();
+  });
 
   it("opens about 300 ms after the pointer rests on the thumbnail, and closes when it leaves", async () => {
     const u = user();

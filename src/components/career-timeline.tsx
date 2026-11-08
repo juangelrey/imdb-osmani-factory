@@ -2,7 +2,7 @@ import Link from "next/link";
 import { formatShortDate } from "@/lib/catalog/format";
 import { careerKinds, filterCareer, summaryHref } from "@/lib/catalog/map";
 import type { CareerEntry, CareerYear, CreditsFilter } from "@/lib/catalog/types";
-import { Poster } from "./poster";
+import { Poster, titleColorKey } from "./poster";
 import { TitlePreview } from "./title-preview";
 
 interface CareerTimelineProps {
@@ -143,7 +143,7 @@ function TimelineEntry({
       </div>
       <div className="flex min-w-0 items-center gap-3">
         <TitlePreview
-          colorKey={title.slug}
+          colorKey={titleColorKey(title.kind, title.id)}
           name={title.name}
           href={href}
           year={title.year}
@@ -152,7 +152,7 @@ function TimelineEntry({
           posterUrl={previewPosterUrl}
         >
           <Poster
-            colorKey={title.slug}
+            colorKey={titleColorKey(title.kind, title.id)}
             name={title.name}
             posterUrl={title.posterUrl}
             size="thumb"

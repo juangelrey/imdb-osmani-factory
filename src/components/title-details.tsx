@@ -3,7 +3,7 @@ import { Fragment, type ReactNode } from "react";
 import { formatRuntime } from "@/lib/catalog/format";
 import { personHref } from "@/lib/catalog/map";
 import type { PersonLink, Title } from "@/lib/catalog/types";
-import { Poster, posterTransitionName } from "./poster";
+import { Poster, posterTransitionName, titleColorKey } from "./poster";
 
 /** A labelled fact; an undefined value hides the row. */
 export type Fact = [term: string, value: ReactNode];
@@ -103,7 +103,7 @@ export function TitleDetails({ title, actions }: TitleDetailsProps) {
 
   return (
     <DetailsLayout
-      colorKey={title.slug}
+      colorKey={titleColorKey("movie", title.id)}
       name={title.name}
       posterUrl={title.posterUrl}
       transitionName={posterTransitionName("movie", title.id)}

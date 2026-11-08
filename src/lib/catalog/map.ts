@@ -15,7 +15,7 @@ import type {
   TmdbTvDetails,
   TmdbTvListItem,
 } from "@/lib/tmdb/schema";
-import { ageOn, formatDate } from "./format";
+import { ageOn, formatDate, truncateText } from "./format";
 import type {
   CareerEntry,
   CareerYear,
@@ -298,6 +298,14 @@ function actingRole(credit: TmdbPersonCastCredit): string {
   return `${role} · ${count} ${count === 1 ? "episode" : "episodes"}`;
 }
 
+/** The preview card clamps the synopsis to four lines; this keeps a long one out of the page payload. */
+const CAREER_SYNOPSIS_MAX = 300;
+
+function careerSynopsis(overview: string | null | undefined): string | undefined {
+  const text = overview?.trim();
+  return text ? truncateText(text, CAREER_SYNOPSIS_MAX) : undefined;
+}
+
 /**
  * Merge acting and directing credits into one entry per film or show, grouped by year, newest first.
  * A movie and a show with the same id stay separate. Other crew jobs (Creator, Writer, producers) are
@@ -317,7 +325,7 @@ export function toCareer(credits: TmdbPersonCombinedCredits, today: string): Car
       releaseDate: date,
       upcoming: false,
       roles: [],
-      synopsis: credit.overview?.trim() || undefined,
+      synopsis: careerSynopsis(credit.overview),
       previewPosterUrl: posterUrl(credit.poster_path, "w185"),
     };
     // Several rows for one show can start on different dates; the person's first appearance wins.

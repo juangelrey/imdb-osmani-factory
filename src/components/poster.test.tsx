@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { ViewTransition, type ReactElement } from "react";
-import { Poster, posterTransitionName } from "./poster";
+import { Poster, posterTransitionName, titleColorKey } from "./poster";
 
 const posterUrl = "https://image.tmdb.org/t/p/w342/abc.jpg";
 
@@ -33,5 +33,10 @@ describe("Poster", () => {
   it("renders no view transition without a name, so timeline thumbnails never share one", () => {
     const element = Poster({ colorKey: "k", name: "Name", size: "thumb" }) as ReactElement;
     expect(element.type).not.toBe(ViewTransition);
+  });
+
+  it("keys a title's fallback colours by id: the id alone for a movie, kind and id for a show", () => {
+    expect(titleColorKey("movie", 603)).toBe("603");
+    expect(titleColorKey("tv", 603)).toBe("tv-603");
   });
 });

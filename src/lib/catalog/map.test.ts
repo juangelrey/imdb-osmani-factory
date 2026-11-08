@@ -283,6 +283,15 @@ describe("toCareer", () => {
     });
   });
 
+  it("trims a long synopsis to about 300 characters, so the page payload stays small", () => {
+    const overview = `${"A long tale of the west. ".repeat(20)}The end.`;
+    const [year] = toCareer({ cast: [{ ...film(1, "Long", "2001-01-01"), overview, character: "Ann" }], crew: [] }, TODAY);
+    const synopsis = year.entries[0].synopsis!;
+    expect(synopsis.length).toBeLessThanOrEqual(301);
+    expect(synopsis).toMatch(/^A long tale of the west\. .*\S…$/);
+    expect(overview.startsWith(synopsis.slice(0, -1))).toBe(true);
+  });
+
   it("leaves the preview poster, synopsis and rating undefined when TMDB has none", () => {
     const blank = { ...film(1, "Bare", "2001-01-01"), overview: " ", vote_average: 0, vote_count: 0 };
     const [year] = toCareer({ cast: [{ ...blank, character: "Ann" }], crew: [] }, TODAY);

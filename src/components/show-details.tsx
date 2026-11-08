@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { Show } from "@/lib/catalog/types";
-import { posterTransitionName } from "./poster";
+import { posterTransitionName, titleColorKey } from "./poster";
 import { DetailsLayout, personLinks, ratingFact, type Fact } from "./title-details";
 
 interface ShowDetailsProps {
@@ -22,7 +22,7 @@ export function ShowDetails({ show, actions }: ShowDetailsProps) {
 
   return (
     <DetailsLayout
-      colorKey={show.slug}
+      colorKey={titleColorKey("tv", show.id)}
       name={show.name}
       posterUrl={show.posterUrl}
       transitionName={posterTransitionName("tv", show.id)}

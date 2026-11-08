@@ -6,9 +6,8 @@ export function TitleCard({ title }: { title: CardTitle }) {
   return (
     <Link
       href={title.href}
-      // The poster morph only pairs when the detail page renders in the navigation's own commit. The default
-      // prefetch stops at the route's loading.tsx, so the skeleton would land first and the morph would not play.
-      prefetch={true}
+      // Default prefetch: it stops at the route's loading.tsx, so the poster morph plays only when the detail page
+      // is already loaded and the skeleton shows otherwise. Full prefetch was declined (#40 decision 11).
       // Lifts and brightens on hover and keyboard focus; with reduced motion it brightens without moving.
       className="group block rounded-lg transition duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-400 motion-safe:hover:-translate-y-1 motion-safe:focus-visible:-translate-y-1 motion-reduce:transition-none"
     >

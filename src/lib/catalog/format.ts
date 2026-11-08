@@ -38,3 +38,15 @@ export function ageOn(from: string, to: string): number | undefined {
   const age = end[0] - start[0] - (beforeBirthday ? 1 : 0);
   return age >= 0 ? age : undefined;
 }
+
+/**
+ * `text` cut to at most `max` characters at the last word boundary, with an ellipsis; mid-word only when the
+ * first word alone is longer. Text within the limit comes back as it is.
+ */
+export function truncateText(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const head = text.slice(0, max + 1);
+  const boundary = head.search(/\s\S*$/);
+  const cut = boundary > 0 ? head.slice(0, boundary) : text.slice(0, max);
+  return `${cut.replace(/[\s,;:.\u2013\u2014-]+$/, "")}…`;
+}

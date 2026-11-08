@@ -4,6 +4,8 @@ import type { Show } from "@/lib/catalog/types";
 import tvDetails from "@/lib/tmdb/fixtures/tv-details.json";
 import tvSparse from "@/lib/tmdb/fixtures/tv-details-sparse.json";
 import type { TmdbTvDetails } from "@/lib/tmdb/schema";
+import { titleColorKey } from "./poster";
+import { posterColors } from "./poster-art";
 import { ShowDetails } from "./show-details";
 
 const show: Show = toShow(tvDetails as TmdbTvDetails);
@@ -61,5 +63,13 @@ describe("ShowDetails", () => {
   it("shows actions under the heading", () => {
     render(<ShowDetails show={show} actions={<button type="button">Save</button>} />);
     expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+  });
+
+  it("seeds the fallback gradient with the same colour key as its grid card", () => {
+    const { container } = render(<ShowDetails show={{ ...show, posterUrl: undefined }} />);
+    const { from, to } = posterColors(titleColorKey("tv", show.id));
+    expect(container.querySelector('[style*="linear-gradient"]')).toHaveStyle({
+      backgroundImage: `linear-gradient(160deg, ${from}, ${to})`,
+    });
   });
 });

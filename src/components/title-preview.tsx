@@ -32,9 +32,10 @@ interface TitlePreviewProps {
 
 /**
  * A thumbnail that opens a floating preview card on hover (after about 300 ms), on focus and on
- * tap. The card is a native `popover="auto"` in the top layer, so it never shifts the layout; it is
- * placed with CSS anchor positioning where supported, else by `placeCard`. Escape, a click
- * outside, the pointer leaving, or focus moving past it closes the card.
+ * tap. The card is a native `popover="manual"` in the top layer, so it never shifts the layout; it is
+ * placed with CSS anchor positioning where supported, else by `placeCard`. Only this component
+ * closes it: Escape, a pointerdown outside, the pointer leaving, focus moving past it, and, with the
+ * fallback placement, a scroll or resize. (`auto` would light-dismiss it on the click that opened it.)
  */
 export function TitlePreview({ children, colorKey, name, href, year, rating, synopsis, posterUrl }: TitlePreviewProps) {
   const id = useId();
@@ -42,6 +43,8 @@ export function TitlePreview({ children, colorKey, name, href, year, rating, syn
   const triggerRef = useRef<HTMLButtonElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  /** True while Escape hands focus back to the thumbnail, so that focus does not reopen the card. */
+  const refocusing = useRef(false);
   const [open, setOpen] = useState(false);
 
   const clearTimer = () => clearTimeout(timer.current);
@@ -54,8 +57,8 @@ export function TitlePreview({ children, colorKey, name, href, year, rating, syn
     setOpen(true);
   }, []);
 
-  // One card at a time; and the open card listens for Escape and clicks outside. A native auto
-  // popover does both too, but browsers without the Popover API rely on these.
+  // One card at a time; and the open card listens for Escape and pointerdowns outside. A manual
+  // popover has no light dismiss, so these are the only way it closes besides hover and focus.
   useEffect(() => {
     if (!open) return;
     if (closeOpenCard !== close) closeOpenCard?.();
@@ -63,8 +66,14 @@ export function TitlePreview({ children, colorKey, name, href, year, rating, syn
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      const focusInCard = cardRef.current?.contains(document.activeElement) ?? false;
       close();
-      triggerRef.current?.focus();
+      // Focus would be lost with the card; hand it back to the thumbnail without reopening the card.
+      if (focusInCard) {
+        refocusing.current = true;
+        triggerRef.current?.focus();
+        refocusing.current = false;
+      }
     };
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
@@ -79,22 +88,37 @@ export function TitlePreview({ children, colorKey, name, href, year, rating, syn
     };
   }, [open, close]);
 
-  // Promote the card to the top layer as a `popover="auto"`, and follow the browser when it light-dismisses it.
+  // Promote the card, mounted fresh on each open, to the top layer as a `popover="manual"`. With the
+  // fallback placement, the card is fixed where the thumbnail was, so a scroll or resize closes it.
   useLayoutEffect(() => {
     const card = cardRef.current;
     const trigger = triggerRef.current;
     if (!open || !card || !trigger) return;
     // Set imperatively: where the Popover API is missing, a `popover` attribute would hide the card.
-    if (typeof card.showPopover === "function" && !card.matches(":popover-open")) {
-      card.popover = "auto";
+    const popover = typeof card.showPopover === "function";
+    if (popover) {
+      card.popover = "manual";
       card.showPopover();
     }
-    if (!supportsAnchors()) placeCard(card, trigger);
-    const onToggle = (event: Event) => {
-      if ((event as ToggleEvent).newState === "closed") close();
+    const fallback = !supportsAnchors();
+    if (fallback) {
+      placeCard(card, trigger);
+      window.addEventListener("scroll", close, { capture: true, passive: true });
+      window.addEventListener("resize", close);
+    }
+    return () => {
+      if (fallback) {
+        window.removeEventListener("scroll", close, { capture: true });
+        window.removeEventListener("resize", close);
+      }
+      if (popover && card.isConnected) {
+        try {
+          card.hidePopover();
+        } catch {
+          // Already hidden.
+        }
+      }
     };
-    card.addEventListener("toggle", onToggle);
-    return () => card.removeEventListener("toggle", onToggle);
   }, [open, close]);
 
   useEffect(() => clearTimer, []);
@@ -124,7 +148,9 @@ export function TitlePreview({ children, colorKey, name, href, year, rating, syn
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? `${id}-card` : undefined}
-        onFocus={show}
+        onFocus={() => {
+          if (!refocusing.current) show();
+        }}
         onClick={show}
         {...hoverHandlers}
         style={{ anchorName: anchor } as React.CSSProperties}
