@@ -6,15 +6,18 @@ export function TitleCard({ title }: { title: CardTitle }) {
   return (
     <Link
       href={title.href}
-      className="group block rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-400"
+      // Lifts and brightens on hover and keyboard focus; with reduced motion it brightens without moving.
+      className="group block rounded-lg transition duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-400 motion-safe:hover:-translate-y-1 motion-safe:focus-visible:-translate-y-1 motion-reduce:transition-none"
     >
       <Poster
         colorKey={title.colorKey}
         name={title.name}
         posterUrl={title.posterUrl}
-        className="transition group-hover:brightness-110"
+        className="shadow-black/40 transition duration-150 ease-out group-hover:shadow-lg group-hover:brightness-110 group-focus-visible:shadow-lg group-focus-visible:brightness-110 motion-reduce:transition-none"
       />
-      <h2 className="mt-2 text-sm font-semibold leading-snug group-hover:text-amber-300">{title.name}</h2>
+      <h2 className="mt-2 text-sm font-semibold leading-snug transition-colors duration-150 group-hover:text-amber-300 group-focus-visible:text-amber-300">
+        {title.name}
+      </h2>
       <p className="mt-1 flex items-center justify-between text-xs text-zinc-400">
         <span>{title.year}</span>
         {title.rating !== undefined && (

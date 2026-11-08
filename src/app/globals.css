@@ -30,3 +30,56 @@
   justify-self: center;
   margin: 0 0 0.75rem;
 }
+
+/* Links and buttons ease between colours; a utility such as `transition` on an element still wins. */
+@layer base {
+  a,
+  button {
+    transition-property: color, background-color, border-color, text-decoration-color;
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
+  }
+}
+
+/*
+ * Route crossfade (layout.tsx): the page content inside <main> is a <ViewTransition default="page">, so every
+ * navigation and every loading-skeleton reveal crossfades it in 200 ms.
+ */
+::view-transition-group(.page),
+::view-transition-old(.page),
+::view-transition-new(.page) {
+  animation-duration: 200ms;
+}
+
+/* The header and footer are named (site-header.tsx, layout.tsx) and never animate; the new one shows at once. */
+::view-transition-group(site-header),
+::view-transition-group(site-footer),
+::view-transition-new(site-header),
+::view-transition-new(site-footer) {
+  animation: none;
+}
+
+::view-transition-group(site-header),
+::view-transition-group(site-footer) {
+  z-index: 100;
+}
+
+::view-transition-old(site-header),
+::view-transition-old(site-footer) {
+  display: none;
+}
+
+/* Clicks during a transition reach the live page instead of the snapshot overlay. */
+::view-transition {
+  pointer-events: none;
+}
+
+/* Reduced motion: transitions swap instantly, with nothing fading, sliding or scaling. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

@@ -3,7 +3,8 @@ import { SearchBox } from "./search-box";
 
 export function SiteHeader() {
   return (
-    <header className="border-b border-zinc-800 bg-zinc-950/90">
+    // Named, so it stays still while the page content crossfades (globals.css).
+    <header className="border-b border-zinc-800 bg-zinc-950/90" style={{ viewTransitionName: "site-header" }}>
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
         <Link href="/" className="text-xl font-bold tracking-tight text-amber-400 hover:text-amber-300">
           Reelbase
