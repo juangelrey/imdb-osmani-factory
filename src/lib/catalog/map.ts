@@ -19,6 +19,7 @@ import { ageOn, formatDate } from "./format";
 import type {
   CareerEntry,
   CareerYear,
+  CreditsFilter,
   Episode,
   Genre,
   Paged,
@@ -29,6 +30,7 @@ import type {
   Show,
   ShowSummary,
   Title,
+  TitleKind,
   TitleSummary,
 } from "./types";
 
@@ -89,6 +91,30 @@ export function parseSeasonParam(param: string | string[] | undefined): number |
   if (value === undefined || !/^(0|[1-9]\d*)$/.test(value)) return undefined;
   const season = Number(value);
   return Number.isSafeInteger(season) ? season : undefined;
+}
+
+const CREDITS_FILTERS: readonly CreditsFilter[] = ["all", "movie", "tv"];
+
+/** Parse `?credits=`; undefined when absent or unknown (the page then shows all credits). */
+export function parseCreditsParam(param: string | string[] | undefined): CreditsFilter | undefined {
+  const value = Array.isArray(param) ? param[0] : param;
+  return CREDITS_FILTERS.find((filter) => filter === value);
+}
+
+/** The career with only one kind's credits, in the same order; years left empty are dropped. */
+export function filterCareer(career: CareerYear[], credits: CreditsFilter): CareerYear[] {
+  if (credits === "all") return career;
+  return career
+    .map((year) => ({
+      ...year,
+      entries: year.entries.filter((entry) => entry.title.kind === credits),
+    }))
+    .filter((year) => year.entries.length > 0);
+}
+
+/** The kinds of title a career holds. */
+export function careerKinds(career: CareerYear[]): Set<TitleKind> {
+  return new Set(career.flatMap((year) => year.entries.map((entry) => entry.title.kind)));
 }
 
 /** Parse a `/person/[id]` route param shaped "<id>-<slug>" or "<id>". */

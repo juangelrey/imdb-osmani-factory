@@ -18,9 +18,13 @@ import type {
   TmdbSeason,
   TmdbTvDetails,
 } from "@/lib/tmdb/schema";
+import type { CareerYear } from "./types";
 import {
+  careerKinds,
   defaultSeason,
+  filterCareer,
   MAX_PAGES,
+  parseCreditsParam,
   parsePersonParam,
   parseSeasonParam,
   parseShowParam,
@@ -870,6 +874,59 @@ describe("parseSeasonParam", () => {
 
   it("reads the first of repeated params", () => {
     expect(parseSeasonParam(["3", "4"])).toBe(3);
+  });
+});
+
+describe("parseCreditsParam", () => {
+  it.each(["all", "movie", "tv"])("reads %s", (param) => {
+    expect(parseCreditsParam(param)).toBe(param);
+  });
+
+  it.each([undefined, "", "junk", "TV", "movies", " tv"])("ignores %o", (param) => {
+    expect(parseCreditsParam(param)).toBeUndefined();
+  });
+
+  it("reads the first of repeated params", () => {
+    expect(parseCreditsParam(["tv", "movie"])).toBe("tv");
+  });
+});
+
+describe("filterCareer and careerKinds", () => {
+  const entry = (kind: "movie" | "tv", id: number) => ({
+    title: { kind, id, slug: `t${id}`, name: `T${id}` },
+    upcoming: false,
+    roles: ["Actor"],
+  });
+  const career: CareerYear[] = [
+    { label: "TBA", entries: [entry("tv", 1)] },
+    { year: 2020, label: "2020", entries: [entry("movie", 2), entry("tv", 3), entry("movie", 4)] },
+    { year: 2010, label: "2010", entries: [entry("movie", 5)] },
+  ];
+  const ids = (years: CareerYear[]) => years.map((y) => [y.label, y.entries.map((e) => e.title.id)]);
+
+  it("returns the career unchanged for all", () => {
+    expect(filterCareer(career, "all")).toBe(career);
+  });
+
+  it("keeps only one kind, in order, and drops the years left empty", () => {
+    expect(ids(filterCareer(career, "movie"))).toEqual([
+      ["2020", [2, 4]],
+      ["2010", [5]],
+    ]);
+    expect(ids(filterCareer(career, "tv"))).toEqual([
+      ["TBA", [1]],
+      ["2020", [3]],
+    ]);
+  });
+
+  it("returns no years for a kind the person has no credits of", () => {
+    expect(filterCareer([career[2]], "tv")).toEqual([]);
+  });
+
+  it("lists the kinds a career holds", () => {
+    expect(careerKinds(career)).toEqual(new Set(["movie", "tv"]));
+    expect(careerKinds([career[2]])).toEqual(new Set(["movie"]));
+    expect(careerKinds([])).toEqual(new Set());
   });
 });
 

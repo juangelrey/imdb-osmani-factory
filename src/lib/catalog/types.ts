@@ -28,6 +28,9 @@ export interface Title {
 /** Whether a summary is a movie (`/title`) or a TV show (`/tv`). A movie and a show can share an id. */
 export type TitleKind = "movie" | "tv";
 
+/** The person page's career filter (`?credits=`): every credit, or one kind. */
+export type CreditsFilter = "all" | TitleKind;
+
 /** The fields a title card needs. Identity is `kind` + `id`, never the id alone. */
 export interface TitleSummary {
   kind: TitleKind;

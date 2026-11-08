@@ -179,3 +179,69 @@ describe("CareerTimeline with TV credits", () => {
     error.mockRestore();
   });
 });
+
+describe("CareerTimeline credits filter", () => {
+  const entry = (kind: "movie" | "tv", id: number, name: string) => ({
+    title: { kind, id, slug: name.toLowerCase().replaceAll(" ", "-"), name },
+    upcoming: false,
+    roles: ["Actor"],
+  });
+  const mixed: CareerYear[] = [
+    { year: 2020, label: "2020", entries: [entry("tv", 1, "Show A"), entry("movie", 2, "Film B")] },
+    { year: 2010, label: "2010", entries: [entry("movie", 3, "Film C")] },
+    { year: 2005, label: "2005", entries: [entry("tv", 4, "Show D")] },
+  ];
+  const hrefForCredits = (credits: string) => `/person/1-p?credits=${credits}`;
+  const filter = () => screen.getByRole("navigation", { name: "Filter credits" });
+  const titles = () => [...document.querySelectorAll("ol > li")].map((li) => li.querySelector("a")?.textContent);
+  const yearMarkers = () => screen.queryAllByRole("heading", { level: 3 }).map((h) => h.textContent);
+
+  it("links All · Movies · TV to ?credits= and marks All current by default", () => {
+    render(<CareerTimeline career={mixed} hrefForCredits={hrefForCredits} />);
+    const links = within(filter()).getAllByRole("link");
+    expect(links.map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
+      ["All", "/person/1-p?credits=all"],
+      ["Movies", "/person/1-p?credits=movie"],
+      ["TV", "/person/1-p?credits=tv"],
+    ]);
+    expect(links.map((link) => link.getAttribute("aria-current"))).toEqual(["page", null, null]);
+    expect(titles()).toEqual(["Show A", "Film B", "Film C", "Show D"]);
+  });
+
+  it("shows only TV credits, in order, with the year markers of the years left", () => {
+    render(<CareerTimeline career={mixed} credits="tv" hrefForCredits={hrefForCredits} />);
+    expect(within(filter()).getByRole("link", { name: "TV" })).toHaveAttribute("aria-current", "page");
+    expect(within(filter()).getByRole("link", { name: "All" })).not.toHaveAttribute("aria-current");
+    expect(titles()).toEqual(["Show A", "Show D"]);
+    expect(yearMarkers()).toEqual(["2020", "2005"]);
+  });
+
+  it("shows only movies under Movies", () => {
+    render(<CareerTimeline career={mixed} credits="movie" hrefForCredits={hrefForCredits} />);
+    expect(within(filter()).getByRole("link", { name: "Movies" })).toHaveAttribute("aria-current", "page");
+    expect(titles()).toEqual(["Film B", "Film C"]);
+    expect(yearMarkers()).toEqual(["2020", "2010"]);
+  });
+
+  it("hides the filter when the person has credits of only one kind", () => {
+    render(<CareerTimeline career={[mixed[1]]} hrefForCredits={hrefForCredits} />);
+    expect(screen.queryByRole("navigation", { name: "Filter credits" })).not.toBeInTheDocument();
+    expect(titles()).toEqual(["Film C"]);
+  });
+
+  it("shows a short empty message, with a way back to all credits, for a kind with no credits", () => {
+    render(<CareerTimeline career={[mixed[1]]} credits="tv" hrefForCredits={hrefForCredits} />);
+    const section = screen.getByRole("region", { name: "Career" });
+    expect(section).toHaveTextContent("No TV credits.");
+    expect(within(section).getByRole("link", { name: "Show all credits" })).toHaveAttribute(
+      "href",
+      "/person/1-p?credits=all",
+    );
+    expect(within(section).queryByRole("list")).not.toBeInTheDocument();
+  });
+
+  it("shows no filter without hrefForCredits", () => {
+    render(<CareerTimeline career={mixed} />);
+    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+  });
+});

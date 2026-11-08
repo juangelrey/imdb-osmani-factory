@@ -1,13 +1,23 @@
 import Link from "next/link";
 import { formatShortDate } from "@/lib/catalog/format";
-import { summaryHref } from "@/lib/catalog/map";
-import type { CareerEntry, CareerYear } from "@/lib/catalog/types";
+import { careerKinds, filterCareer, summaryHref } from "@/lib/catalog/map";
+import type { CareerEntry, CareerYear, CreditsFilter } from "@/lib/catalog/types";
 import { Poster } from "./poster";
 import { TitlePreview } from "./title-preview";
 
 interface CareerTimelineProps {
   career: CareerYear[];
+  /** The `?credits=` filter; defaults to all. */
+  credits?: CreditsFilter;
+  /** The URL for each filter. Without it, no filter links are shown. */
+  hrefForCredits?: (credits: CreditsFilter) => string;
 }
+
+const FILTERS: { credits: CreditsFilter; label: string; empty: string }[] = [
+  { credits: "all", label: "All", empty: "No credits." },
+  { credits: "movie", label: "Movies", empty: "No movie credits." },
+  { credits: "tv", label: "TV", empty: "No TV credits." },
+];
 
 /** Three columns: the date, the line with the nodes, and the film. The line sits in the middle one. */
 const ROW = "grid grid-cols-[4.5rem_1.5rem_minmax(0,1fr)] sm:grid-cols-[6rem_2rem_minmax(0,1fr)]";
@@ -17,35 +27,83 @@ const LINE_X = "left-[5.25rem] sm:left-[7rem]";
 /**
  * Every film and TV credit as a vertical timeline, newest first: a date column, a line with one node
  * per title and a year marker at each year change, then the title, with a "TV" badge on shows.
- * Hidden without credits.
+ * An All / Movies / TV filter sits above it when the person has credits of both kinds. Hidden without credits.
  */
-export function CareerTimeline({ career }: CareerTimelineProps) {
+export function CareerTimeline({ career, credits = "all", hrefForCredits }: CareerTimelineProps) {
   if (career.length === 0) return null;
+  const shown = filterCareer(career, credits);
+  const showFilter = hrefForCredits !== undefined && careerKinds(career).size > 1;
 
   return (
     <section aria-labelledby="career-heading" className="space-y-4">
       <h2 id="career-heading" className="text-xl font-semibold">
         Career
       </h2>
-      <div className="relative">
-        <div
-          aria-hidden="true"
-          data-timeline-line
-          className={`absolute inset-y-0 ${LINE_X} w-px -translate-x-1/2 bg-zinc-800`}
-        />
-        <ol className="relative space-y-3">
-          {career.flatMap((year) =>
-            year.entries.map((entry, index) => (
-              <TimelineEntry
-                key={`${entry.title.kind}-${entry.title.id}`}
-                entry={entry}
-                yearMarker={index === 0 ? year.label : undefined}
-              />
-            )),
+      {showFilter && <CreditsFilterLinks current={credits} hrefForCredits={hrefForCredits} />}
+      {shown.length === 0 ? (
+        <p className="text-sm text-zinc-400">
+          {FILTERS.find((filter) => filter.credits === credits)?.empty}{" "}
+          {hrefForCredits && (
+            <Link
+              href={hrefForCredits("all")}
+              className="text-amber-300 underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
+            >
+              Show all credits
+            </Link>
           )}
-        </ol>
-      </div>
+        </p>
+      ) : (
+        <div className="relative">
+          <div
+            aria-hidden="true"
+            data-timeline-line
+            className={`absolute inset-y-0 ${LINE_X} w-px -translate-x-1/2 bg-zinc-800`}
+          />
+          <ol className="relative space-y-3">
+            {shown.flatMap((year) =>
+              year.entries.map((entry, index) => (
+                <TimelineEntry
+                  key={`${entry.title.kind}-${entry.title.id}`}
+                  entry={entry}
+                  yearMarker={index === 0 ? year.label : undefined}
+                />
+              )),
+            )}
+          </ol>
+        </div>
+      )}
     </section>
+  );
+}
+
+interface CreditsFilterLinksProps {
+  current: CreditsFilter;
+  hrefForCredits: (credits: CreditsFilter) => string;
+}
+
+/** "All · Movies · TV" links, the current one marked `aria-current`; styled like the Movies / TV switch. */
+function CreditsFilterLinks({ current, hrefForCredits }: CreditsFilterLinksProps) {
+  return (
+    <nav aria-label="Filter credits">
+      <ul className="inline-flex rounded-md border border-zinc-700 p-0.5 text-sm">
+        {FILTERS.map(({ credits, label }) => {
+          const selected = credits === current;
+          return (
+            <li key={credits}>
+              <Link
+                href={hrefForCredits(credits)}
+                aria-current={selected ? "page" : undefined}
+                className={`block rounded px-3 py-1 font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 ${
+                  selected ? "bg-amber-400/15 text-amber-200" : "text-zinc-300 hover:text-amber-300"
+                }`}
+              >
+                {label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 }
 

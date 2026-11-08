@@ -1,13 +1,16 @@
-import type { Person } from "@/lib/catalog/types";
+import { personHref } from "@/lib/catalog/map";
+import type { CreditsFilter, Person } from "@/lib/catalog/types";
 import { Biography } from "./biography";
 import { CareerTimeline } from "./career-timeline";
 import { Poster } from "./poster";
 
 interface PersonDetailsProps {
   person: Person;
+  /** The career filter, from `?credits=`. */
+  credits?: CreditsFilter;
 }
 
-export function PersonDetails({ person }: PersonDetailsProps) {
+export function PersonDetails({ person, credits }: PersonDetailsProps) {
   const facts = (
     [
       ["Known for", person.knownFor],
@@ -49,7 +52,11 @@ export function PersonDetails({ person }: PersonDetailsProps) {
             <Biography text={person.biography} />
           </section>
         )}
-        <CareerTimeline career={person.career} />
+        <CareerTimeline
+          career={person.career}
+          credits={credits}
+          hrefForCredits={(filter) => `${personHref(person)}?credits=${filter}`}
+        />
       </div>
     </article>
   );

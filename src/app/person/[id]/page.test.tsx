@@ -2,7 +2,8 @@ import { render, screen, within } from "@testing-library/react";
 import { notFound, permanentRedirect } from "next/navigation";
 import person from "@/lib/tmdb/fixtures/person-details.json";
 import sparse from "@/lib/tmdb/fixtures/person-details-sparse.json";
-import PersonPage, { dynamicParams, generateMetadata, generateStaticParams, revalidate } from "./page";
+import * as personPage from "./page";
+import PersonPage, { generateMetadata, revalidate } from "./page";
 
 vi.mock("next/navigation", () => ({
   notFound: vi.fn(() => {
@@ -13,7 +14,10 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-const params = (id: string) => ({ params: Promise.resolve({ id }) });
+const params = (id: string, searchParams: Record<string, string | string[] | undefined> = {}) => ({
+  params: Promise.resolve({ id }),
+  searchParams: Promise.resolve(searchParams),
+});
 
 function stubTmdb(body: unknown, status = 200) {
   const fetchMock = vi.fn(async () => Response.json(body, { status }));
@@ -33,9 +37,9 @@ afterEach(() => {
 });
 
 describe("Person page", () => {
-  it("renders on demand and caches for an hour instead of prerendering people", () => {
-    expect(generateStaticParams()).toEqual([]);
-    expect(dynamicParams).toBe(true);
+  it("renders per request (it reads ?credits) and keeps TMDB responses cached for an hour", () => {
+    expect(personPage).not.toHaveProperty("generateStaticParams");
+    expect(personPage).not.toHaveProperty("dynamicParams");
     expect(revalidate).toBe(3600);
   });
 
@@ -131,6 +135,46 @@ describe("Person page", () => {
     expect(screen.queryByRole("heading", { name: "Career" })).not.toBeInTheDocument();
   });
 
+  it("filters the career to TV credits with ?credits=tv", async () => {
+    stubTmdb(person);
+    render(await PersonPage(params("190-clint-eastwood", { credits: "tv" })));
+    const career = screen.getByRole("region", { name: "Career" });
+    const filter = within(career).getByRole("navigation", { name: "Filter credits" });
+    expect(within(filter).getByRole("link", { name: "TV" })).toHaveAttribute("aria-current", "page");
+    expect(within(filter).getByRole("link", { name: "Movies" })).toHaveAttribute(
+      "href",
+      "/person/190-clint-eastwood?credits=movie",
+    );
+    const links = [...career.querySelectorAll("ol > li")].map((li) => li.querySelector("a")!.getAttribute("href"));
+    expect(links.length).toBeGreaterThan(0);
+    expect(links.every((href) => href!.startsWith("/tv/"))).toBe(true);
+    expect(within(career).queryByRole("link", { name: "Unforgiven" })).not.toBeInTheDocument();
+  });
+
+  it("filters the career to movies with ?credits=movie", async () => {
+    stubTmdb(person);
+    render(await PersonPage(params("190-clint-eastwood", { credits: "movie" })));
+    const career = screen.getByRole("region", { name: "Career" });
+    expect(within(career).getByRole("link", { name: "Unforgiven" })).toBeInTheDocument();
+    expect(within(career).queryByRole("link", { name: "Rawhide" })).not.toBeInTheDocument();
+  });
+
+  it.each([{}, { credits: "junk" }])("reads %o as All", async (search) => {
+    stubTmdb(person);
+    render(await PersonPage(params("190-clint-eastwood", search)));
+    const career = screen.getByRole("region", { name: "Career" });
+    const filter = within(career).getByRole("navigation", { name: "Filter credits" });
+    expect(within(filter).getByRole("link", { name: "All" })).toHaveAttribute("aria-current", "page");
+    expect(within(career).getByRole("link", { name: "Unforgiven" })).toBeInTheDocument();
+    expect(within(career).getByRole("link", { name: "Rawhide" })).toBeInTheDocument();
+  });
+
+  it("hides the filter for a person with credits of only one kind", async () => {
+    stubTmdb(sparse);
+    render(await PersonPage(params("4891257-mara-lindqvist")));
+    expect(screen.queryByRole("navigation", { name: "Filter credits" })).not.toBeInTheDocument();
+  });
+
   it("names the page after the person", async () => {
     stubTmdb(person);
     expect(await generateMetadata(params("190-clint-eastwood"))).toEqual({ title: "Clint Eastwood · Reelbase" });
@@ -139,6 +183,19 @@ describe("Person page", () => {
   it.each(["190-wrong-slug", "190"])("permanently redirects %s to the canonical slug", async (id) => {
     stubTmdb(person);
     await expect(PersonPage(params(id))).rejects.toThrow("redirect /person/190-clint-eastwood");
+    expect(permanentRedirect).toHaveBeenCalledWith("/person/190-clint-eastwood");
+  });
+
+  it("keeps ?credits through the slug redirect", async () => {
+    stubTmdb(person);
+    await expect(PersonPage(params("190-wrong-slug", { credits: "tv" }))).rejects.toThrow(
+      "redirect /person/190-clint-eastwood?credits=tv",
+    );
+  });
+
+  it("drops an unknown ?credits value on the slug redirect", async () => {
+    stubTmdb(person);
+    await expect(PersonPage(params("190", { credits: "junk" }))).rejects.toThrow("redirect /person/190-clint-eastwood");
     expect(permanentRedirect).toHaveBeenCalledWith("/person/190-clint-eastwood");
   });
 
