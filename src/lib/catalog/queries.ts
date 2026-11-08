@@ -6,15 +6,26 @@ import type {
   TmdbMovieListItem,
   TmdbPaged,
   TmdbPersonDetails,
+  TmdbPersonListItem,
   TmdbSeason,
   TmdbTvDetails,
   TmdbTvListItem,
 } from "@/lib/tmdb/schema";
 import type { BrowseState, SortKey } from "./browse-params";
-import { defaultSeason, toGenre, toPaged, toPerson, toShow, toShowSummary, toSummary, toTitle } from "./map";
+import {
+  defaultSeason,
+  toGenre,
+  toPaged,
+  toPerson,
+  toPersonSearchPage,
+  toShow,
+  toShowSummary,
+  toSummary,
+  toTitle,
+} from "./map";
 import type { SearchSortKey } from "./search-params";
 import { SEARCH_WINDOW_PAGES, sortSearchItems, windowPage, type SearchItem } from "./search-sort";
-import type { Genre, Paged, Person, Show, ShowSummary, Title, TitleKind, TitleSummary } from "./types";
+import type { Genre, Paged, Person, PersonSummary, Show, ShowSummary, Title, TitleKind, TitleSummary } from "./types";
 
 /** A movie with credits and recommendations in one request, or undefined when TMDB does not know the id. Other failures throw. */
 export async function getTitle(id: number): Promise<Title | undefined> {
@@ -150,4 +161,16 @@ export async function searchTitles(query: string, page: number, sort: SearchSort
 /** Search TV series by name, in the given sort (Recency is by first air date). */
 export async function searchShows(query: string, page: number, sort: SearchSortKey): Promise<Paged<ShowSummary>> {
   return search<TmdbTvListItem, ShowSummary>("/search/tv", query, page, sort, toShowSummary);
+}
+
+/**
+ * Search people by name: TMDB's own order (popularity) and paging, one call per page, adult profiles
+ * skipped. A blank query returns no results without calling TMDB.
+ */
+export async function searchPeople(query: string, page: number): Promise<Paged<PersonSummary>> {
+  const trimmed = query.trim();
+  if (!trimmed) return NO_RESULTS;
+  return toPersonSearchPage(
+    await tmdbFetch<TmdbPaged<TmdbPersonListItem>>("/search/person", { query: trimmed, include_adult: false, page }),
+  );
 }

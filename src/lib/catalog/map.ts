@@ -9,6 +9,7 @@ import type {
   TmdbPersonCombinedCredits,
   TmdbPersonCredit,
   TmdbPersonDetails,
+  TmdbPersonListItem,
   TmdbRecommendations,
   TmdbEpisode,
   TmdbSeason,
@@ -26,6 +27,7 @@ import type {
   Paged,
   Person,
   PersonLink,
+  PersonSummary,
   Season,
   SeasonSummary,
   Show,
@@ -44,7 +46,7 @@ const CAST_LIMIT = 10;
 export const RECOMMENDATIONS_LIMIT = 12;
 
 export type PosterSize = "w92" | "w185" | "w342" | "w500";
-export type ProfileSize = "h632";
+export type ProfileSize = "w185" | "h632";
 
 /** URL slug for a name; `fallback` is used when nothing Latin is left, e.g. "千と千尋の神隠し". */
 export function slugify(name: string, fallback = "movie"): string {
@@ -406,6 +408,17 @@ export function toShowSummary(show: TmdbTvListItem): ShowSummary {
     rating: rating(show),
     posterUrl: posterUrl(show.poster_path, "w342"),
   };
+}
+
+/** A page of people search results in TMDB order, adult profiles skipped; the counts stay TMDB's. */
+export function toPersonSearchPage(page: TmdbPaged<TmdbPersonListItem>): Paged<PersonSummary> {
+  return toPaged({ ...page, results: page.results.filter((person) => !person.adult) }, (person) => ({
+    id: person.id,
+    slug: slugify(person.name, "person"),
+    name: person.name,
+    knownFor: person.known_for_department?.trim() || undefined,
+    profileUrl: profileUrl(person.profile_path, "w185"),
+  }));
 }
 
 export function toPaged<T, U>(page: TmdbPaged<T>, map: (item: T) => U): Paged<U> {

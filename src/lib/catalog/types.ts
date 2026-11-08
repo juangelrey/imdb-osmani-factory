@@ -124,6 +124,14 @@ export interface PersonLink {
   name: string;
 }
 
+/** A person as a search result card shows it. Fields TMDB may omit are optional. */
+export interface PersonSummary extends PersonLink {
+  /** TMDB's department, e.g. "Acting" or "Directing". */
+  knownFor?: string;
+  /** Card-size (w185) photo URL. */
+  profileUrl?: string;
+}
+
 /** A person as the person page shows it. Fields TMDB may omit are optional. */
 export interface Person extends PersonLink {
   /** Profile-size (h632) photo URL. */

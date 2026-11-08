@@ -126,6 +126,16 @@ export interface TmdbPersonDetails {
   combined_credits: TmdbPersonCombinedCredits;
 }
 
+/** A person as it appears in `/search/person` results, in TMDB's popularity order. */
+export interface TmdbPersonListItem {
+  id: number;
+  name: string;
+  adult: boolean;
+  /** e.g. "Acting" or "Directing"; may be "" or null. */
+  known_for_department: string | null;
+  profile_path: string | null;
+}
+
 /** A TV show as it appears in TV discover and search results. */
 export interface TmdbTvListItem {
   id: number;

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { SearchKind } from "@/lib/catalog/search-params";
 import type { TitleKind } from "@/lib/catalog/types";
 
 const KINDS: { kind: TitleKind; label: string }[] = [
@@ -7,7 +8,8 @@ const KINDS: { kind: TitleKind; label: string }[] = [
 ];
 
 interface MediaSwitchProps {
-  current: TitleKind;
+  /** The kind on view; on People search, neither Movies nor TV is marked. */
+  current: SearchKind;
   /** The URL for each kind. Callers decide what to keep (the query, the sort) and what to reset (the page). */
   hrefForKind: (kind: TitleKind) => string;
 }
