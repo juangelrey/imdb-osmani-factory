@@ -6,10 +6,11 @@ import type {
   TmdbMovieListItem,
   TmdbPaged,
   TmdbPersonDetails,
+  TmdbSeason,
   TmdbTvDetails,
 } from "@/lib/tmdb/schema";
 import type { BrowseState, SortKey } from "./browse-params";
-import { toGenre, toPaged, toPerson, toShow, toSummary, toTitle } from "./map";
+import { defaultSeason, toGenre, toPaged, toPerson, toShow, toSummary, toTitle } from "./map";
 import type { Genre, Paged, Person, Show, Title, TitleSummary } from "./types";
 
 /** A movie with credits, or undefined when TMDB does not know the id. Other failures throw. */
@@ -23,18 +24,24 @@ export async function getTitle(id: number): Promise<Title | undefined> {
 }
 
 /**
- * A TV show with credits in one request, or undefined when TMDB does not know the id or flags the show
- * adult or softcore. Other failures throw.
+ * A TV show with credits and the episodes of season `season` (default 1) in one request, or undefined when
+ * TMDB does not know the id or flags the show adult or softcore. When the show has no such season, one more
+ * request fetches its default season (season 1, else the first listed). Other failures throw.
  */
-export async function getShow(id: number): Promise<Show | undefined> {
+export async function getShow(id: number, season = 1): Promise<Show | undefined> {
   let show: TmdbTvDetails;
   try {
-    show = await tmdbFetch<TmdbTvDetails>(`/tv/${id}`, { append_to_response: "credits" });
+    show = await tmdbFetch<TmdbTvDetails>(`/tv/${id}`, { append_to_response: `credits,season/${season}` });
   } catch (error) {
     if (error instanceof TmdbError && error.status === 404) return undefined;
     throw error;
   }
-  return show.adult || show.softcore ? undefined : toShow(show);
+  if (show.adult || show.softcore) return undefined;
+  const requested = show[`season/${season}`];
+  if (requested) return toShow(show, requested);
+  const fallback = defaultSeason(toShow(show).seasons);
+  if (fallback === undefined || fallback === season) return toShow(show);
+  return toShow(show, await tmdbFetch<TmdbSeason>(`/tv/${id}/season/${fallback}`));
 }
 
 /**

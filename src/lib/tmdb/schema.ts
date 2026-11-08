@@ -117,7 +117,36 @@ export interface TmdbTvCreator {
   name: string;
 }
 
-/** `GET /tv/{id}?append_to_response=credits`. */
+/** A season as listed in a show's `seasons`; season 0 is Specials. */
+export interface TmdbSeasonSummary {
+  season_number: number;
+  name: string;
+  episode_count: number;
+}
+
+/** An episode in a season's `episodes`. */
+export interface TmdbEpisode {
+  episode_number: number;
+  name: string;
+  /** "YYYY-MM-DD", or "" / null when unknown. */
+  air_date?: string | null;
+  /** Minutes, or null when unknown. */
+  runtime?: number | null;
+  overview?: string | null;
+  still_path?: string | null;
+}
+
+/** `GET /tv/{id}/season/{n}`, also appended to the show as `season/{n}`. */
+export interface TmdbSeason {
+  season_number: number;
+  name: string;
+  episodes: TmdbEpisode[];
+}
+
+/**
+ * `GET /tv/{id}?append_to_response=credits,season/{n}`. TMDB leaves `season/{n}` out when the show
+ * has no season `n`.
+ */
 export interface TmdbTvDetails {
   id: number;
   name: string;
@@ -138,7 +167,10 @@ export interface TmdbTvDetails {
   overview: string | null;
   poster_path: string | null;
   created_by: TmdbTvCreator[];
+  /** Every season, Specials (season 0) included; TMDB may leave it out for a bare show. */
+  seasons?: TmdbSeasonSummary[];
   credits: {
     cast: TmdbCastMember[];
   };
+  [season: `season/${number}`]: TmdbSeason | undefined;
 }

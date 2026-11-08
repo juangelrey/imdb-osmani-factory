@@ -8,6 +8,9 @@ import type {
   TmdbPersonDetails,
   TmdbPersonMovieCredit,
   TmdbPersonMovieCredits,
+  TmdbEpisode,
+  TmdbSeason,
+  TmdbSeasonSummary,
   TmdbTvDetails,
   TmdbTvListItem,
 } from "@/lib/tmdb/schema";
@@ -15,10 +18,13 @@ import { ageOn, formatDate } from "./format";
 import type {
   CareerEntry,
   CareerYear,
+  Episode,
   Genre,
   Paged,
   Person,
   PersonLink,
+  Season,
+  SeasonSummary,
   Show,
   ShowSummary,
   Title,
@@ -70,6 +76,14 @@ export const parseTitleParam = parseIdSlugParam;
 
 /** Parse a `/tv/[id]` route param shaped "<id>-<slug>" or "<id>". */
 export const parseShowParam = parseIdSlugParam;
+
+/** Parse `?season=N`: a whole number without leading zeros, or undefined. Repeated params use the first. */
+export function parseSeasonParam(param: string | string[] | undefined): number | undefined {
+  const value = Array.isArray(param) ? param[0] : param;
+  if (value === undefined || !/^(0|[1-9]\d*)$/.test(value)) return undefined;
+  const season = Number(value);
+  return Number.isSafeInteger(season) ? season : undefined;
+}
 
 /** Parse a `/person/[id]` route param shaped "<id>-<slug>" or "<id>". */
 export const parsePersonParam = parseIdSlugParam;
@@ -147,7 +161,49 @@ function airYears(show: TmdbTvDetails): string | undefined {
   return last !== undefined && last > first ? `${first}–${last}` : String(first);
 }
 
-export function toShow(show: TmdbTvDetails): Show {
+function seasonName(number: number, name: string | null | undefined): string {
+  return name?.trim() || `Season ${number}`;
+}
+
+/** Regular seasons in order, then Specials (season 0). */
+function toSeasonSummaries(seasons: TmdbSeasonSummary[]): SeasonSummary[] {
+  return seasons
+    .map((season) => ({
+      number: season.season_number,
+      name: seasonName(season.season_number, season.name),
+      episodeCount: season.episode_count,
+    }))
+    .sort((a, b) => (a.number === 0 ? Infinity : a.number) - (b.number === 0 ? Infinity : b.number));
+}
+
+/** The season shown without `?season`: season 1, else the first listed (Specials last); undefined with no seasons. */
+export function defaultSeason(seasons: SeasonSummary[]): number | undefined {
+  if (seasons.some(({ number }) => number === 1)) return 1;
+  return seasons.find(({ number }) => number !== 0)?.number ?? seasons[0]?.number;
+}
+
+export function toEpisode(episode: TmdbEpisode): Episode {
+  return {
+    number: episode.episode_number,
+    name: episode.name?.trim() || `Episode ${episode.episode_number}`,
+    airDate: episode.air_date || undefined,
+    runtime: episode.runtime || undefined,
+    synopsis: episode.overview?.trim() || undefined,
+    stillUrl: imageUrl(episode.still_path, "w185"),
+  };
+}
+
+/** A season of a show, with its episodes in order. */
+export function toSeason(season: TmdbSeason): Season {
+  return {
+    number: season.season_number,
+    name: seasonName(season.season_number, season.name),
+    episodes: season.episodes.map(toEpisode).sort((a, b) => a.number - b.number),
+  };
+}
+
+/** `season` is the selected season's TMDB response, when the show has one. */
+export function toShow(show: TmdbTvDetails, season?: TmdbSeason): Show {
   const creators = new Map<number, PersonLink>();
   for (const creator of show.created_by) if (!creators.has(creator.id)) creators.set(creator.id, toPersonLink(creator));
   return {
@@ -165,6 +221,8 @@ export function toShow(show: TmdbTvDetails): Show {
     posterPath: show.poster_path || undefined,
     creators: [...creators.values()],
     cast: topCast(show.credits.cast),
+    seasons: toSeasonSummaries(show.seasons ?? []),
+    season: season && toSeason(season),
   };
 }
 

@@ -6,6 +6,7 @@ import person from "@/lib/tmdb/fixtures/person-details.json";
 import sparsePerson from "@/lib/tmdb/fixtures/person-details-sparse.json";
 import tvDetails from "@/lib/tmdb/fixtures/tv-details.json";
 import tvSparse from "@/lib/tmdb/fixtures/tv-details-sparse.json";
+import tvSeason from "@/lib/tmdb/fixtures/tv-season.json";
 import type {
   TmdbMovieDetails,
   TmdbMovieListItem,
@@ -13,11 +14,14 @@ import type {
   TmdbPersonCastCredit,
   TmdbPersonCrewCredit,
   TmdbPersonDetails,
+  TmdbSeason,
   TmdbTvDetails,
 } from "@/lib/tmdb/schema";
 import {
+  defaultSeason,
   MAX_PAGES,
   parsePersonParam,
+  parseSeasonParam,
   parseShowParam,
   parseTitleParam,
   personHref,
@@ -27,9 +31,11 @@ import {
   slugify,
   titleHref,
   toCareer,
+  toEpisode,
   toGenre,
   toPaged,
   toPerson,
+  toSeason,
   toShow,
   toShowSummary,
   toSummary,
@@ -575,6 +581,8 @@ describe("toShow", () => {
       posterPath: undefined,
       creators: [],
       cast: [],
+      seasons: [],
+      season: undefined,
     });
   });
 
@@ -630,5 +638,102 @@ describe("toShowSummary", () => {
   it("leaves a missing year, poster and unvoted rating undefined", () => {
     const summary = toShowSummary({ id: 9, name: "Pilot", first_air_date: "", vote_average: 0, vote_count: 0, poster_path: null });
     expect(summary).toMatchObject({ year: undefined, rating: undefined, posterUrl: undefined });
+  });
+});
+
+const seasonOne = tvSeason as TmdbSeason;
+
+describe("toShow seasons", () => {
+  it("lists every season with its episode count, with Specials last", () => {
+    expect(toShow(breakingBad).seasons.map(({ number, episodeCount }) => [number, episodeCount])).toEqual([
+      [1, 7],
+      [2, 13],
+      [3, 13],
+      [4, 13],
+      [5, 16],
+      [0, 9],
+    ]);
+  });
+
+  it("names a nameless season after its number", () => {
+    const show = toShow({ ...breakingBad, seasons: [{ season_number: 3, name: "", episode_count: 0 }] });
+    expect(show.seasons).toEqual([{ number: 3, name: "Season 3", episodeCount: 0 }]);
+  });
+
+  it("keeps the selected season with its episodes", () => {
+    expect(toShow(breakingBad, seasonOne).season?.episodes).toHaveLength(3);
+  });
+});
+
+describe("defaultSeason", () => {
+  it("is season 1 when the show has one", () => {
+    expect(defaultSeason(toShow(breakingBad).seasons)).toBe(1);
+  });
+
+  it("is the first listed season, Specials last, when there is no season 1", () => {
+    const seasons = [
+      { number: 0, name: "Specials", episodeCount: 2 },
+      { number: 2, name: "Season 2", episodeCount: 8 },
+    ];
+    expect(defaultSeason(seasons)).toBe(2);
+    expect(defaultSeason([seasons[0]])).toBe(0);
+  });
+
+  it("is undefined when the show lists no seasons", () => {
+    expect(defaultSeason([])).toBeUndefined();
+  });
+});
+
+describe("parseSeasonParam", () => {
+  it.each([
+    ["1", 1],
+    ["0", 0],
+    ["12", 12],
+  ])("reads %s as season %i", (param, season) => {
+    expect(parseSeasonParam(param)).toBe(season);
+  });
+
+  it.each([undefined, "", "abc", "-1", "1.5", "01", " 2", "99999999999999999999"])("ignores %o", (param) => {
+    expect(parseSeasonParam(param)).toBeUndefined();
+  });
+
+  it("reads the first of repeated params", () => {
+    expect(parseSeasonParam(["3", "4"])).toBe(3);
+  });
+});
+
+describe("toSeason", () => {
+  it("keeps the number and name and sorts episodes by number", () => {
+    const season = toSeason(seasonOne);
+    expect(season).toMatchObject({ number: 1, name: "Season 1" });
+    expect(season.episodes.map(({ number }) => number)).toEqual([1, 2, 3]);
+  });
+
+  it("names a nameless season after its number", () => {
+    expect(toSeason({ ...seasonOne, name: "" }).name).toBe("Season 1");
+  });
+});
+
+describe("toEpisode", () => {
+  it("maps every field of a full episode, with a w185 still", () => {
+    expect(toEpisode(seasonOne.episodes[1])).toEqual({
+      number: 1,
+      name: "Pilot",
+      airDate: "2008-01-20",
+      runtime: 59,
+      synopsis: expect.stringContaining("chemistry teacher"),
+      stillUrl: "https://image.tmdb.org/t/p/w185/ydlY3iPfeOAvu8gVqrxPoMvzNCn.jpg",
+    });
+  });
+
+  it("leaves a missing air date, runtime, overview and still undefined and names the episode by number", () => {
+    expect(toEpisode(seasonOne.episodes[2])).toEqual({
+      number: 3,
+      name: "Episode 3",
+      airDate: undefined,
+      runtime: undefined,
+      synopsis: undefined,
+      stillUrl: undefined,
+    });
   });
 });

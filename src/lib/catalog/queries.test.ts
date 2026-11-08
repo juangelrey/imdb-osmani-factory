@@ -4,6 +4,7 @@ import genreList from "@/lib/tmdb/fixtures/genre-movie-list.json";
 import search from "@/lib/tmdb/fixtures/search-movie.json";
 import person from "@/lib/tmdb/fixtures/person-details.json";
 import tvDetails from "@/lib/tmdb/fixtures/tv-details.json";
+import tvSeason from "@/lib/tmdb/fixtures/tv-season.json";
 import { TmdbError } from "@/lib/tmdb/client";
 import { discoverTitles, getPerson, getShow, getTitle, listGenres, searchTitles } from "./queries";
 
@@ -53,15 +54,84 @@ describe("getTitle", () => {
   });
 });
 
+/** A fetch stub answering each TMDB path from `bodies`, and 404 for any other path. */
+function stubTmdbPaths(bodies: Record<string, unknown>) {
+  const fetchMock = vi.fn(async (input: string | URL | Request) => {
+    const body = bodies[new URL(String(input)).pathname];
+    return body === undefined ? Response.json({ success: false }, { status: 404 }) : Response.json(body);
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+}
+
+function requestedUrls(fetchMock: { mock: { calls: unknown[][] } }) {
+  return fetchMock.mock.calls.map((call) => new URL(String(call[0])));
+}
+
 describe("getShow", () => {
-  it("makes exactly one request for the show with credits appended, in English", async () => {
-    const fetchMock = stubFetch(tvDetails);
-    await getShow(1396);
+  it("makes exactly one request for the show with credits and season 1 appended, in English", async () => {
+    const fetchMock = stubFetch({ ...tvDetails, "season/1": tvSeason });
+    const show = await getShow(1396);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const url = requestedUrl(fetchMock);
     expect(url.pathname).toBe("/3/tv/1396");
-    expect(url.searchParams.get("append_to_response")).toBe("credits");
+    expect(url.searchParams.get("append_to_response")).toBe("credits,season/1");
     expect(url.searchParams.get("language")).toBe("en-US");
+    expect(show?.season).toMatchObject({ number: 1, name: "Season 1" });
+  });
+
+  it("appends the requested season to the same request", async () => {
+    const seasonTwo = { ...tvSeason, season_number: 2, name: "Season 2" };
+    const fetchMock = stubFetch({ ...tvDetails, "season/2": seasonTwo });
+    const show = await getShow(1396, 2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(requestedUrl(fetchMock).searchParams.get("append_to_response")).toBe("credits,season/2");
+    expect(show?.season?.number).toBe(2);
+  });
+
+  it("makes one more request, for the default season, only when the requested season is missing", async () => {
+    const fetchMock = stubTmdbPaths({ "/3/tv/1396": tvDetails, "/3/tv/1396/season/1": tvSeason });
+    const show = await getShow(1396, 99);
+    const urls = requestedUrls(fetchMock);
+    expect(urls.map(({ pathname }) => pathname)).toEqual(["/3/tv/1396", "/3/tv/1396/season/1"]);
+    expect(urls[0].searchParams.get("append_to_response")).toBe("credits,season/99");
+    expect(show?.season?.number).toBe(1);
+  });
+
+  it("falls back to the first listed season when there is no season 1", async () => {
+    const noSeasonOne = {
+      ...tvDetails,
+      seasons: [
+        { season_number: 0, name: "Specials", episode_count: 1 },
+        { season_number: 2, name: "Season 2", episode_count: 8 },
+      ],
+    };
+    const fetchMock = stubTmdbPaths({ "/3/tv/1396": noSeasonOne, "/3/tv/1396/season/2": { ...tvSeason, season_number: 2 } });
+    const show = await getShow(1396);
+    expect(requestedUrls(fetchMock).map(({ pathname }) => pathname)).toEqual(["/3/tv/1396", "/3/tv/1396/season/2"]);
+    expect(show?.season?.number).toBe(2);
+  });
+
+  it("makes no second request when the show lists no seasons", async () => {
+    const fetchMock = stubFetch({ ...tvDetails, seasons: [] });
+    const show = await getShow(1396);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(show?.season).toBeUndefined();
+  });
+
+  it("makes no second request for a show it will not show", async () => {
+    const fetchMock = stubFetch({ ...tvDetails, adult: true });
+    await getShow(1396, 99);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("lets a failing season request reach the error boundary", async () => {
+    let calls = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => (calls++ === 0 ? Response.json(tvDetails) : Response.json({}, { status: 503 }))),
+    );
+    await expect(getShow(1396, 99)).rejects.toBeInstanceOf(TmdbError);
   });
 
   it("maps the response into a Show", async () => {

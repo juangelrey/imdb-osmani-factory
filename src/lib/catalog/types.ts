@@ -68,6 +68,38 @@ export interface Show {
   creators: PersonLink[];
   /** Top-billed cast, at most 10. */
   cast: PersonLink[];
+  /** Every season for the picker, in order with Specials (season 0) last; empty when TMDB lists none. */
+  seasons: SeasonSummary[];
+  /** The selected season with its episodes; undefined when the show has no seasons. */
+  season?: Season;
+}
+
+/** A season as the picker lists it. */
+export interface SeasonSummary {
+  number: number;
+  /** TMDB's name, e.g. "Season 1" or "Specials". */
+  name: string;
+  episodeCount: number;
+}
+
+/** A season of a show, with its episodes in order. */
+export interface Season {
+  number: number;
+  name: string;
+  episodes: Episode[];
+}
+
+/** An episode as the episode list shows it. Fields TMDB may omit are optional. */
+export interface Episode {
+  number: number;
+  name: string;
+  /** "YYYY-MM-DD"; the list marks an episode dated after today as upcoming. */
+  airDate?: string;
+  /** Minutes. */
+  runtime?: number;
+  synopsis?: string;
+  /** Still-size (w185) image URL. */
+  stillUrl?: string;
 }
 
 export interface Paged<T> {
