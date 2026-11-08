@@ -1,10 +1,10 @@
-import { posterUrl, titleHref } from "@/lib/catalog/map";
+import { posterUrl, showHref, titleHref } from "@/lib/catalog/map";
 import type { TitleSummary } from "@/lib/catalog/types";
 import type { WatchlistEntry } from "@/lib/watchlist/watchlist";
 
 /** What a title card renders. Every data source adapts to this shape. */
 export interface CardTitle {
-  /** Unique within a grid; also seeds the fallback poster colours. */
+  /** `<kind>-<id>`, unique within a grid even when a movie and a show share an id; also seeds the fallback poster colours. */
   key: string;
   href: string;
   name: string;
@@ -15,8 +15,8 @@ export interface CardTitle {
 
 export function cardFromSummary(title: TitleSummary): CardTitle {
   return {
-    key: String(title.id),
-    href: titleHref(title),
+    key: `${title.kind}-${title.id}`,
+    href: title.kind === "tv" ? showHref(title) : titleHref(title),
     name: title.name,
     year: title.year,
     rating: title.rating,

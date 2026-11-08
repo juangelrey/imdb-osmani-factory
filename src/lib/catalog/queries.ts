@@ -8,10 +8,11 @@ import type {
   TmdbPersonDetails,
   TmdbSeason,
   TmdbTvDetails,
+  TmdbTvListItem,
 } from "@/lib/tmdb/schema";
 import type { BrowseState, SortKey } from "./browse-params";
-import { defaultSeason, toGenre, toPaged, toPerson, toShow, toSummary, toTitle } from "./map";
-import type { Genre, Paged, Person, Show, Title, TitleSummary } from "./types";
+import { defaultSeason, toGenre, toPaged, toPerson, toShow, toShowSummary, toSummary, toTitle } from "./map";
+import type { Genre, Paged, Person, Show, ShowSummary, Title, TitleSummary } from "./types";
 
 /** A movie with credits, or undefined when TMDB does not know the id. Other failures throw. */
 export async function getTitle(id: number): Promise<Title | undefined> {
@@ -93,7 +94,7 @@ export async function discoverTitles({ genre, sort, page }: BrowseState): Promis
   return toPaged(response, toSummary);
 }
 
-const NO_RESULTS: Paged<TitleSummary> = { results: [], page: 1, totalPages: 0, totalResults: 0 };
+const NO_RESULTS: Paged<never> = { results: [], page: 1, totalPages: 0, totalResults: 0 };
 
 /** Search movies by title. A blank query returns no results without calling TMDB. */
 export async function searchTitles(query: string, page: number): Promise<Paged<TitleSummary>> {
@@ -105,4 +106,16 @@ export async function searchTitles(query: string, page: number): Promise<Paged<T
     page,
   });
   return toPaged(response, toSummary);
+}
+
+/** Search TV series by name. A blank query returns no results without calling TMDB. */
+export async function searchShows(query: string, page: number): Promise<Paged<ShowSummary>> {
+  const trimmed = query.trim();
+  if (!trimmed) return NO_RESULTS;
+  const response = await tmdbFetch<TmdbPaged<TmdbTvListItem>>("/search/tv", {
+    query: trimmed,
+    include_adult: false,
+    page,
+  });
+  return toPaged(response, toShowSummary);
 }

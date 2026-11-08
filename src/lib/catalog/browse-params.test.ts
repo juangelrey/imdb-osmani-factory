@@ -1,4 +1,4 @@
-import { DEFAULT_SORT, browseHref, parseBrowseParams, parsePage } from "./browse-params";
+import { DEFAULT_SORT, browseHref, parseBrowseParams, parseKind, parsePage } from "./browse-params";
 
 const known = new Set([28, 878, 18]);
 
@@ -72,5 +72,15 @@ describe("browseHref", () => {
     const state = { genre: 28, sort: "release" as const, page: 7 };
     const query = Object.fromEntries(new URLSearchParams(browseHref(state).slice(2)));
     expect(parseBrowseParams(query, known)).toEqual(state);
+  });
+});
+
+describe("parseKind", () => {
+  it("reads tv and defaults anything else to movie", () => {
+    expect(parseKind("tv")).toBe("tv");
+    expect(parseKind("movie")).toBe("movie");
+    expect(parseKind(undefined)).toBe("movie");
+    expect(parseKind("series")).toBe("movie");
+    expect(parseKind(["tv", "movie"])).toBe("tv");
   });
 });

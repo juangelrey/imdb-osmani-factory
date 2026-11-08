@@ -2,11 +2,12 @@ import details from "@/lib/tmdb/fixtures/movie-details.json";
 import discover from "@/lib/tmdb/fixtures/discover-movie.json";
 import genreList from "@/lib/tmdb/fixtures/genre-movie-list.json";
 import search from "@/lib/tmdb/fixtures/search-movie.json";
+import searchTv from "@/lib/tmdb/fixtures/search-tv.json";
 import person from "@/lib/tmdb/fixtures/person-details.json";
 import tvDetails from "@/lib/tmdb/fixtures/tv-details.json";
 import tvSeason from "@/lib/tmdb/fixtures/tv-season.json";
 import { TmdbError } from "@/lib/tmdb/client";
-import { discoverTitles, getPerson, getShow, getTitle, listGenres, searchTitles } from "./queries";
+import { discoverTitles, getPerson, getShow, getTitle, listGenres, searchShows, searchTitles } from "./queries";
 
 function stubFetch(body: unknown, status = 200) {
   const fetchMock = vi.fn(async () => Response.json(body, { status }));
@@ -266,6 +267,31 @@ describe("searchTitles", () => {
   it("returns an empty page for a blank query without calling TMDB", async () => {
     const fetchMock = stubFetch(search);
     await expect(searchTitles("   ", 1)).resolves.toEqual({ results: [], page: 1, totalPages: 0, totalResults: 0 });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("searchShows", () => {
+  it("searches non-adult TV series by the trimmed query and page", async () => {
+    const fetchMock = stubFetch(searchTv);
+    const page = await searchShows("  breaking ", 2);
+    const url = requestedUrl(fetchMock);
+    expect(url.pathname).toBe("/3/search/tv");
+    expect(url.searchParams.get("query")).toBe("breaking");
+    expect(url.searchParams.get("include_adult")).toBe("false");
+    expect(url.searchParams.get("page")).toBe("2");
+    expect(page.results.map(({ kind, name }) => [kind, name])).toEqual([
+      ["tv", "Breaking Bad"],
+      ["tv", "Breaking In"],
+      ["tv", "Breaking Point"],
+    ]);
+    expect(page.totalResults).toBe(117);
+    expect(page.totalPages).toBe(6);
+  });
+
+  it("returns an empty page for a blank query without calling TMDB", async () => {
+    const fetchMock = stubFetch(searchTv);
+    await expect(searchShows("   ", 1)).resolves.toEqual({ results: [], page: 1, totalPages: 0, totalResults: 0 });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

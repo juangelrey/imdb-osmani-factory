@@ -1,4 +1,5 @@
 import { MAX_PAGES } from "./map";
+import type { TitleKind } from "./types";
 
 export type SearchParamValue = string | string[] | undefined;
 
@@ -17,6 +18,11 @@ export interface BrowseState {
 
 export function firstParam(value: SearchParamValue): string | undefined {
   return Array.isArray(value) ? value[0] : value;
+}
+
+/** The `type` param: "tv", else movie (the default, so links without `type` behave as before). */
+export function parseKind(value: SearchParamValue): TitleKind {
+  return firstParam(value) === "tv" ? "tv" : "movie";
 }
 
 function isSortKey(value: string | undefined): value is SortKey {
