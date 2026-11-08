@@ -49,11 +49,11 @@ export async function getShow(id: number, season = 1): Promise<Show | undefined>
  * A person with their movie credits in one request, or undefined when TMDB does not know the id
  * or flags the person adult. Other failures throw.
  */
-/** `today` is "YYYY-MM-DD"; it decides which films in the career are upcoming. */
+/** `today` is "YYYY-MM-DD"; it decides which titles in the career are upcoming. */
 export async function getPerson(id: number, today: string): Promise<Person | undefined> {
   let person: TmdbPersonDetails;
   try {
-    person = await tmdbFetch<TmdbPersonDetails>(`/person/${id}`, { append_to_response: "movie_credits" });
+    person = await tmdbFetch<TmdbPersonDetails>(`/person/${id}`, { append_to_response: "combined_credits" });
   } catch (error) {
     if (error instanceof TmdbError && error.status === 404) return undefined;
     throw error;

@@ -87,10 +87,18 @@ describe("Person page", () => {
       "2024",
       "2008",
       "1992",
+      "1985",
       "1966",
+      "1959",
     ]);
     expect(within(career).getByRole("link", { name: "Unforgiven" })).toHaveAttribute("href", "/title/33-unforgiven");
     expect(within(career).getByText("Director · as Bill Munny")).toBeInTheDocument();
+    const rawhide = within(career).getByRole("link", { name: "Rawhide" });
+    expect(rawhide).toHaveAttribute("href", "/tv/2343-rawhide");
+    expect(rawhide.closest("li")).toHaveTextContent("TV");
+    expect(rawhide.closest("li")).toHaveTextContent("as Rowdy Yates · 217 episodes");
+    const amazingStories = within(career).getByRole("link", { name: "Amazing Stories" });
+    expect(amazingStories).toHaveAttribute("href", "/tv/1918-amazing-stories");
     expect(within(career).getByText("Upcoming").closest("li")).toHaveTextContent("Juror #2");
   });
 
@@ -111,11 +119,13 @@ describe("Person page", () => {
     expect(within(career).getByText("Actor")).toBeInTheDocument();
     expect(screen.queryByText("Late Shift")).not.toBeInTheDocument();
     expect(screen.queryByText("Velvet Hours")).not.toBeInTheDocument();
+    expect(screen.queryByText("After Hours")).not.toBeInTheDocument();
+    expect(screen.queryByText("Silk Nights")).not.toBeInTheDocument();
   });
 
   it("hides the Career section when no credits are left to show", async () => {
-    const [, adult, softcore] = sparse.movie_credits.cast;
-    stubTmdb({ ...sparse, movie_credits: { cast: [adult, softcore], crew: [] } });
+    const [, ...flagged] = sparse.combined_credits.cast;
+    stubTmdb({ ...sparse, combined_credits: { cast: flagged, crew: [] } });
     render(await PersonPage(params("4891257-mara-lindqvist")));
     expect(screen.queryByRole("region", { name: "Career" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Career" })).not.toBeInTheDocument();

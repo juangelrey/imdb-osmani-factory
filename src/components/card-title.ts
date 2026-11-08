@@ -1,4 +1,4 @@
-import { posterUrl, showHref, titleHref } from "@/lib/catalog/map";
+import { posterUrl, summaryHref } from "@/lib/catalog/map";
 import type { TitleSummary } from "@/lib/catalog/types";
 import type { WatchlistEntry } from "@/lib/watchlist/watchlist";
 
@@ -20,7 +20,7 @@ export function cardFromSummary(title: TitleSummary): CardTitle {
   return {
     key,
     colorKey: title.kind === "movie" ? String(title.id) : key,
-    href: title.kind === "tv" ? showHref(title) : titleHref(title),
+    href: summaryHref(title),
     name: title.name,
     year: title.year,
     rating: title.rating,

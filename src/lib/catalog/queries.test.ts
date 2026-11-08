@@ -159,13 +159,13 @@ describe("getShow", () => {
 });
 
 describe("getPerson", () => {
-  it("makes one request for the person with movie credits appended, in English", async () => {
+  it("makes one request for the person with combined (movie and TV) credits appended, in English", async () => {
     const fetchMock = stubFetch(person);
     await getPerson(190, "2026-11-07");
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const url = requestedUrl(fetchMock);
     expect(url.pathname).toBe("/3/person/190");
-    expect(url.searchParams.get("append_to_response")).toBe("movie_credits");
+    expect(url.searchParams.get("append_to_response")).toBe("combined_credits");
     expect(url.searchParams.get("language")).toBe("en-US");
   });
 

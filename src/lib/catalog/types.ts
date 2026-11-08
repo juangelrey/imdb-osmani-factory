@@ -130,27 +130,30 @@ export interface Person extends PersonLink {
   birthplace?: string;
   /** TMDB's biography, with its paragraph breaks ("\n\n") kept. */
   biography?: string;
-  /** Movie credits, one entry per film, grouped by year. */
+  /** Movie and TV credits, one entry per film or show, grouped by year. */
   career: CareerYear[];
 }
 
-/** One film in a person's career, with every role they had in it. */
+/** One film or show in a person's career, with every role they had in it. */
 export interface CareerEntry {
-  /** The film, with a thumbnail-size (w92) poster URL. */
+  /** The film or show (by `kind`), with a thumbnail-size (w92) poster URL; `year` is its release or first air year. */
   title: TitleSummary;
-  /** "YYYY-MM-DD"; undefined when TMDB has no date. */
+  /**
+   * "YYYY-MM-DD": a film's release date; for a show, when the person first appeared in it, else its
+   * first air date. Undefined when TMDB has no date.
+   */
   releaseDate?: string;
   /** Dated after today. */
   upcoming: boolean;
-  /** "Director" first, then "as <character>" (or "Actor") in billing order. */
+  /** "Director" first, then "as <character>" (or "Actor") in billing order; on a show, " · <n> episode(s)" follows. */
   roles: string[];
-  /** The film's synopsis, for the preview card. The card's rating is `title.rating`. */
+  /** The title's synopsis, for the preview card. The card's rating is `title.rating`. */
   synopsis?: string;
   /** Preview-card-size (w185) poster URL. */
   previewPosterUrl?: string;
 }
 
-/** A year of a person's career; undated films form a "TBA" group with no year. */
+/** A year of a person's career, by entry date; undated titles form a "TBA" group with no year. */
 export interface CareerYear {
   year?: number;
   /** The heading: the year, or "TBA". */

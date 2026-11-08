@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { formatShortDate } from "@/lib/catalog/format";
-import { titleHref } from "@/lib/catalog/map";
+import { summaryHref } from "@/lib/catalog/map";
 import type { CareerEntry, CareerYear } from "@/lib/catalog/types";
 import { Poster } from "./poster";
 import { TitlePreview } from "./title-preview";
@@ -15,8 +15,9 @@ const ROW = "grid grid-cols-[4.5rem_1.5rem_minmax(0,1fr)] sm:grid-cols-[6rem_2re
 const LINE_X = "left-[5.25rem] sm:left-[7rem]";
 
 /**
- * Every film credit as a vertical timeline, newest first: a date column, a line with one node
- * per film and a year marker at each year change, then the film. Hidden without credits.
+ * Every film and TV credit as a vertical timeline, newest first: a date column, a line with one node
+ * per title and a year marker at each year change, then the title, with a "TV" badge on shows.
+ * Hidden without credits.
  */
 export function CareerTimeline({ career }: CareerTimelineProps) {
   if (career.length === 0) return null;
@@ -35,7 +36,11 @@ export function CareerTimeline({ career }: CareerTimelineProps) {
         <ol className="relative space-y-3">
           {career.flatMap((year) =>
             year.entries.map((entry, index) => (
-              <TimelineEntry key={entry.title.id} entry={entry} yearMarker={index === 0 ? year.label : undefined} />
+              <TimelineEntry
+                key={`${entry.title.kind}-${entry.title.id}`}
+                entry={entry}
+                yearMarker={index === 0 ? year.label : undefined}
+              />
             )),
           )}
         </ol>
@@ -46,7 +51,7 @@ export function CareerTimeline({ career }: CareerTimelineProps) {
 
 interface TimelineEntryProps {
   entry: CareerEntry;
-  /** The year label, on the first film of each year: a marker on the line, above the film. */
+  /** The year label, on the first title of each year: a marker on the line, above the title. */
   yearMarker?: string;
 }
 
@@ -55,6 +60,7 @@ function TimelineEntry({
   yearMarker,
 }: TimelineEntryProps) {
   const date = releaseDate && formatShortDate(releaseDate);
+  const href = summaryHref(title);
 
   return (
     <li className={`${ROW} items-center gap-y-3 ${yearMarker ? "pt-2 first:pt-0" : ""}`}>
@@ -81,7 +87,7 @@ function TimelineEntry({
         <TitlePreview
           colorKey={title.slug}
           name={title.name}
-          href={titleHref(title)}
+          href={href}
           year={title.year}
           rating={title.rating}
           synopsis={synopsis}
@@ -98,11 +104,16 @@ function TimelineEntry({
         <div className="min-w-0">
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <Link
-              href={titleHref(title)}
+              href={href}
               className="font-medium break-words hover:text-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
             >
               {title.name}
             </Link>
+            {title.kind === "tv" && (
+              <span className="rounded-full border border-zinc-700 px-1.5 py-px text-[0.6875rem] font-semibold tracking-wide text-zinc-300">
+                TV
+              </span>
+            )}
             {upcoming && (
               <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-xs font-medium text-amber-300">
                 Upcoming

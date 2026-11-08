@@ -123,8 +123,59 @@ describe("CareerTimeline", () => {
     expect(within(card).getByRole("link", { name: "Open" })).toHaveAttribute("href", "/title/33-unforgiven");
   });
 
+  it("puts no TV badge on films", () => {
+    render(<CareerTimeline career={career} />);
+    expect(screen.queryByText("TV")).not.toBeInTheDocument();
+  });
+
   it("renders nothing without credits", () => {
     const { container } = render(<CareerTimeline career={[]} />);
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("CareerTimeline with TV credits", () => {
+  const mixed: CareerYear[] = [
+    {
+      year: 1999,
+      label: "1999",
+      entries: [
+        {
+          title: { kind: "tv", id: 603, slug: "matrix-show", name: "Matrix Show", year: 1998 },
+          releaseDate: "1999-04-01",
+          upcoming: false,
+          roles: ["as Brian East · 1 episode"],
+          synopsis: "A show that shares an id with a film.",
+        },
+        {
+          title: { kind: "movie", id: 603, slug: "the-matrix", name: "The Matrix", year: 1999 },
+          releaseDate: "1999-03-31",
+          upcoming: false,
+          roles: ["as Neo"],
+        },
+      ],
+    },
+  ];
+
+  it("badges the show 'TV' and links it, and its preview's Open, to its TV page", () => {
+    render(<CareerTimeline career={mixed} />);
+    const showLink = screen.getByRole("link", { name: "Matrix Show" });
+    expect(showLink).toHaveAttribute("href", "/tv/603-matrix-show");
+    const badges = screen.getAllByText("TV");
+    expect(badges).toHaveLength(1);
+    expect(badges[0].closest("li")).toBe(showLink.closest("li"));
+    expect(showLink.closest("li")).toHaveTextContent("as Brian East · 1 episode");
+    fireEvent.click(screen.getByRole("button", { name: "Preview Matrix Show" }));
+    const card = screen.getByRole("dialog", { name: "Matrix Show" });
+    expect(within(card).getByRole("link", { name: "Open" })).toHaveAttribute("href", "/tv/603-matrix-show");
+  });
+
+  it("keeps a film and a show with the same id as separate entries, linking the film to its title page", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<CareerTimeline career={mixed} />);
+    expect(screen.getAllByRole("listitem")).toHaveLength(2);
+    expect(screen.getByRole("link", { name: "The Matrix" })).toHaveAttribute("href", "/title/603-the-matrix");
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
   });
 });

@@ -8,7 +8,7 @@
   "place_of_birth": null,
   "known_for_department": null,
   "profile_path": null,
-  "movie_credits": {
+  "combined_credits": {
     "cast": [
       {
         "adult": false,
@@ -22,7 +22,8 @@
         "genre_ids": [],
         "character": "",
         "credit_id": "65a1f0c2e8a3e1012c9b7d11",
-        "order": 0
+        "order": 0,
+        "media_type": "movie"
       },
       {
         "adult": true,
@@ -36,7 +37,8 @@
         "genre_ids": [],
         "character": "Nina",
         "credit_id": "6049c3a1e8a3e1003f5e2a90",
-        "order": 1
+        "order": 1,
+        "media_type": "movie"
       },
       {
         "adult": false,
@@ -50,7 +52,40 @@
         "genre_ids": [],
         "character": "Ilse",
         "credit_id": "62a0b7d1e8a3e1004c8f1b22",
-        "order": 2
+        "order": 2,
+        "media_type": "movie"
+      },
+      {
+        "adult": true,
+        "softcore": false,
+        "id": 281904,
+        "name": "After Hours",
+        "first_air_date": "2020-02-14",
+        "poster_path": null,
+        "vote_average": 0,
+        "vote_count": 0,
+        "genre_ids": [],
+        "character": "Nina",
+        "credit_id": "5e46c2b1e8a3e10014b2c7a1",
+        "episode_count": 4,
+        "first_credit_air_date": "2020-02-14",
+        "media_type": "tv"
+      },
+      {
+        "adult": false,
+        "softcore": true,
+        "id": 290117,
+        "name": "Silk Nights",
+        "first_air_date": "2021-07-09",
+        "poster_path": null,
+        "vote_average": 0,
+        "vote_count": 0,
+        "genre_ids": [],
+        "character": "Ilse",
+        "credit_id": "60e8a4c1e8a3e1004d6c2f31",
+        "episode_count": 2,
+        "first_credit_air_date": "2021-07-09",
+        "media_type": "tv"
       }
     ],
     "crew": []

@@ -5,9 +5,10 @@ import type {
   TmdbMovieDetails,
   TmdbMovieListItem,
   TmdbPaged,
+  TmdbPersonCastCredit,
+  TmdbPersonCombinedCredits,
+  TmdbPersonCredit,
   TmdbPersonDetails,
-  TmdbPersonMovieCredit,
-  TmdbPersonMovieCredits,
   TmdbEpisode,
   TmdbSeason,
   TmdbSeasonSummary,
@@ -56,6 +57,11 @@ export function titleHref({ id, slug }: { id: number; slug: string }): string {
 
 export function showHref({ id, slug }: { id: number; slug: string }): string {
   return `/tv/${id}-${slug}`;
+}
+
+/** The page a summary links to: `/title/…` for a movie, `/tv/…` for a show. */
+export function summaryHref(title: Pick<TitleSummary, "kind" | "id" | "slug">): string {
+  return title.kind === "tv" ? showHref(title) : titleHref(title);
 }
 
 export function personHref({ id, slug }: { id: number; slug: string }): string {
@@ -248,37 +254,63 @@ export function toPerson(person: TmdbPersonDetails, today: string): Person {
     died: dateWithAge(died, ageAtDeath === undefined ? undefined : `aged ${ageAtDeath}`),
     birthplace: person.place_of_birth?.trim() || undefined,
     biography: person.biography?.trim() || undefined,
-    career: toCareer(person.movie_credits, today),
+    career: toCareer(person.combined_credits, today),
   };
 }
 
+/** A movie by its release date; a show by when this person first appeared in it, else its first air date. */
+function creditDate(credit: TmdbPersonCredit): string | undefined {
+  if (credit.media_type === "movie") return credit.release_date || undefined;
+  return credit.first_credit_air_date || credit.first_air_date || undefined;
+}
+
+/** "as <character>" (or "Actor"), plus " · <n> episode(s)" for a show. */
+function actingRole(credit: TmdbPersonCastCredit): string {
+  const role = credit.character ? `as ${credit.character}` : "Actor";
+  if (credit.media_type !== "tv" || !credit.episode_count) return role;
+  const count = credit.episode_count;
+  return `${role} · ${count} ${count === 1 ? "episode" : "episodes"}`;
+}
+
 /**
- * Merge acting and directing credits into one entry per film, grouped by year, newest first.
- * `today` is "YYYY-MM-DD"; films dated after it are flagged upcoming.
+ * Merge acting and directing credits into one entry per film or show, grouped by year, newest first.
+ * A movie and a show with the same id stay separate. Other crew jobs (Creator, Writer, producers) are
+ * dropped. `today` is "YYYY-MM-DD"; titles dated after it are flagged upcoming.
  */
-export function toCareer(credits: TmdbPersonMovieCredits, today: string): CareerYear[] {
-  const byFilm = new Map<number, CareerEntry>();
-  const add = (film: TmdbPersonMovieCredit, role: string) => {
-    if (film.adult || film.softcore) return;
-    const entry = byFilm.get(film.id) ?? {
-      title: { ...toSummary(film), posterUrl: posterUrl(film.poster_path, "w92") },
-      releaseDate: film.release_date || undefined,
-      upcoming: Boolean(film.release_date && film.release_date > today),
+export function toCareer(credits: TmdbPersonCombinedCredits, today: string): CareerYear[] {
+  const byTitle = new Map<string, CareerEntry>();
+  const add = (credit: TmdbPersonCredit, role: string) => {
+    if (credit.adult || credit.softcore) return;
+    const key = `${credit.media_type}-${credit.id}`;
+    const date = creditDate(credit);
+    const entry = byTitle.get(key) ?? {
+      title: {
+        ...(credit.media_type === "tv" ? toShowSummary(credit) : toSummary(credit)),
+        posterUrl: posterUrl(credit.poster_path, "w92"),
+      },
+      releaseDate: date,
+      upcoming: false,
       roles: [],
-      synopsis: film.overview?.trim() || undefined,
-      previewPosterUrl: posterUrl(film.poster_path, "w185"),
+      synopsis: credit.overview?.trim() || undefined,
+      previewPosterUrl: posterUrl(credit.poster_path, "w185"),
     };
+    // Several rows for one show can start on different dates; the person's first appearance wins.
+    if (date && (!entry.releaseDate || date < entry.releaseDate)) entry.releaseDate = date;
+    entry.upcoming = Boolean(entry.releaseDate && entry.releaseDate > today);
     if (!entry.roles.includes(role)) entry.roles.push(role);
-    byFilm.set(film.id, entry);
+    byTitle.set(key, entry);
   };
   credits.crew.filter((credit) => credit.job === "Director").forEach((credit) => add(credit, "Director"));
   [...credits.cast]
     .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity))
-    .forEach((credit) => add(credit, credit.character ? `as ${credit.character}` : "Actor"));
-  return groupByYearDesc([...byFilm.values()]);
+    .forEach((credit) => add(credit, actingRole(credit)));
+  return groupByYearDesc([...byTitle.values()]);
 }
 
-/** Undated films first, under "TBA"; then years newest first, each sorted by date (newest first), then title. */
+/**
+ * Undated titles first, under "TBA"; then years newest first, each sorted by date (newest first), then
+ * title. The year is the entry's date, so a show sits in the year the person first appeared in it.
+ */
 function groupByYearDesc(entries: CareerEntry[]): CareerYear[] {
   const sorted = [...entries].sort((a, b) => {
     if (a.releaseDate === b.releaseDate) return a.title.name.localeCompare(b.title.name);
@@ -288,7 +320,7 @@ function groupByYearDesc(entries: CareerEntry[]): CareerYear[] {
   });
   const years: CareerYear[] = [];
   for (const entry of sorted) {
-    const year = entry.title.year;
+    const year = releaseYear(entry.releaseDate);
     const label = year === undefined ? "TBA" : String(year);
     const last = years.at(-1);
     if (last?.label === label) last.entries.push(entry);

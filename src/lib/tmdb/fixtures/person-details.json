@@ -8,7 +8,7 @@
   "place_of_birth": "San Francisco, California, USA",
   "known_for_department": "Acting",
   "profile_path": "/dU35NnjZ8aGh9LxIgSXgXGr4jmx.jpg",
-  "movie_credits": {
+  "combined_credits": {
     "cast": [
       {
         "adult": false,
@@ -23,7 +23,8 @@
         "genre_ids": [37],
         "character": "Bill Munny",
         "credit_id": "52fe4211c3a36847f8000a3b",
-        "order": 0
+        "order": 0,
+        "media_type": "movie"
       },
       {
         "adult": false,
@@ -38,7 +39,8 @@
         "genre_ids": [18],
         "character": "Walt Kowalski",
         "credit_id": "52fe45abc3a36847f80d4f1d",
-        "order": 0
+        "order": 0,
+        "media_type": "movie"
       },
       {
         "adult": false,
@@ -52,7 +54,25 @@
         "genre_ids": [37],
         "character": "Blondie",
         "credit_id": "52fe4247c3a36847f8012b27",
-        "order": 0
+        "order": 0,
+        "media_type": "movie"
+      },
+      {
+        "adult": false,
+        "softcore": false,
+        "id": 2343,
+        "name": "Rawhide",
+        "overview": "Trail boss Gil Favor and his ramrod Rowdy Yates drive cattle along the Sedalia Trail.",
+        "first_air_date": "1959-01-09",
+        "poster_path": "/4G0zVAitlv6mn9EG5Z1fq7gRMLQ.jpg",
+        "vote_average": 7.4,
+        "vote_count": 112,
+        "genre_ids": [37],
+        "character": "Rowdy Yates",
+        "credit_id": "52571b6c19c29571140d5f03",
+        "episode_count": 217,
+        "first_credit_air_date": "1959-01-09",
+        "media_type": "tv"
       }
     ],
     "crew": [
@@ -69,7 +89,8 @@
         "genre_ids": [37],
         "department": "Directing",
         "job": "Director",
-        "credit_id": "52fe4211c3a36847f8000a29"
+        "credit_id": "52fe4211c3a36847f8000a29",
+        "media_type": "movie"
       },
       {
         "adult": false,
@@ -84,7 +105,8 @@
         "genre_ids": [37],
         "department": "Production",
         "job": "Producer",
-        "credit_id": "52fe4211c3a36847f8000a41"
+        "credit_id": "52fe4211c3a36847f8000a41",
+        "media_type": "movie"
       },
       {
         "adult": false,
@@ -99,7 +121,8 @@
         "genre_ids": [18],
         "department": "Directing",
         "job": "Director",
-        "credit_id": "52fe45abc3a36847f80d4f09"
+        "credit_id": "52fe45abc3a36847f80d4f09",
+        "media_type": "movie"
       },
       {
         "adult": false,
@@ -113,7 +136,44 @@
         "genre_ids": [18, 9648],
         "department": "Directing",
         "job": "Director",
-        "credit_id": "64d1a2b3c4d5e6f708192a3b"
+        "credit_id": "64d1a2b3c4d5e6f708192a3b",
+        "media_type": "movie"
+      },
+      {
+        "adult": false,
+        "softcore": false,
+        "id": 1918,
+        "name": "Amazing Stories",
+        "overview": "An anthology of fantasy, science fiction and horror tales.",
+        "first_air_date": "1985-09-29",
+        "poster_path": "/2dZbS3N0B1PlJ7Z6aX0Hk3bQ3Yp.jpg",
+        "vote_average": 7.0,
+        "vote_count": 330,
+        "genre_ids": [10765, 18],
+        "credit_id": "5257177319c29571140a0b12",
+        "department": "Directing",
+        "job": "Director",
+        "episode_count": 1,
+        "first_credit_air_date": "1985-12-29",
+        "media_type": "tv"
+      },
+      {
+        "adult": false,
+        "softcore": false,
+        "id": 2343,
+        "name": "Rawhide",
+        "overview": "Trail boss Gil Favor and his ramrod Rowdy Yates drive cattle along the Sedalia Trail.",
+        "first_air_date": "1959-01-09",
+        "poster_path": "/4G0zVAitlv6mn9EG5Z1fq7gRMLQ.jpg",
+        "vote_average": 7.4,
+        "vote_count": 112,
+        "genre_ids": [37],
+        "credit_id": "52571b6c19c29571140d5f19",
+        "department": "Writing",
+        "job": "Writer",
+        "episode_count": 3,
+        "first_credit_air_date": "1959-01-09",
+        "media_type": "tv"
       }
     ]
   }

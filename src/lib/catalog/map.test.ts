@@ -14,6 +14,7 @@ import type {
   TmdbPersonCastCredit,
   TmdbPersonCrewCredit,
   TmdbPersonDetails,
+  TmdbPersonTvCredit,
   TmdbSeason,
   TmdbTvDetails,
 } from "@/lib/tmdb/schema";
@@ -137,7 +138,7 @@ describe("toPerson", () => {
       birthplace: "San Francisco, California, USA",
       biography:
         "Clinton Eastwood Jr. is an American actor and film director.\n\nHe rose to fame playing the Man with No Name in Sergio Leone's Dollars trilogy.",
-      career: toCareer(clint.movie_credits, TODAY),
+      career: toCareer(clint.combined_credits, TODAY),
     });
   });
 
@@ -199,6 +200,7 @@ describe("toPerson", () => {
 
 function film(id: number, title: string, release_date: string) {
   return {
+    media_type: "movie" as const,
     adult: false,
     softcore: false,
     id,
@@ -219,20 +221,39 @@ function crew(id: number, title: string, release_date: string, job: string): Tmd
   return { ...film(id, title, release_date), job, department: job === "Producer" ? "Production" : "Directing" };
 }
 
+function show(id: number, name: string, first_air_date: string, first_credit_air_date?: string): TmdbPersonTvCredit {
+  return {
+    media_type: "tv",
+    adult: false,
+    softcore: false,
+    id,
+    name,
+    first_air_date,
+    first_credit_air_date,
+    episode_count: 1,
+    poster_path: null,
+    vote_average: 7,
+    vote_count: 10,
+    genre_ids: [],
+  };
+}
+
 describe("toCareer", () => {
-  it("merges the fixture's acting and directing credits into one entry per film, newest year first", () => {
-    const career = toCareer((person as TmdbPersonDetails).movie_credits, TODAY);
-    expect(career.map((year) => year.label)).toEqual(["2024", "2008", "1992", "1966"]);
+  it("merges the fixture's acting and directing credits into one entry per film or show, newest year first", () => {
+    const career = toCareer((person as TmdbPersonDetails).combined_credits, TODAY);
+    expect(career.map((year) => year.label)).toEqual(["2024", "2008", "1992", "1985", "1966", "1959"]);
     expect(career.map((year) => year.entries.map((entry) => [entry.title.name, entry.roles]))).toEqual([
       [["Juror #2", ["Director"]]],
       [["Gran Torino", ["Director", "as Walt Kowalski"]]],
       [["Unforgiven", ["Director", "as Bill Munny"]]],
+      [["Amazing Stories", ["Director"]]],
       [["The Good, the Bad and the Ugly", ["as Blondie"]]],
+      [["Rawhide", ["as Rowdy Yates · 217 episodes"]]],
     ]);
   });
 
   it("maps each film to a summary with a w92 thumbnail, its release date, and a w185 preview poster and synopsis", () => {
-    const [, , unforgiven] = toCareer((person as TmdbPersonDetails).movie_credits, TODAY);
+    const [, , unforgiven] = toCareer((person as TmdbPersonDetails).combined_credits, TODAY);
     expect(unforgiven).toEqual({
       year: 1992,
       label: "1992",
@@ -345,8 +366,8 @@ describe("toCareer", () => {
     ]);
   });
 
-  it("drops adult and softcore credits", () => {
-    const career = toCareer((sparsePerson as TmdbPersonDetails).movie_credits, TODAY);
+  it("drops adult and softcore credits, movie and TV", () => {
+    const career = toCareer((sparsePerson as TmdbPersonDetails).combined_credits, TODAY);
     expect(career).toEqual([
       {
         year: undefined,
@@ -372,6 +393,156 @@ describe("toCareer", () => {
       ["Tomorrow", true],
       ["Today", false],
     ]);
+  });
+});
+
+describe("toCareer over TV credits", () => {
+  const tvCast = (
+    credit: TmdbPersonTvCredit,
+    character: string,
+    episode_count = credit.episode_count,
+  ): TmdbPersonCastCredit => ({ ...credit, character, episode_count });
+  const tvCrew = (credit: TmdbPersonTvCredit, job: string): TmdbPersonCrewCredit => ({
+    ...credit,
+    job,
+    department: job === "Director" ? "Directing" : "Writing",
+  });
+
+  it("maps the fixture's show to a TV summary with a w92 thumbnail, its first credit date and a w185 preview", () => {
+    const rawhide = toCareer((person as TmdbPersonDetails).combined_credits, TODAY).at(-1)!;
+    expect(rawhide).toEqual({
+      year: 1959,
+      label: "1959",
+      entries: [
+        {
+          title: {
+            kind: "tv",
+            id: 2343,
+            slug: "rawhide",
+            name: "Rawhide",
+            year: 1959,
+            rating: 7.4,
+            posterUrl: "https://image.tmdb.org/t/p/w92/4G0zVAitlv6mn9EG5Z1fq7gRMLQ.jpg",
+          },
+          releaseDate: "1959-01-09",
+          upcoming: false,
+          roles: ["as Rowdy Yates · 217 episodes"],
+          synopsis: "Trail boss Gil Favor and his ramrod Rowdy Yates drive cattle along the Sedalia Trail.",
+          previewPosterUrl: "https://image.tmdb.org/t/p/w185/4G0zVAitlv6mn9EG5Z1fq7gRMLQ.jpg",
+        },
+      ],
+    });
+  });
+
+  it("dates a show by first_credit_air_date, then first_air_date, then TBA", () => {
+    const career = toCareer(
+      {
+        cast: [
+          tvCast(show(1, "Guest Spot", "1984-09-30", "1986-04-06"), "Brian East"),
+          tvCast(show(2, "No Credit Date", "1990-04-09"), "Anchor"),
+          tvCast({ ...show(3, "Blank Credit Date", "1995-01-01"), first_credit_air_date: "" }, "Host"),
+          tvCast({ ...show(4, "Announced Show", ""), first_credit_air_date: null }, "Lead"),
+        ],
+        crew: [],
+      },
+      TODAY,
+    );
+    expect(
+      career.map((year) => [year.label, year.entries.map((entry) => [entry.title.name, entry.releaseDate])]),
+    ).toEqual([
+      ["TBA", [["Announced Show", undefined]]],
+      ["1995", [["Blank Credit Date", "1995-01-01"]]],
+      ["1990", [["No Credit Date", "1990-04-09"]]],
+      ["1986", [["Guest Spot", "1986-04-06"]]],
+    ]);
+    // The show's own year stays its first air year; the timeline places it by the credit date.
+    expect(career[3].entries[0].title.year).toBe(1984);
+  });
+
+  it("reads TV roles as 'as <character> · <n> episode(s)', and 'Actor' without a character", () => {
+    const career = toCareer(
+      {
+        cast: [
+          tvCast(show(1, "One", "2001-01-01"), "Brian East", 1),
+          tvCast(show(2, "Many", "2002-01-01"), "Rowdy Yates", 217),
+          tvCast(show(3, "Unnamed", "2003-01-01"), "", 3),
+          tvCast({ ...show(4, "Uncounted", "2004-01-01"), episode_count: undefined }, "Self"),
+        ],
+        crew: [],
+      },
+      TODAY,
+    );
+    expect(career.flatMap((year) => year.entries.map((entry) => entry.roles))).toEqual([
+      ["as Self"],
+      ["Actor · 3 episodes"],
+      ["as Rowdy Yates · 217 episodes"],
+      ["as Brian East · 1 episode"],
+    ]);
+  });
+
+  it("keeps TV Director credits and drops Creator, Writer and producer jobs", () => {
+    const series = show(1, "Series", "2000-01-09", "2003-03-16");
+    const career = toCareer(
+      {
+        cast: [],
+        crew: [
+          tvCrew(series, "Director"),
+          tvCrew(show(2, "Created", "2001-01-01"), "Creator"),
+          tvCrew(show(3, "Written", "2002-01-01"), "Writer"),
+          tvCrew(show(4, "Produced", "2003-01-01"), "Executive Producer"),
+          tvCrew(show(5, "Produced Too", "2004-01-01"), "Producer"),
+        ],
+      },
+      TODAY,
+    );
+    expect(career.flatMap((year) => year.entries.map((entry) => [entry.title.name, entry.roles]))).toEqual([
+      ["Series", ["Director"]],
+    ]);
+  });
+
+  it("merges a show's directing and acting rows into one entry, dated by the first appearance", () => {
+    const career = toCareer(
+      {
+        cast: [tvCast(show(1, "Series", "2000-01-09", "2005-02-01"), "Himself", 2)],
+        crew: [tvCrew(show(1, "Series", "2000-01-09", "2003-03-16"), "Director")],
+      },
+      TODAY,
+    );
+    expect(career).toHaveLength(1);
+    expect(career[0].entries).toEqual([
+      expect.objectContaining({ releaseDate: "2003-03-16", roles: ["Director", "as Himself · 2 episodes"] }),
+    ]);
+    expect(career[0].label).toBe("2003");
+  });
+
+  it("keeps a movie and a show with the same id as separate entries", () => {
+    const career = toCareer(
+      {
+        cast: [cast(603, "The Matrix", "1999-03-31", "Neo"), tvCast(show(603, "Matrix Show", "1999-03-31"), "Neo")],
+        crew: [],
+      },
+      TODAY,
+    );
+    expect(career[0].entries.map((entry) => [entry.title.kind, entry.title.id, entry.title.name])).toEqual([
+      ["tv", 603, "Matrix Show"],
+      ["movie", 603, "The Matrix"],
+    ]);
+  });
+
+  it("drops adult and softcore shows, as cast and as Director", () => {
+    const adult = { ...show(1, "Adult", "2001-01-01"), adult: true };
+    const softcore = { ...show(2, "Softcore", "2002-01-01"), softcore: true };
+    expect(
+      toCareer({ cast: [tvCast(adult, "A"), tvCast(softcore, "B")], crew: [tvCrew(adult, "Director")] }, TODAY),
+    ).toEqual([]);
+  });
+
+  it("flags a show whose first credit airs after today as upcoming", () => {
+    const [year] = toCareer(
+      { cast: [tvCast(show(1, "Next Season", "2020-01-01", "2026-11-08"), "Lead")], crew: [] },
+      TODAY,
+    );
+    expect(year.entries[0]).toMatchObject({ upcoming: true, releaseDate: "2026-11-08" });
   });
 });
 
