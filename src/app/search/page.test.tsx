@@ -159,6 +159,22 @@ describe("Search page", () => {
     expect(within(nav).getByRole("link", { name: "TV" })).toHaveAttribute("href", "/search?q=breaking&type=tv&sort=relevance");
   });
 
+  it("lists results by Rating with sort=rating, highest first", async () => {
+    stubTmdb();
+    render(await SearchPage({ searchParams: Promise.resolve({ q: "matrix", sort: "rating" }) }));
+    expect(resultHrefs()).toEqual(["/title/603-the-matrix", "/title/604-the-matrix-reloaded", "/title/605-the-matrix-revolutions"]);
+    const sortNav = screen.getByRole("navigation", { name: "Sort results" });
+    expect(within(sortNav).getByRole("link", { name: "Rating" })).toHaveAttribute("aria-current", "true");
+  });
+
+  it("keeps sort=rating when switching between Movies and TV", async () => {
+    stubTmdb(searchTvOnePage);
+    render(await SearchPage({ searchParams: Promise.resolve({ q: "breaking", type: "tv", sort: "rating" }) }));
+    const nav = screen.getByRole("navigation", { name: "Movies or TV" });
+    expect(within(nav).getByRole("link", { name: "Movies" })).toHaveAttribute("href", "/search?q=breaking&sort=rating");
+    expect(within(nav).getByRole("link", { name: "TV" })).toHaveAttribute("href", "/search?q=breaking&type=tv&sort=rating");
+  });
+
   it("sends a TV page past the last one back to page 1, keeping the query and type", async () => {
     stubTmdb({ page: 99, results: [], total_pages: 6, total_results: 117 });
     await expect(SearchPage({ searchParams: Promise.resolve({ q: "breaking", type: "tv", page: "99" }) })).rejects.toThrow(

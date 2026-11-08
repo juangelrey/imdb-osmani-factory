@@ -32,8 +32,23 @@ function byRecency(a: SearchItem, b: SearchItem): number {
   return left < right ? 1 : -1;
 }
 
+/** Titles with fewer votes than this rank after every title with at least this many. */
+export const RATING_VOTE_FLOOR = 50;
+
+/** 0 for titles at or above the vote floor, 1 below it, 2 for unvoted titles. */
+function ratingTier({ vote_count }: SearchItem): number {
+  if (vote_count >= RATING_VOTE_FLOOR) return 0;
+  return vote_count > 0 ? 1 : 2;
+}
+
+/** Highest vote average first, within tiers: 50+ votes, then fewer, then unvoted. */
+function byRating(a: SearchItem, b: SearchItem): number {
+  return ratingTier(a) - ratingTier(b) || b.vote_average - a.vote_average;
+}
+
 const COMPARATORS: Record<ServerSortKey, (a: SearchItem, b: SearchItem) => number> = {
   recency: byRecency,
+  rating: byRating,
 };
 
 /** A sorted copy of raw TMDB search items. The sort is stable, so ties keep TMDB's order. */

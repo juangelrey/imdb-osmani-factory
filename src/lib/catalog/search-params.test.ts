@@ -4,6 +4,7 @@ describe("parseSearchSort", () => {
   it("reads each search sort key", () => {
     expect(parseSearchSort("relevance")).toBe("relevance");
     expect(parseSearchSort("recency")).toBe("recency");
+    expect(parseSearchSort("rating")).toBe("rating");
     expect(parseSearchSort(["relevance", "recency"])).toBe("relevance");
   });
 
@@ -15,8 +16,7 @@ describe("parseSearchSort", () => {
     expect(parseSearchSort("RELEVANCE")).toBe("recency");
   });
 
-  it("lists Recency first, as the default", () => {
-    expect(SEARCH_SORT_KEYS[0]).toBe("recency");
-    expect(SEARCH_SORT_KEYS).toContain("relevance");
+  it("lists Recency first, as the default, then Rating and Relevance", () => {
+    expect(SEARCH_SORT_KEYS).toEqual(["recency", "rating", "relevance"]);
   });
 });
