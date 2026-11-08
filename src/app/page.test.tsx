@@ -145,6 +145,8 @@ describe("Home page", () => {
     const media = screen.getByRole("navigation", { name: "Movies or TV" });
     expect(within(media).getByRole("link", { name: "TV" })).toHaveAttribute("aria-current", "page");
     expect(within(media).getByRole("link", { name: "Movies" })).toHaveAttribute("href", "/");
+    // Browse has no People option.
+    expect(within(media).getAllByRole("link").map((link) => link.textContent)).toEqual(["Movies", "TV"]);
   });
 
   it("titles a TV genre as series, sorts by first air date and keeps type in the controls", async () => {

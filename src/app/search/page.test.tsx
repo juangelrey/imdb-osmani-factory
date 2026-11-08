@@ -127,7 +127,7 @@ describe("Search page", () => {
     const fetchMock = stubTmdb();
     render(await SearchPage({ searchParams: Promise.resolve({ q: "matrix" }) }));
     expect(requestedUrl(fetchMock).pathname).toBe("/3/search/movie");
-    const nav = screen.getByRole("navigation", { name: "Movies or TV" });
+    const nav = screen.getByRole("navigation", { name: "Movies, TV or People" });
     expect(within(nav).getByRole("link", { name: "Movies" })).toHaveAttribute("aria-current", "page");
   });
 
@@ -140,14 +140,14 @@ describe("Search page", () => {
     expect(screen.getByRole("link", { name: /Breaking Bad/ })).toHaveAttribute("href", "/tv/1396-breaking-bad");
     // Breaking Point has no first air date, so it comes last.
     expect(resultHrefs()).toEqual(["/tv/34541-breaking-in", "/tv/1396-breaking-bad", "/tv/603-breaking-point"]);
-    const nav = screen.getByRole("navigation", { name: "Movies or TV" });
+    const nav = screen.getByRole("navigation", { name: "Movies, TV or People" });
     expect(within(nav).getByRole("link", { name: "TV" })).toHaveAttribute("aria-current", "page");
   });
 
   it("switches kind keeping the query and leaving out the default sort", async () => {
     stubTmdb(searchTvOnePage);
     render(await SearchPage({ searchParams: Promise.resolve({ q: "breaking", type: "tv" }) }));
-    const nav = screen.getByRole("navigation", { name: "Movies or TV" });
+    const nav = screen.getByRole("navigation", { name: "Movies, TV or People" });
     expect(within(nav).getByRole("link", { name: "Movies" })).toHaveAttribute("href", "/search?q=breaking");
     expect(within(nav).getByRole("link", { name: "TV" })).toHaveAttribute("href", "/search?q=breaking&type=tv");
   });
@@ -155,7 +155,7 @@ describe("Search page", () => {
   it("switches kind keeping the query and a non-default sort, resetting the page to 1", async () => {
     stubTmdb(searchTv);
     render(await SearchPage({ searchParams: Promise.resolve({ q: "breaking", type: "tv", sort: "relevance", page: "3" }) }));
-    const nav = screen.getByRole("navigation", { name: "Movies or TV" });
+    const nav = screen.getByRole("navigation", { name: "Movies, TV or People" });
     expect(within(nav).getByRole("link", { name: "Movies" })).toHaveAttribute("href", "/search?q=breaking&sort=relevance");
     expect(within(nav).getByRole("link", { name: "TV" })).toHaveAttribute("href", "/search?q=breaking&type=tv&sort=relevance");
   });
@@ -171,7 +171,7 @@ describe("Search page", () => {
   it("keeps sort=rating when switching between Movies and TV", async () => {
     stubTmdb(searchTvOnePage);
     render(await SearchPage({ searchParams: Promise.resolve({ q: "breaking", type: "tv", sort: "rating" }) }));
-    const nav = screen.getByRole("navigation", { name: "Movies or TV" });
+    const nav = screen.getByRole("navigation", { name: "Movies, TV or People" });
     expect(within(nav).getByRole("link", { name: "Movies" })).toHaveAttribute("href", "/search?q=breaking&sort=rating");
     expect(within(nav).getByRole("link", { name: "TV" })).toHaveAttribute("href", "/search?q=breaking&type=tv&sort=rating");
   });
@@ -241,12 +241,23 @@ describe("Search page", () => {
     );
   });
 
-  it("links Movies and TV from the People view keeping the query, with neither marked", async () => {
+  it("marks People on the People view and links Movies and TV keeping the query", async () => {
     stubTmdb(searchPerson);
-    render(await SearchPage({ searchParams: Promise.resolve({ q: "nolan", type: "person" }) }));
-    const nav = screen.getByRole("navigation", { name: "Movies or TV" });
+    render(await SearchPage({ searchParams: Promise.resolve({ q: "nolan", type: "person", page: "2" }) }));
+    const nav = screen.getByRole("navigation", { name: "Movies, TV or People" });
+    expect(within(nav).getAllByRole("link").map((link) => link.textContent)).toEqual(["Movies", "TV", "People"]);
+    expect(within(nav).getByRole("link", { name: "People" })).toHaveAttribute("aria-current", "page");
+    expect(within(nav).getByRole("link", { name: "People" })).toHaveAttribute("href", "/search?q=nolan&type=person");
+    expect(within(nav).getByRole("link", { name: "Movies" })).not.toHaveAttribute("aria-current");
     expect(within(nav).getByRole("link", { name: "Movies" })).toHaveAttribute("href", "/search?q=nolan");
     expect(within(nav).getByRole("link", { name: "TV" })).toHaveAttribute("href", "/search?q=nolan&type=tv");
-    expect(within(nav).queryByRole("link", { current: "page" })).not.toBeInTheDocument();
+  });
+
+  it("links People keeping the query and dropping a non-default sort", async () => {
+    stubTmdb(searchTvOnePage);
+    render(await SearchPage({ searchParams: Promise.resolve({ q: "breaking", type: "tv", sort: "rating" }) }));
+    const nav = screen.getByRole("navigation", { name: "Movies, TV or People" });
+    expect(within(nav).getByRole("link", { name: "People" })).toHaveAttribute("href", "/search?q=breaking&type=person");
+    expect(within(nav).getByRole("link", { name: "People" })).not.toHaveAttribute("aria-current");
   });
 });

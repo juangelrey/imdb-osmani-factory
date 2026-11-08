@@ -5,7 +5,7 @@ import { SearchResults, searchHref } from "@/components/search-results";
 import { SearchSortControl } from "@/components/search-sort-control";
 import { firstParam, parsePage, type SearchParamValue } from "@/lib/catalog/browse-params";
 import { searchPeople, searchShows, searchTitles } from "@/lib/catalog/queries";
-import { parseSearchKind, parseSearchSort } from "@/lib/catalog/search-params";
+import { parseSearchKind, parseSearchSort, SEARCH_KINDS } from "@/lib/catalog/search-params";
 
 export const metadata: Metadata = { title: "Search · Reelbase" };
 
@@ -32,7 +32,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <h1 className="text-2xl font-bold">Search</h1>
       {/* Switching kind or sort keeps the query and the other choice, and starts again at page 1. */}
       <div className="flex flex-wrap items-center gap-4">
-        <MediaSwitch current={kind} hrefForKind={(next) => searchHref(trimmed, 1, next, sort)} />
+        <MediaSwitch kinds={SEARCH_KINDS} current={kind} hrefForKind={(next) => searchHref(trimmed, 1, next, sort)} />
         {trimmed && kind !== "person" && (
           <SearchSortControl current={sort} hrefForSort={(next) => searchHref(trimmed, 1, kind, next)} />
         )}

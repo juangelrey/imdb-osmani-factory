@@ -7,6 +7,9 @@ import { TitleGrid } from "@/components/title-grid";
 import { browseHref, parseBrowseParams, parseKind, type SearchParamValue } from "@/lib/catalog/browse-params";
 import { discoverShows, discoverTitles, listGenres } from "@/lib/catalog/queries";
 
+/** Browse has no People: TMDB's discover lists only movies and shows. */
+const BROWSE_KINDS = ["movie", "tv"] as const;
+
 interface HomeProps {
   searchParams: Promise<Record<string, SearchParamValue>>;
 }
@@ -27,7 +30,7 @@ export default async function Home({ searchParams }: HomeProps) {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">{genreName ? `${genreName} ${noun}` : `All ${noun}`}</h1>
       {/* Switching kind resets the genre (the lists differ) and the page, and keeps the sort. */}
-      <MediaSwitch current={state.kind} hrefForKind={(kind) => browseHref({ kind, genre: undefined, sort: state.sort, page: 1 })} />
+      <MediaSwitch kinds={BROWSE_KINDS} current={state.kind} hrefForKind={(kind) => browseHref({ kind, genre: undefined, sort: state.sort, page: 1 })} />
       <BrowseControls genres={genres} state={state} />
       <TitleGrid
         titles={results.map(cardFromSummary)}
