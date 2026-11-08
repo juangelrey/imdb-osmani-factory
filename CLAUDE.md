@@ -1,22 +1,9 @@
 # Reelbase
 
-Specs, plans and tasks live in GitHub Issues, not files. In the skills, the spec is the open `prd`
-issue, the plan is the open `plan` issue, and a task is an issue labeled `ticket`. Follow the spec's boundaries.
-
-## Issue tracker
-
-GitHub Issues on `juangelrey/reelbase` is the tracker. Do not create `SPEC.md`,
-`tasks/plan.md` or `tasks/todo.md`.
-
-- One issue labeled `ticket` per task. Acceptance criteria go in the body, and links go in
-  as "Part of #N" and "Blocked by #N".
-- The plan issue's task list is an index of ticket numbers. "Blocked by" decides build order.
-- A task is done when its issue is closed. PRs use `Closes #N`.
-
 ## Agent skills
 
-`.claude/` holds a copy of the `agent-skills` skills so they work in cloud sessions, where plugins
-do not load. Commands: `/as-spec`, `/as-plan`, `/as-build`, `/as-test`, `/as-review`, `/as-merge`.
+`.claude/` holds our own skills, adapted from agent-skills. Use them over any `agent-skills:` plugin
+skill with the same name.
 
 ## Cloud sessions
 
