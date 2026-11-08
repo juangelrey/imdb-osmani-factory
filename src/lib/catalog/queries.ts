@@ -148,7 +148,10 @@ async function search<T extends SearchItem, U>(
   const first = await fetchPage(1);
   const lastPage = Math.min(first.total_pages, SEARCH_WINDOW_PAGES);
   const rest = await Promise.all(Array.from({ length: Math.max(lastPage - 1, 0) }, (_, index) => fetchPage(index + 2)));
-  const items = sortSearchItems([first, ...rest].flatMap(({ results }) => results), sort);
+  // TMDB can repeat a title on a later page when its order shifts between calls; keep the first.
+  const unique = new Map<number, T>();
+  for (const item of [first, ...rest].flatMap(({ results }) => results)) if (!unique.has(item.id)) unique.set(item.id, item);
+  const items = sortSearchItems([...unique.values()], sort);
   const window = windowPage(items, page);
   return { ...window, results: window.results.map(map) };
 }

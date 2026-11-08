@@ -1,15 +1,25 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { THEME_STORAGE_KEY } from "@/lib/theme/theme";
 import { ThemeToggle } from "./theme-toggle";
 
+/** A fake OS colour preference. `change` handlers are kept, so `setPrefersLight` notifies them as the OS would. */
 function stubOs({ prefersLight }: { prefersLight: boolean }) {
+  const handlers = new Set<() => void>();
   vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: query === "(prefers-color-scheme: light)" && prefersLight,
+    get matches() {
+      return query === "(prefers-color-scheme: light)" && prefersLight;
+    },
     media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
+    addEventListener: (_type: "change", handler: () => void) => handlers.add(handler),
+    removeEventListener: (_type: "change", handler: () => void) => handlers.delete(handler),
   }));
+  return {
+    setPrefersLight(value: boolean) {
+      prefersLight = value;
+      act(() => handlers.forEach((handler) => handler()));
+    },
+  };
 }
 
 beforeEach(() => {
@@ -59,6 +69,22 @@ describe("ThemeToggle", () => {
     await userEvent.click(screen.getByRole("radio", { name: "System" }));
     expect(document.documentElement).toHaveAttribute("data-theme", "light");
     expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe("system");
+  });
+
+  it("follows a live OS change while System is selected", () => {
+    const os = stubOs({ prefersLight: false });
+    render(<ThemeToggle />);
+    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
+    os.setPrefersLight(true);
+    expect(document.documentElement).toHaveAttribute("data-theme", "light");
+  });
+
+  it("ignores a live OS change once Dark is chosen", async () => {
+    const os = stubOs({ prefersLight: false });
+    render(<ThemeToggle />);
+    await userEvent.click(screen.getByRole("radio", { name: "Dark" }));
+    os.setPrefersLight(true);
+    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
   });
 
   it("re-applies the stored theme on mount, after React has reset <html>", () => {

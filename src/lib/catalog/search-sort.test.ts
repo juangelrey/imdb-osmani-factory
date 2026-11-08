@@ -59,6 +59,11 @@ describe("sortSearchItems by rating", () => {
     expect(ids(sortSearchItems(items, "rating"))).toEqual([4, 2, 1, 3]);
   });
 
+  it("puts a voted title with a 0 average before an unvoted title", () => {
+    const items = [rated(1, 0, 0), rated(2, 0, 3)];
+    expect(ids(sortSearchItems(items, "rating"))).toEqual([2, 1]);
+  });
+
   it("keeps TMDB order for titles with the same rating", () => {
     const items = [rated(1, 7, 100), rated(2, 8, 100), rated(3, 7, 5000), rated(4, 7, 60)];
     expect(ids(sortSearchItems(items, "rating"))).toEqual([2, 1, 3, 4]);

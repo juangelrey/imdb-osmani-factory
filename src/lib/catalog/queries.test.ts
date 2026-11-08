@@ -417,6 +417,26 @@ describe("searchTitles", () => {
     expect(page).toMatchObject({ totalPages: 2, totalResults: 40 });
   });
 
+  it("lists a title once when TMDB repeats it on a later page", async () => {
+    const fetchMock = vi.fn(async (input: string | URL) => {
+      const page = Number(new URL(String(input)).searchParams.get("page"));
+      // Page 2 repeats the last two titles of page 1, as TMDB does when its order shifts between calls.
+      const results = (page === 1 ? [1, 2, 3] : [2, 3, 4]).map((id) => ({
+        id,
+        title: `Movie ${id}`,
+        release_date: `200${id}-01-01`,
+        vote_average: 7,
+        vote_count: 100,
+        poster_path: null,
+      }));
+      return Response.json({ page, results, total_pages: 2, total_results: 6 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const page = await searchTitles("batman", 1, "recency");
+    expect(page.results.map(({ id }) => id)).toEqual([4, 3, 2, 1]);
+    expect(page).toMatchObject({ totalPages: 1, totalResults: 4 });
+  });
+
   it("returns an empty page past the window without calling TMDB", async () => {
     const fetchMock = stubSearchPages("movie", 9);
     const page = await searchTitles("batman", 6, "recency");
