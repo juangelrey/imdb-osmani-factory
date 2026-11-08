@@ -10,7 +10,7 @@ GitHub Issues on `juangelrey/reelbase` is the tracker. Do not create `SPEC.md`,
 
 - One issue labeled `ticket` per task. Acceptance criteria go in the body, and links go in
   as "Part of #N" and "Blocked by #N".
-- The plan issue's task list is an ordered index of ticket numbers.
+- The plan issue's task list is an index of ticket numbers. "Blocked by" decides build order.
 - A task is done when its issue is closed. PRs use `Closes #N`.
 
 ## Agent skills

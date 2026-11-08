@@ -1,6 +1,6 @@
 ---
 name: planning-and-task-breakdown
-description: Breaks work into ordered tasks. Use when you have a spec or clear requirements and need to break work into implementable tasks. Use when a task feels too large to start, when you need to estimate scope, or when parallel work is possible.
+description: Breaks work into tasks linked by a dependency graph. Use when you have a spec or clear requirements and need to break work into implementable tasks. Use when a task feels too large to start, when you need to estimate scope, or when parallel work is possible.
 ---
 
 # Planning and Task Breakdown
@@ -53,6 +53,8 @@ Database schema
 ```
 
 Implementation order follows the dependency graph bottom-up: build foundations first.
+
+A ticket gets a `Blocked by` only when it cannot start without the other ticket's work, or when both edit the same file (from "Files likely touched"). Every extra edge keeps a ticket from running in parallel; every missing shared-file edge becomes a merge conflict.
 
 ### Step 3: Slice Vertically
 
@@ -117,6 +119,8 @@ Add explicit checkpoints to the plan issue:
 - [ ] Review with human before proceeding
 ```
 
+Checkpoints are human review points for `/as-build` and `/as-build auto`. `/as-build dark` runs past them: the user's single plan approval covers them.
+
 ## Task Sizing Guidelines
 
 | Size | Files | Scope | Example |
@@ -139,7 +143,7 @@ If a task is L or larger, it should be broken into smaller tasks. An agent perfo
 
 All planning output lives in GitHub Issues. Do not create `tasks/plan.md`, `tasks/todo.md` or a `tasks/` directory. Create the `plan` and `ticket` labels first if they do not exist.
 
-- **Plan issue:** An open issue labeled `plan`, titled `Plan: [Feature/Project Name]`, with `Part of #N` pointing at the `prd` issue. Its body follows the template below and holds design decisions, risks, open questions, checkpoints and the ordered ticket list.
+- **Plan issue:** An open issue labeled `plan`, titled `Plan: [Feature/Project Name]`, with `Part of #N` pointing at the `prd` issue. Its body follows the template below and holds design decisions, risks, open questions, checkpoints and the ticket list.
 - **Tickets:** One issue per task, labeled `ticket`, with the Step 4 structure in the body and `Part of #N` pointing at the plan issue. Create the plan issue first, then tickets in dependency order so each `Blocked by #N` points at an existing issue. Then fill the plan issue's Task List with the ticket numbers.
 
 **Never overwrite an incomplete plan.** Before creating a plan issue, list open issues labeled `plan`:
@@ -194,7 +198,7 @@ Never bulk-close or delete another plan's open tickets to make room for new ones
 - [Question needing human input]
 ```
 
-The Task List section is an ordered index of ticket numbers, with no checkboxes. A ticket's status is its issue state, which GitHub shows as a badge on the `#N` reference. Task details live in the tickets, not here.
+The Task List section is an index of ticket numbers grouped by phase, with no checkboxes. Phases group tickets for reading; only `Blocked by` gates work, so a ticket is ready as soon as its blockers are done, whatever its phase. A ticket's status is its issue state, which GitHub shows as a badge on the `#N` reference. Task details live in the tickets, not here.
 
 ## Parallelization Opportunities
 
@@ -229,7 +233,7 @@ When multiple agents or sessions are available:
 Before starting implementation, confirm:
 
 - [ ] Every task has acceptance criteria
-- [ ] Task dependencies are identified and ordered correctly
+- [ ] Every `Blocked by` is a real gate or a shared file, and every shared file has one
 - [ ] Every task is an issue labeled `ticket`, listed in order in the plan issue
 - [ ] No pre-existing incomplete plan was overwritten without explicit user confirmation
 - [ ] No task touches more than ~5 files

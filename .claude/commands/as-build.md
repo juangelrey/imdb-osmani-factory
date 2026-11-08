@@ -1,5 +1,5 @@
 ---
-description: Build tickets test-first and open a PR. No argument: next ticket. "auto": whole plan, you merge. "dark": whole plan, merged if two-way.
+description: Build tickets test-first and open a PR. No argument: next ticket. "auto": whole plan, you merge. "dark": whole plan in parallel, merged if two-way.
 disable-model-invocation: true
 ---
 
@@ -9,7 +9,7 @@ disable-model-invocation: true
 |---|---|---|---|
 | `/as-build` | the next ready ticket | nothing up front | one PR for that ticket, which the user merges |
 | `/as-build auto` | the whole plan, written first if none exists, each ticket in a fresh subagent | the plan once, plus any blocker or high-risk ticket | one PR for the plan, which the user merges |
-| `/as-build dark` | same as `auto` | same as `auto` | the same PR, merged by a fresh subagent if its door is two-way, otherwise left for the user |
+| `/as-build dark` | same as `auto`, but every ready ticket at once, each in its own worktree | same as `auto` | the same PR, merged by a fresh subagent if its door is two-way, otherwise left for the user |
 
 `$ARGUMENTS` selects the mode: `auto` and `dark` run Autonomous below, and empty or anything else runs Default.
 
@@ -52,24 +52,26 @@ A two-way door is cheap to reverse. A one-way door is destructive or hard to rev
 2. **Establish a clean baseline.** Run `git status --porcelain`. If there are any uncommitted changes, stop and ask the user to commit, stash, or confirm how to handle them. Autonomous per-task commits must not absorb unrelated local work, or the clean-rollback guarantee breaks.
 3. **Plan if needed.** If there is no open issue labeled `plan`, invoke planning-and-task-breakdown to generate one.
 4. **Single checkpoint.** Present the full plan and wait for an unambiguous affirmative (e.g. "approve", "go", "yes"). Treat hedged responses ("looks reasonable", "I guess") as **not** approved.
-5. **Execute every task in dependency order, one at a time.** Use each task's declared dependencies; if they aren't explicit, execute in the order the plan lists them. Create the branch per `.claude/skills/git-workflow-and-versioning/references/branch-naming.md`, or reuse it when resuming. You coordinate; do not write code yourself. For each ticket, spawn one foreground implementer subagent, so every ticket starts with a fresh context and its work stays out of this session.
+5. **Execute every task in dependency order.** A ticket is ready when every ticket in its `Blocked by` is on the work branch; phases and Task List order never gate it. Create the work branch per `.claude/skills/git-workflow-and-versioning/references/branch-naming.md`, or reuse it when resuming. You coordinate; do not write code yourself. Each ticket gets one implementer subagent, so it starts with a fresh context and its work stays out of this session.
+   - `auto`: one ready ticket at a time, in the foreground, on the work branch.
+   - `dark`: every ready ticket at once. Spawn them in one message, each with `isolation: "worktree"`, which gives it its own branch. When one reports DONE with its branch name, merge that branch into the work branch with `--no-ff`, then remove its worktree and branch (`git worktree remove <path>`, `git branch -d <branch>`) and spawn any ticket that became ready. If a merge conflicts, abort it and stop as in step 6.
 
    Keep the brief short and use pointers, not copied text:
    - the ticket number, the `prd` issue and the `plan` issue
-   - the branch, plus the commits made so far on it
+   - its branch, plus the commits made so far on the work branch
    - "Run steps 2–7 of the default loop in `.claude/commands/as-build.md`. Stay on this branch. Do not push or open a PR. Stage only the files this ticket touched, never `git add -A`. Make exactly one commit."
    - "If an Autonomous step 6 stop condition applies, do not push through or guess. Report BLOCKED with the reason and leave the blocked work uncommitted."
 
-   It must report, in at most 5 lines, DONE or BLOCKED, the commit hash, and any decision later tickets need.
+   It must report, in at most 5 lines, DONE or BLOCKED, its branch, the commit hash, and any decision later tickets need.
 
-   After each report, check it yourself: the commit exists, the working tree is clean, and tests and build pass. Keep only pass or fail and any failing test names, not full logs. Then pass any decisions on in the next brief.
+   After each report (in `dark`, after each merge), check it yourself: the commit exists, the working tree is clean, and tests and build pass. Keep only pass or fail and any failing test names, not full logs. Then pass any decisions on in the next brief.
 
 6. **Stop and ask the user** when an implementer reports BLOCKED, your check fails, or:
    - a test can't be made to pass or the build breaks without an obvious fix
    - the spec is ambiguous, or a task needs a decision the spec doesn't cover
    - a task is high-risk or irreversible — auth/permission changes, destructive data migrations, payments, deletions, deploys, anything touching secrets, **or anything you can't undo with `git revert`** → follow doubt-driven-development and get explicit sign-off before continuing. Check this before spawning the implementer, not after
 
-   After the user resolves a blocker, they re-invoke `/as-build auto` — it resumes from the next ticket not yet on the branch.
+   After the user resolves a blocker, they re-invoke the same mode — it resumes from the tickets not yet on the work branch.
 
 7. **Open one PR.** Run the review step above once on the whole branch, naming every ticket, with one fix subagent making the fixes. Then push the branch and open a PR to `main`, using the PR body above with one `Closes #N` line per ticket. Leave the tickets open.
 8. **Hand off the merge (`dark` only).** Choosing `dark` is the user's sign-off to deploy two-way-door PRs to production. If the PR body says `**Door:** two-way`, wait for the PR's checks to finish, then spawn one fresh subagent with only this brief: "Follow `.claude/commands/as-merge.md` for PR #<number>." Pass no other context, so it judges the diff unanchored by this run. A one-way door skips this step.
