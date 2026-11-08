@@ -21,6 +21,14 @@ export function formatDate(date: string): string | undefined {
   return parts && dateFormat.format(Date.UTC(parts[0], parts[1] - 1, parts[2]));
 }
 
+const SHORT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** "2018-03-21" → "21 Mar 2018", for the career timeline; undefined for anything else. */
+export function formatShortDate(date: string): string | undefined {
+  const parts = parseDate(date);
+  return parts && `${parts[2]} ${SHORT_MONTHS[parts[1] - 1]} ${parts[0]}`;
+}
+
 /** Whole years from `from` to `to` (both "YYYY-MM-DD"); undefined if either is invalid or `to` is earlier. */
 export function ageOn(from: string, to: string): number | undefined {
   const start = parseDate(from);

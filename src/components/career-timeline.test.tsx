@@ -47,7 +47,7 @@ const career: CareerYear[] = [
 ];
 
 describe("CareerTimeline", () => {
-  it("renders a labelled Career section with a heading per year, in order", () => {
+  it("renders a labelled Career section with a year marker heading at each year change, in order", () => {
     render(<CareerTimeline career={career} />);
     const section = screen.getByRole("region", { name: "Career" });
     expect(within(section).getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual([
@@ -64,15 +64,43 @@ describe("CareerTimeline", () => {
     expect(screen.getByText("Actor")).toBeInTheDocument();
   });
 
-  it("shows a lazy w92 thumbnail, or the gradient placeholder without a poster", () => {
+  it("shows a lazy w92 thumbnail at a fixed 40x60, or the gradient placeholder at the same size", () => {
     const { container } = render(<CareerTimeline career={career} />);
     const thumbnail = container.querySelector('img[src*="/w92/"]');
     expect(thumbnail).toHaveAttribute("loading", "lazy");
     expect(thumbnail).toHaveAttribute("width", "92");
     expect(thumbnail).toHaveAttribute("alt", "");
+    expect(thumbnail).toHaveClass("w-10", "aspect-[2/3]");
+    expect(thumbnail).not.toHaveClass("w-full");
     const tba = screen.getByRole("link", { name: "Announced" }).closest("li")!;
     expect(tba.querySelector("img")).toBeNull();
-    expect(tba.querySelector('[aria-hidden="true"]')?.getAttribute("style")).toContain("linear-gradient");
+    const placeholder = tba.querySelector('[style*="linear-gradient"]');
+    expect(placeholder).toHaveAttribute("aria-hidden", "true");
+    expect(placeholder).toHaveClass("w-10", "aspect-[2/3]");
+  });
+
+  it("is an ordered list with one entry per film, each labelled with its date or TBA", () => {
+    render(<CareerTimeline career={career} />);
+    const entries = screen.getAllByRole("link").map((link) => link.closest("li")!);
+    expect(entries).toHaveLength(3);
+    for (const entry of entries) expect(entry.closest("ol")).not.toBeNull();
+    expect(entries.map((entry) => entry.querySelector("time, [data-date]")?.textContent)).toEqual([
+      "TBA",
+      "1 Mar 2027",
+      "7 Aug 1992",
+    ]);
+    expect(entries[1].querySelector("time")).toHaveAttribute("dateTime", "2027-03-01");
+  });
+
+  it("draws a decorative line with one node per film, hollow and amber when upcoming", () => {
+    const { container } = render(<CareerTimeline career={career} />);
+    expect(container.querySelector("[data-timeline-line]")).toHaveAttribute("aria-hidden", "true");
+    const entries = screen.getAllByRole("link").map((link) => link.closest("li")!);
+    const nodes = entries.map((entry) => entry.querySelectorAll("[data-timeline-node]"));
+    expect(nodes.map((n) => n.length)).toEqual([1, 1, 1]);
+    for (const [node] of nodes) expect(node).toHaveAttribute("aria-hidden", "true");
+    expect(nodes[1][0]).toHaveClass("border-amber-400", "bg-zinc-950");
+    expect(nodes[2][0]).not.toHaveClass("border-amber-400");
   });
 
   it("badges only upcoming films", () => {

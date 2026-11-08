@@ -1,4 +1,4 @@
-import { ageOn, formatDate, formatRuntime } from "./format";
+import { ageOn, formatDate, formatRuntime, formatShortDate } from "./format";
 
 describe("formatRuntime", () => {
   it("formats hours and minutes", () => {
@@ -15,6 +15,19 @@ describe("formatRuntime", () => {
 
   it("drops zero hours", () => {
     expect(formatRuntime(45)).toBe("45m");
+  });
+});
+
+describe("formatShortDate", () => {
+  it("formats a TMDB date as day, short month and year, in UTC", () => {
+    expect(formatShortDate("2018-03-21")).toBe("21 Mar 2018");
+    expect(formatShortDate("1992-08-07")).toBe("7 Aug 1992");
+    expect(formatShortDate("2024-09-01")).toBe("1 Sep 2024");
+    expect(formatShortDate("2024-12-31")).toBe("31 Dec 2024");
+  });
+
+  it.each(["", "2018", "2018-3-21", "2018-02-30", "not a date"])("returns undefined for %j", (date) => {
+    expect(formatShortDate(date)).toBeUndefined();
   });
 });
 

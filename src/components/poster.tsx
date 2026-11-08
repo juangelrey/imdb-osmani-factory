@@ -10,6 +10,12 @@ const SIZES = {
   thumb: { width: 92, height: 138 },
 } as const;
 
+/**
+ * Sizes that fill their container. A thumbnail has no built-in width, so the caller's width
+ * class applies; with both, Tailwind's `w-full` would win and the thumbnail would stretch.
+ */
+const FILL: ReadonlySet<keyof typeof SIZES> = new Set(["grid", "detail", "profile"]);
+
 /** Sizes shown in long lists, below the fold: their images load lazily. */
 const LAZY: ReadonlySet<keyof typeof SIZES> = new Set(["grid", "thumb"]);
 
@@ -37,7 +43,7 @@ export function Poster({ colorKey, name, posterUrl, size = "grid", className = "
         {...SIZES[size]}
         unoptimized
         loading={LAZY.has(size) ? "lazy" : "eager"}
-        className={`aspect-[2/3] h-auto w-full rounded-md bg-zinc-800 object-cover ${className}`}
+        className={`aspect-[2/3] h-auto ${FILL.has(size) ? "w-full" : ""} rounded-md bg-zinc-800 object-cover ${className}`}
       />
     );
   }
