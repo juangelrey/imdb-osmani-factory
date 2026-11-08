@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SearchBox } from "./search-box";
+import { ThemeToggle } from "./theme-toggle";
 
 export function SiteHeader() {
   return (
@@ -19,6 +20,7 @@ export function SiteHeader() {
             </li>
           </ul>
         </nav>
+        <ThemeToggle />
       </div>
     </header>
   );

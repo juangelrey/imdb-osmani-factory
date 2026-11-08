@@ -18,6 +18,13 @@ describe("SiteHeader search", () => {
   });
 });
 
+describe("SiteHeader theme", () => {
+  it("includes the theme toggle", () => {
+    render(<SiteHeader />);
+    expect(within(screen.getByRole("banner")).getByRole("group", { name: "Theme" })).toBeInTheDocument();
+  });
+});
+
 describe("SiteHeader view transition", () => {
   it("is named so it stays still while main crossfades", () => {
     render(<SiteHeader />);
