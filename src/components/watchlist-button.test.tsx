@@ -3,7 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { STORAGE_KEY, type WatchlistEntry } from "@/lib/watchlist/watchlist";
 import { WatchlistButton } from "./watchlist-button";
 
-const ENTRY: WatchlistEntry = { id: 603, slug: "the-matrix", name: "The Matrix", year: 1999, rating: 8.2, posterPath: "/m.jpg" };
+const ENTRY: WatchlistEntry = { kind: "movie", id: 603, slug: "the-matrix", name: "The Matrix", year: 1999, rating: 8.2, posterPath: "/m.jpg" };
+/** A show sharing the movie's TMDB id. */
+const SHOW: WatchlistEntry = { kind: "tv", id: 603, slug: "matrix-show", name: "Matrix Show", year: 2020, posterPath: "/s.jpg" };
 
 beforeEach(() => {
   localStorage.clear();
@@ -63,5 +65,42 @@ describe("WatchlistButton", () => {
       window.dispatchEvent(new StorageEvent("storage", { key: STORAGE_KEY }));
     });
     expect(screen.getByRole("button", { name: "Save to watchlist" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("adds and removes a show snapshot, with the same label and aria-pressed", async () => {
+    const user = userEvent.setup();
+    render(<WatchlistButton entry={SHOW} />);
+    const button = screen.getByRole("button", { name: "Save to watchlist" });
+    expect(button).toHaveAttribute("aria-pressed", "false");
+
+    await user.click(button);
+    expect(button).toHaveAttribute("aria-pressed", "true");
+    expect(button).toHaveTextContent("Saved");
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual([SHOW]);
+
+    await user.click(button);
+    expect(button).toHaveAttribute("aria-pressed", "false");
+    expect(button).toHaveTextContent("Save to watchlist");
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual([]);
+  });
+
+  it("never marks a show as saved when a movie with the same id is saved, and vice versa", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <WatchlistButton entry={ENTRY} />
+        <WatchlistButton entry={SHOW} />
+      </>,
+    );
+    const [movieButton, showButton] = screen.getAllByRole("button", { name: "Save to watchlist" });
+    await user.click(movieButton);
+    expect(movieButton).toHaveAttribute("aria-pressed", "true");
+    expect(showButton).toHaveAttribute("aria-pressed", "false");
+
+    await user.click(showButton);
+    await user.click(movieButton);
+    expect(movieButton).toHaveAttribute("aria-pressed", "false");
+    expect(showButton).toHaveAttribute("aria-pressed", "true");
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual([SHOW]);
   });
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { createWatchlistStore, hasEntry } from "./watchlist";
+import { createWatchlistStore, hasEntry, type WatchlistKey } from "./watchlist";
 
 function browserStorage(): Storage | undefined {
   try {
@@ -17,12 +17,12 @@ const store = createWatchlistStore({
   events: typeof window === "undefined" ? undefined : window,
 });
 
-/** The saved movie snapshots, in the order they were added. Empty on the server and before hydration. */
+/** The saved movie and show snapshots, in the order they were added. Empty on the server and before hydration. */
 export function useWatchlist() {
   const entries = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getServerSnapshot);
   return {
     entries,
-    has: (id: number) => hasEntry(entries, id),
+    has: (key: WatchlistKey) => hasEntry(entries, key),
     add: store.add,
     remove: store.remove,
   };

@@ -1,9 +1,11 @@
-import type { Title } from "@/lib/catalog/types";
+import type { Show, Title, TitleKind } from "@/lib/catalog/types";
 
-export const STORAGE_KEY = "reelbase:watchlist:v2";
+/** v3 added `kind`. Older keys are never read: there is no migration (decision 7 in #40). */
+export const STORAGE_KEY = "reelbase:watchlist:v3";
 
-/** A small snapshot of a saved movie, enough to render its card without calling TMDB. */
+/** A small snapshot of a saved movie or show, enough to render its card without calling TMDB. */
 export interface WatchlistEntry {
+  kind: TitleKind;
   id: number;
   slug: string;
   name: string;
@@ -13,28 +15,41 @@ export interface WatchlistEntry {
   posterPath?: string;
 }
 
+/** What identifies an entry: a movie and a show can share a TMDB id, so never the id alone. */
+export type WatchlistKey = Pick<WatchlistEntry, "kind" | "id">;
+
 export type WatchlistStorage = Pick<Storage, "getItem" | "setItem">;
 
 const EMPTY: readonly WatchlistEntry[] = Object.freeze([]);
 const POSTER_PATH = /^\/[\w.-]+$/;
+const KINDS: readonly unknown[] = ["movie", "tv"] satisfies TitleKind[];
 
 export function entryFromTitle({ id, slug, name, year, rating, posterPath }: Title): WatchlistEntry {
-  return { id, slug, name, year, rating, posterPath };
+  return { kind: "movie", id, slug, name, year, rating, posterPath };
+}
+
+export function entryFromShow({ id, slug, name, year, rating, posterPath }: Show): WatchlistEntry {
+  return { kind: "tv", id, slug, name, year, rating, posterPath };
+}
+
+function sameEntry(a: WatchlistKey, b: WatchlistKey): boolean {
+  return a.kind === b.kind && a.id === b.id;
 }
 
 /** Validate one stored item, keeping only known fields. Returns undefined for anything malformed. */
 function toEntry(item: unknown): WatchlistEntry | undefined {
   if (typeof item !== "object" || item === null) return undefined;
-  const { id, slug, name, year, rating, posterPath } = item as Record<string, unknown>;
+  const { kind, id, slug, name, year, rating, posterPath } = item as Record<string, unknown>;
+  if (!KINDS.includes(kind)) return undefined;
   if (typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0) return undefined;
   if (typeof slug !== "string" || typeof name !== "string") return undefined;
   if (rating !== undefined && (typeof rating !== "number" || !Number.isFinite(rating))) return undefined;
   if (year !== undefined && (typeof year !== "number" || !Number.isInteger(year))) return undefined;
   if (posterPath !== undefined && (typeof posterPath !== "string" || !POSTER_PATH.test(posterPath))) return undefined;
-  return { id, slug, name, year, rating, posterPath };
+  return { kind: kind as TitleKind, id, slug, name, year, rating, posterPath };
 }
 
-/** Parse stored data. Anything missing or malformed reads as empty; bad entries and duplicate ids are dropped. */
+/** Parse stored data. Anything missing or malformed reads as empty; bad entries and duplicate kind + id pairs are dropped. */
 export function parseWatchlist(raw: string | null): WatchlistEntry[] {
   if (!raw) return [];
   let value: unknown;
@@ -47,7 +62,7 @@ export function parseWatchlist(raw: string | null): WatchlistEntry[] {
   const entries: WatchlistEntry[] = [];
   for (const item of value) {
     const entry = toEntry(item);
-    if (entry && !hasEntry(entries, entry.id)) entries.push(entry);
+    if (entry && !hasEntry(entries, entry)) entries.push(entry);
   }
   return entries;
 }
@@ -56,16 +71,17 @@ export function serializeWatchlist(entries: readonly WatchlistEntry[]): string {
   return JSON.stringify(entries);
 }
 
-export function hasEntry(entries: readonly WatchlistEntry[], id: number): boolean {
-  return entries.some((entry) => entry.id === id);
+export function hasEntry(entries: readonly WatchlistEntry[], key: WatchlistKey): boolean {
+  return entries.some((entry) => sameEntry(entry, key));
 }
 
+/** Appends, so storage keeps the order entries were saved in. */
 export function addEntry(entries: readonly WatchlistEntry[], entry: WatchlistEntry): WatchlistEntry[] {
-  return hasEntry(entries, entry.id) ? [...entries] : [...entries, entry];
+  return hasEntry(entries, entry) ? [...entries] : [...entries, entry];
 }
 
-export function removeEntry(entries: readonly WatchlistEntry[], id: number): WatchlistEntry[] {
-  return entries.filter((entry) => entry.id !== id);
+export function removeEntry(entries: readonly WatchlistEntry[], key: WatchlistKey): WatchlistEntry[] {
+  return entries.filter((entry) => !sameEntry(entry, key));
 }
 
 function readRaw(storage: WatchlistStorage | undefined): string | null {
@@ -102,7 +118,7 @@ export interface WatchlistStore {
   getSnapshot(): readonly WatchlistEntry[];
   getServerSnapshot(): readonly WatchlistEntry[];
   add(entry: WatchlistEntry): void;
-  remove(id: number): void;
+  remove(key: WatchlistKey): void;
 }
 
 /** An external store for `useSyncExternalStore`. Snapshots are cached by the raw stored string. */
@@ -143,6 +159,6 @@ export function createWatchlistStore({ getStorage, events }: WatchlistStoreOptio
     getSnapshot,
     getServerSnapshot: () => EMPTY,
     add: (entry) => update((entries) => addEntry(entries, entry)),
-    remove: (id) => update((entries) => removeEntry(entries, id)),
+    remove: (key) => update((entries) => removeEntry(entries, key)),
   };
 }

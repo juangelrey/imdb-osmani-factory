@@ -29,5 +29,5 @@ export function cardFromSummary(title: TitleSummary): CardTitle {
 }
 
 export function cardFromEntry(entry: WatchlistEntry): CardTitle {
-  return cardFromSummary({ ...entry, kind: "movie", posterUrl: posterUrl(entry.posterPath, "w342") });
+  return cardFromSummary({ ...entry, posterUrl: posterUrl(entry.posterPath, "w342") });
 }

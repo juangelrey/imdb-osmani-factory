@@ -31,7 +31,7 @@ describe("cardFromSummary", () => {
 
 describe("cardFromEntry", () => {
   it("builds the grid poster from the saved poster path", () => {
-    expect(cardFromEntry({ id: 603, slug: "the-matrix", name: "The Matrix", rating: 8.2, posterPath: "/m.jpg" })).toEqual({
+    expect(cardFromEntry({ kind: "movie", id: 603, slug: "the-matrix", name: "The Matrix", rating: 8.2, posterPath: "/m.jpg" })).toEqual({
       key: "movie-603",
       colorKey: "603",
       href: "/title/603-the-matrix",
@@ -39,6 +39,18 @@ describe("cardFromEntry", () => {
       year: undefined,
       rating: 8.2,
       posterUrl: "https://image.tmdb.org/t/p/w342/m.jpg",
+    });
+  });
+
+  it("links a saved show to its TV page, keyed apart from a movie with the same id", () => {
+    expect(cardFromEntry({ kind: "tv", id: 603, slug: "matrix-show", name: "Matrix Show", posterPath: "/s.jpg" })).toEqual({
+      key: "tv-603",
+      colorKey: "tv-603",
+      href: "/tv/603-matrix-show",
+      name: "Matrix Show",
+      year: undefined,
+      rating: undefined,
+      posterUrl: "https://image.tmdb.org/t/p/w342/s.jpg",
     });
   });
 });

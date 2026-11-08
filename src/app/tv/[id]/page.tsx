@@ -3,8 +3,10 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { EpisodeList } from "@/components/episode-list";
 import { SeasonPicker } from "@/components/season-picker";
 import { ShowDetails } from "@/components/show-details";
+import { WatchlistButton } from "@/components/watchlist-button";
 import { parseSeasonParam, parseShowParam, showHref } from "@/lib/catalog/map";
 import { getShow } from "@/lib/catalog/queries";
+import { entryFromShow } from "@/lib/watchlist/watchlist";
 
 interface ShowPageProps {
   params: Promise<{ id: string }>;
@@ -41,7 +43,7 @@ export default async function ShowPage({ params, searchParams }: ShowPageProps) 
   if (!canonical) permanentRedirect(season === undefined ? href : `${href}?season=${season}`);
   return (
     <div className="space-y-10">
-      <ShowDetails show={show} />
+      <ShowDetails show={show} actions={<WatchlistButton entry={entryFromShow(show)} />} />
       {show.season && (
         <div className="space-y-6">
           <SeasonPicker href={href} seasons={show.seasons} current={show.season.number} />

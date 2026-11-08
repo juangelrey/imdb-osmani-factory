@@ -17,7 +17,7 @@ function useHydrated() {
   );
 }
 
-/** Renders the saved snapshots; needs no catalogue or API data. */
+/** Renders the saved movie and show snapshots, newest saved first; needs no catalogue or API data. */
 export function WatchlistView() {
   const hydrated = useHydrated();
   const { entries } = useWatchlist();
@@ -41,5 +41,6 @@ export function WatchlistView() {
     );
   }
 
-  return <TitleGrid titles={entries.map(cardFromEntry)} emptyMessage="" />;
+  // Storage keeps save order; the page shows the newest saved first.
+  return <TitleGrid titles={[...entries].reverse().map(cardFromEntry)} emptyMessage="" />;
 }

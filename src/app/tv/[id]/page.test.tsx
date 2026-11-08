@@ -1,7 +1,9 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { notFound, permanentRedirect } from "next/navigation";
 import details from "@/lib/tmdb/fixtures/tv-details.json";
 import tvSeason from "@/lib/tmdb/fixtures/tv-season.json";
+import { STORAGE_KEY } from "@/lib/watchlist/watchlist";
 import ShowPage, * as page from "./page";
 import { generateMetadata, revalidate } from "./page";
 
@@ -63,6 +65,27 @@ describe("TV page", () => {
     const url = new URL(String((fetchMock.mock.calls[0] as unknown[])[0]));
     expect(url.pathname).toBe("/3/tv/1396");
     expect(url.searchParams.get("append_to_response")).toBe("credits,season/1");
+  });
+
+  it("offers the watchlist button, saving a snapshot of the show", async () => {
+    stubTmdb(withSeasonOne);
+    localStorage.clear();
+    render(await ShowPage(params("1396-breaking-bad")));
+    const button = screen.getByRole("button", { name: "Save to watchlist" });
+    expect(button).toHaveAttribute("aria-pressed", "false");
+    await userEvent.click(button);
+    expect(button).toHaveAttribute("aria-pressed", "true");
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual([
+      { kind: "tv", id: 1396, slug: "breaking-bad", name: "Breaking Bad", year: 2008, rating: 8.9, posterPath: "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg" },
+    ]);
+  });
+
+  it("does not show the show as saved when a movie with the same id is saved", async () => {
+    stubTmdb(withSeasonOne);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([{ kind: "movie", id: 1396, slug: "some-movie", name: "Some Movie" }]));
+    render(await ShowPage(params("1396-breaking-bad")));
+    expect(screen.getByRole("button", { name: "Save to watchlist" })).toHaveAttribute("aria-pressed", "false");
+    localStorage.clear();
   });
 
   it("shows season 1 by default, with the picker marking it current", async () => {
