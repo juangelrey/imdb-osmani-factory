@@ -25,7 +25,8 @@ describe("SearchBox", () => {
     const form = screen.getByRole("search");
     expect(form).toHaveAttribute("action", "/search");
     expect(form).toHaveAttribute("method", "get");
-    expect(screen.getByRole("searchbox", { name: "Search titles" })).toHaveAttribute("name", "q");
+    expect(screen.getByRole("searchbox", { name: "Search titles and people" })).toHaveAttribute("name", "q");
+    expect(screen.getByRole("searchbox")).toHaveAttribute("placeholder", "Search titles and people");
     expect(submitted()).toBe("q=");
   });
 
@@ -39,7 +40,18 @@ describe("SearchBox", () => {
   });
 
   it.each([
+    ["/search", "q=nolan&type=person"],
+    ["/search", "q=nolan&type=person&page=2"],
+  ])("keeps type=person when on %s?%s", (pathname, search) => {
+    at(pathname, search);
+    render(<SearchBox />);
+    expect(submitted()).toBe("q=&type=person");
+  });
+
+  it.each([
     ["/", ""],
+    ["/", "type=person"],
+    ["/person/525-christopher-nolan", "type=person"],
     ["/search", "q=matrix"],
     ["/search", "q=matrix&type=movie"],
     ["/tv/1396-breaking-bad", "type=tv"],
