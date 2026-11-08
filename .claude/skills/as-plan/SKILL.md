@@ -15,7 +15,16 @@ Read the open `prd` issue and the relevant code; note existing patterns, depende
 
 Map what depends on what.
 
-A ticket gets a `Blocked by` only when it cannot start without the other ticket's work, or when both edit the same file (from "Files likely touched"). Every extra edge keeps a ticket from running in parallel; every missing shared-file edge becomes a merge conflict.
+A ticket gets a `Blocked by` only when:
+
+- it uses something the other ticket creates or changes: a function, type, component, fixture or route
+- both change the same part of a file:
+  - the same function, type or component
+  - the same list or union, such as a sort-key array or a kind union
+  - the same JSON fixture
+  - the end of the same file, where both append
+
+Two tickets that add separate new functions or types to one file run in parallel: git merges edits to different parts of a file. Put new code and new tests in new files where that reads naturally, so tickets stay independent. Every extra edge keeps a ticket from running in parallel; every missing one becomes a merge conflict or a broken build.
 
 When the spec has a Capability Map, make each module a phase, and give each ticket a `Blocked by` on the tickets it needs from the modules in its Depends on column.
 
