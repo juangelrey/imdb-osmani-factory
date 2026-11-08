@@ -3,6 +3,7 @@ import { SEARCH_SORT_KEYS, type SearchSortKey } from "@/lib/catalog/search-param
 
 const SORT_LABELS: Record<SearchSortKey, string> = {
   recency: "Recency",
+  rating: "Rating",
   relevance: "Relevance",
 };
 

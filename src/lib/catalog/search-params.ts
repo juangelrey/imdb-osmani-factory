@@ -5,7 +5,7 @@ import { firstParam, type SearchParamValue } from "./browse-params";
  * its own `SortKey`. Relevance is TMDB's own order and paging; every other key sorts a window of results
  * on the server (see `search-sort.ts`).
  */
-export const SEARCH_SORT_KEYS = ["recency", "relevance"] as const;
+export const SEARCH_SORT_KEYS = ["recency", "rating", "relevance"] as const;
 
 export type SearchSortKey = (typeof SEARCH_SORT_KEYS)[number];
 

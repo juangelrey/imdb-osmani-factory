@@ -5,6 +5,10 @@ function movie(id: number, release_date?: string): TmdbMovieListItem {
   return { id, title: `Movie ${id}`, release_date, vote_average: 7, vote_count: 100, poster_path: null };
 }
 
+function rated(id: number, vote_average: number, vote_count: number): TmdbMovieListItem {
+  return { id, title: `Movie ${id}`, release_date: "2000-01-01", vote_average, vote_count, poster_path: null };
+}
+
 function show(id: number, first_air_date?: string): TmdbTvListItem {
   return { id, name: `Show ${id}`, first_air_date, vote_average: 7, vote_count: 100, poster_path: null };
 }
@@ -36,6 +40,37 @@ describe("sortSearchItems by recency", () => {
     const items = [movie(1, "1999-01-01"), movie(2, "2020-01-01")];
     sortSearchItems(items, "recency");
     expect(ids(items)).toEqual([1, 2]);
+  });
+});
+
+describe("sortSearchItems by rating", () => {
+  it("puts the highest vote average first", () => {
+    const items = [rated(1, 6.5, 900), rated(2, 8.2, 900), rated(3, 7.1, 900)];
+    expect(ids(sortSearchItems(items, "rating"))).toEqual([2, 3, 1]);
+  });
+
+  it("puts titles with fewer than 50 votes after every title with 50 or more, each group by rating", () => {
+    const items = [rated(1, 9.8, 49), rated(2, 6.0, 50), rated(3, 10, 3), rated(4, 7.5, 2000), rated(5, 4.0, 12)];
+    expect(ids(sortSearchItems(items, "rating"))).toEqual([4, 2, 3, 1, 5]);
+  });
+
+  it("puts unvoted titles last, after titles with few votes, in TMDB order", () => {
+    const items = [rated(1, 0, 0), rated(2, 2.0, 1), rated(3, 0, 0), rated(4, 5.0, 300)];
+    expect(ids(sortSearchItems(items, "rating"))).toEqual([4, 2, 1, 3]);
+  });
+
+  it("keeps TMDB order for titles with the same rating", () => {
+    const items = [rated(1, 7, 100), rated(2, 8, 100), rated(3, 7, 5000), rated(4, 7, 60)];
+    expect(ids(sortSearchItems(items, "rating"))).toEqual([2, 1, 3, 4]);
+  });
+
+  it("sorts TV the same way", () => {
+    const items = [
+      show(1, "2008-01-20"),
+      { ...show(2, ""), vote_average: 9, vote_count: 400 },
+      { ...show(3, ""), vote_average: 9.9, vote_count: 10 },
+    ];
+    expect(ids(sortSearchItems(items, "rating"))).toEqual([2, 1, 3]);
   });
 });
 

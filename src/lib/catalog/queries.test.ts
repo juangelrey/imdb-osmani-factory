@@ -370,6 +370,28 @@ describe("searchTitles", () => {
     expectNewestFirst(years);
   });
 
+  it("sorts by rating over the same 5-page window, highest first", async () => {
+    const fetchMock = vi.fn(async (input: string | URL) => {
+      const page = Number(new URL(String(input)).searchParams.get("page"));
+      const results = Array.from({ length: 20 }, (_, index) => {
+        const id = page * 100 + index;
+        // Ratings scattered across pages, so a correct sort has to look past TMDB's own order.
+        const vote_average = ((id * 37) % 100) / 10;
+        return { id, title: `Movie ${id}`, release_date: "2000-01-01", vote_average, vote_count: 100, poster_path: null };
+      });
+      return Response.json({ page, results, total_pages: 9, total_results: 177 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const page1 = await searchTitles("batman", 1, "rating");
+    expect(fetchMock).toHaveBeenCalledTimes(5);
+    expect(page1).toMatchObject({ page: 1, totalPages: 5, totalResults: 100 });
+    const pages = [page1];
+    for (const number of [2, 3, 4, 5]) pages.push(await searchTitles("batman", number, "rating"));
+    const ratings = pages.flatMap(({ results }) => results.map(({ rating }) => rating ?? 0));
+    expect(ratings).toHaveLength(100);
+    expect(ratings).toEqual([...ratings].sort((a, b) => b - a));
+  });
+
   it("makes only as many calls as TMDB has pages when there are fewer than 5", async () => {
     const fetchMock = stubSearchPages("movie", 2);
     const page = await searchTitles("batman", 1, "recency");
