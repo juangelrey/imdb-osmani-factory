@@ -1,1 +1,131 @@
 @import "tailwindcss";
+
+/*
+ * The career preview card (title-preview.tsx), a popover in the top layer. Without CSS anchor
+ * positioning, the component sets `top` and `left` itself.
+ */
+.title-preview {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+}
+
+@supports (anchor-name: --a) {
+  /* Right of the thumbnail; else flipped up; else below or above it, centred in the viewport. */
+  .title-preview {
+    position-area: right span-bottom;
+    margin-inline-start: 0.75rem;
+    position-try-fallbacks: flip-block, --title-preview-below, --title-preview-above;
+  }
+}
+
+@position-try --title-preview-below {
+  position-area: bottom span-all;
+  justify-self: center;
+  margin: 0.75rem 0 0;
+}
+
+@position-try --title-preview-above {
+  position-area: top span-all;
+  justify-self: center;
+  margin: 0 0 0.75rem;
+}
+
+/* Links and buttons ease between colours; a utility such as `transition` on an element still wins. */
+@layer base {
+  a,
+  button {
+    transition-property: color, background-color, border-color, text-decoration-color;
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
+  }
+}
+
+/*
+ * Route crossfade (layout.tsx): the page content inside <main> is a <ViewTransition default="page">, so every
+ * navigation and every loading-skeleton reveal crossfades it in 200 ms.
+ */
+::view-transition-group(.page),
+::view-transition-old(.page),
+::view-transition-new(.page) {
+  animation-duration: 200ms;
+}
+
+/*
+ * Pagination (pagination.tsx tags its links): Next slides the content left, so the new page arrives from the right;
+ * Previous slides it right. The old page leaves quickly and the new one fades in behind it.
+ */
+::view-transition-old(.nav-forward),
+::view-transition-old(.nav-back) {
+  animation:
+    150ms ease-in both vt-fade reverse,
+    300ms ease-in-out both vt-slide reverse;
+}
+::view-transition-new(.nav-forward),
+::view-transition-new(.nav-back) {
+  animation:
+    150ms ease-out 100ms both vt-fade,
+    300ms ease-in-out both vt-slide;
+}
+::view-transition-old(.nav-forward),
+::view-transition-new(.nav-back) {
+  --vt-slide-offset: -60px;
+}
+::view-transition-new(.nav-forward),
+::view-transition-old(.nav-back) {
+  --vt-slide-offset: 60px;
+}
+
+@keyframes vt-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes vt-slide {
+  from {
+    translate: var(--vt-slide-offset);
+  }
+}
+
+/*
+ * Poster morph (poster.tsx): a card poster and the detail page poster share a name, so the browser moves and
+ * scales one into the other. Above the crossfading page, so the poster never fades behind it.
+ */
+::view-transition-group(.morph) {
+  animation-duration: 300ms;
+  animation-timing-function: ease-in-out;
+  z-index: 50;
+}
+
+/* The header and footer are named (site-header.tsx, layout.tsx) and never animate; the new one shows at once. */
+::view-transition-group(site-header),
+::view-transition-group(site-footer),
+::view-transition-new(site-header),
+::view-transition-new(site-footer) {
+  animation: none;
+}
+
+::view-transition-group(site-header),
+::view-transition-group(site-footer) {
+  z-index: 100;
+}
+
+::view-transition-old(site-header),
+::view-transition-old(site-footer) {
+  display: none;
+}
+
+/* Clicks during a transition reach the live page instead of the snapshot overlay. */
+::view-transition {
+  pointer-events: none;
+}
+
+/* Reduced motion: transitions swap instantly, with nothing fading, sliding or scaling. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

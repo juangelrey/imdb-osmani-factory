@@ -87,7 +87,7 @@ describe("Title page", () => {
     render(await TitlePage(params("603-the-matrix")));
     await userEvent.click(screen.getByRole("button", { name: "Save to watchlist" }));
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual([
-      { id: 603, slug: "the-matrix", name: "The Matrix", year: 1999, rating: 8.218, posterPath: "/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg" },
+      { kind: "movie", id: 603, slug: "the-matrix", name: "The Matrix", year: 1999, rating: 8.218, posterPath: "/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg" },
     ]);
   });
 });

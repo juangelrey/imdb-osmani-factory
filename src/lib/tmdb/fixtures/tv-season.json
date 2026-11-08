@@ -1,0 +1,30 @@
+{
+  "season_number": 1,
+  "name": "Season 1",
+  "episodes": [
+    {
+      "episode_number": 2,
+      "name": "Cat's in the Bag...",
+      "air_date": "2008-01-27",
+      "runtime": 48,
+      "overview": "Walt and Jesse attempt to tie up loose ends.",
+      "still_path": "/tjDNvbokPLtEnpFyFPyXMOd6Zr1.jpg"
+    },
+    {
+      "episode_number": 1,
+      "name": "Pilot",
+      "air_date": "2008-01-20",
+      "runtime": 59,
+      "overview": "When an unassuming high school chemistry teacher discovers he has a rare form of lung cancer, he decides to team up with a former student and create a top of the line crystal meth in a used RV.",
+      "still_path": "/ydlY3iPfeOAvu8gVqrxPoMvzNCn.jpg"
+    },
+    {
+      "episode_number": 3,
+      "name": "",
+      "air_date": null,
+      "runtime": null,
+      "overview": "",
+      "still_path": null
+    }
+  ]
+}

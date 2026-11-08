@@ -1,5 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import type { Title } from "@/lib/catalog/types";
+import { titleColorKey } from "./poster";
+import { posterColors } from "./poster-art";
 import { TitleDetails } from "./title-details";
 
 const title: Title = {
@@ -88,5 +90,13 @@ describe("TitleDetails", () => {
   it("renders the actions slot", () => {
     render(<TitleDetails title={title} actions={<button type="button">Act</button>} />);
     expect(screen.getByRole("button", { name: "Act" })).toBeInTheDocument();
+  });
+
+  it("seeds the fallback gradient with the same colour key as its grid card", () => {
+    const { container } = render(<TitleDetails title={{ ...title, posterUrl: undefined }} />);
+    const { from, to } = posterColors(titleColorKey("movie", 603));
+    expect(container.querySelector('[style*="linear-gradient"]')).toHaveStyle({
+      backgroundImage: `linear-gradient(160deg, ${from}, ${to})`,
+    });
   });
 });

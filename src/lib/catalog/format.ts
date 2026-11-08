@@ -21,6 +21,14 @@ export function formatDate(date: string): string | undefined {
   return parts && dateFormat.format(Date.UTC(parts[0], parts[1] - 1, parts[2]));
 }
 
+const SHORT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** "2018-03-21" → "21 Mar 2018", for the career timeline; undefined for anything else. */
+export function formatShortDate(date: string): string | undefined {
+  const parts = parseDate(date);
+  return parts && `${parts[2]} ${SHORT_MONTHS[parts[1] - 1]} ${parts[0]}`;
+}
+
 /** Whole years from `from` to `to` (both "YYYY-MM-DD"); undefined if either is invalid or `to` is earlier. */
 export function ageOn(from: string, to: string): number | undefined {
   const start = parseDate(from);
@@ -29,4 +37,16 @@ export function ageOn(from: string, to: string): number | undefined {
   const beforeBirthday = end[1] < start[1] || (end[1] === start[1] && end[2] < start[2]);
   const age = end[0] - start[0] - (beforeBirthday ? 1 : 0);
   return age >= 0 ? age : undefined;
+}
+
+/**
+ * `text` cut to at most `max` characters at the last word boundary, with an ellipsis; mid-word only when the
+ * first word alone is longer. Text within the limit comes back as it is.
+ */
+export function truncateText(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const head = text.slice(0, max + 1);
+  const boundary = head.search(/\s\S*$/);
+  const cut = boundary > 0 ? head.slice(0, boundary) : text.slice(0, max);
+  return `${cut.replace(/[\s,;:.\u2013\u2014-]+$/, "")}…`;
 }

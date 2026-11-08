@@ -1,0 +1,10 @@
+{
+  "page": 1,
+  "results": [
+    { "id": 1396, "name": "Breaking Bad", "first_air_date": "2008-01-20", "vote_average": 8.9, "vote_count": 16000, "poster_path": "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg", "genre_ids": [18, 80] },
+    { "id": 66732, "name": "Stranger Things", "first_air_date": "2016-07-15", "vote_average": 8.6, "vote_count": 17500, "poster_path": "/49WJfeN0moxb9IPfGn8AIqMGskD.jpg", "genre_ids": [18, 10765, 9648] },
+    { "id": 603, "name": "Breaking Point", "first_air_date": "", "vote_average": 0, "vote_count": 0, "poster_path": null, "genre_ids": [] }
+  ],
+  "total_pages": 9120,
+  "total_results": 182400
+}

@@ -17,3 +17,10 @@ describe("SiteHeader search", () => {
     expect(within(screen.getByRole("banner")).getByRole("search")).toBeInTheDocument();
   });
 });
+
+describe("SiteHeader view transition", () => {
+  it("is named so it stays still while main crossfades", () => {
+    render(<SiteHeader />);
+    expect(screen.getByRole("banner").style.viewTransitionName).toBe("site-header");
+  });
+});

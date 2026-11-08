@@ -2,6 +2,7 @@ import {
   STORAGE_KEY,
   addEntry,
   createWatchlistStore,
+  entryFromShow,
   entryFromTitle,
   hasEntry,
   parseWatchlist,
@@ -13,6 +14,7 @@ import {
 } from "./watchlist";
 
 const matrix: WatchlistEntry = {
+  kind: "movie",
   id: 603,
   slug: "the-matrix",
   name: "The Matrix",
@@ -20,7 +22,9 @@ const matrix: WatchlistEntry = {
   rating: 8.2,
   posterPath: "/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
 };
-const inception: WatchlistEntry = { id: 27205, slug: "inception", name: "Inception", year: 2010, rating: 8.4 };
+const inception: WatchlistEntry = { kind: "movie", id: 27205, slug: "inception", name: "Inception", year: 2010, rating: 8.4 };
+/** A show sharing The Matrix's TMDB id, as can happen between movies and shows. */
+const matrixShow: WatchlistEntry = { kind: "tv", id: 603, slug: "matrix-show", name: "Matrix Show", year: 2020 };
 
 class MemoryStorage implements Pick<Storage, "getItem" | "setItem"> {
   data = new Map<string, string>();
@@ -42,8 +46,8 @@ const throwingStorage: Pick<Storage, "getItem" | "setItem"> = {
 };
 
 describe("STORAGE_KEY", () => {
-  it("is the v2 key", () => {
-    expect(STORAGE_KEY).toBe("reelbase:watchlist:v2");
+  it("is the v3 key", () => {
+    expect(STORAGE_KEY).toBe("reelbase:watchlist:v3");
   });
 });
 
@@ -63,9 +67,38 @@ describe("entryFromTitle", () => {
   });
 });
 
+describe("entryFromShow", () => {
+  it("keeps only the snapshot fields, as a tv entry", () => {
+    expect(
+      entryFromShow({
+        id: 603,
+        slug: "matrix-show",
+        name: "Matrix Show",
+        year: 2020,
+        years: "2020–",
+        rating: 7.1,
+        posterPath: "/s.jpg",
+        posterUrl: "https://image.tmdb.org/t/p/w500/s.jpg",
+        genres: [],
+        creators: [],
+        cast: [],
+        seasons: [],
+      }),
+    ).toEqual({ kind: "tv", id: 603, slug: "matrix-show", name: "Matrix Show", year: 2020, rating: 7.1, posterPath: "/s.jpg" });
+  });
+});
+
 describe("parseWatchlist", () => {
-  it("reads a JSON array of entries", () => {
-    expect(parseWatchlist(JSON.stringify([matrix, inception]))).toEqual([matrix, inception]);
+  it("reads a JSON array of v3 entries of both kinds", () => {
+    expect(parseWatchlist(JSON.stringify([matrix, inception, matrixShow]))).toEqual([matrix, inception, matrixShow]);
+  });
+
+  it("keeps the same id saved as a movie and as a show as two entries", () => {
+    expect(parseWatchlist(JSON.stringify([matrix, matrixShow]))).toEqual([matrix, matrixShow]);
+  });
+
+  it.each([["missing", undefined], ["unknown", "person"], ["not a string", 1]])("drops an entry whose kind is %s", (_label, kind) => {
+    expect(parseWatchlist(JSON.stringify([{ ...matrix, kind }, inception]))).toEqual([inception]);
   });
 
   it.each([
@@ -94,11 +127,11 @@ describe("parseWatchlist", () => {
   });
 
   it("keeps an entry without a rating", () => {
-    const unrated = { id: 1, slug: "untitled", name: "Untitled" };
+    const unrated = { kind: "movie", id: 1, slug: "untitled", name: "Untitled" };
     expect(parseWatchlist(JSON.stringify([unrated]))).toEqual([unrated]);
   });
 
-  it("drops duplicate ids, keeping the first", () => {
+  it("drops duplicate kind + id pairs, keeping the first", () => {
     expect(parseWatchlist(JSON.stringify([matrix, { ...matrix, name: "Dupe" }]))).toEqual([matrix]);
   });
 
@@ -119,21 +152,30 @@ describe("addEntry / removeEntry / hasEntry", () => {
     expect(addEntry([matrix], { ...matrix, name: "Again" })).toEqual([matrix]);
   });
 
-  it("removes by id and ignores a missing one", () => {
-    expect(removeEntry([matrix, inception], 603)).toEqual([inception]);
-    expect(removeEntry([matrix], 27205)).toEqual([matrix]);
+  it("adds a show with the same id as a saved movie", () => {
+    expect(addEntry([matrix], matrixShow)).toEqual([matrix, matrixShow]);
+  });
+
+  it("removes by kind + id and ignores a missing one", () => {
+    expect(removeEntry([matrix, inception], { kind: "movie", id: 603 })).toEqual([inception]);
+    expect(removeEntry([matrix], { kind: "movie", id: 27205 })).toEqual([matrix]);
+  });
+
+  it("removing a show leaves the movie with the same id", () => {
+    expect(removeEntry([matrix, matrixShow], { kind: "tv", id: 603 })).toEqual([matrix]);
   });
 
   it("does not mutate its input", () => {
     const list = [matrix];
     addEntry(list, inception);
-    removeEntry(list, 603);
+    removeEntry(list, { kind: "movie", id: 603 });
     expect(list).toEqual([matrix]);
   });
 
-  it("reports membership by id", () => {
-    expect(hasEntry([matrix], 603)).toBe(true);
-    expect(hasEntry([matrix], 27205)).toBe(false);
+  it("reports membership by kind + id", () => {
+    expect(hasEntry([matrix], { kind: "movie", id: 603 })).toBe(true);
+    expect(hasEntry([matrix], { kind: "movie", id: 27205 })).toBe(false);
+    expect(hasEntry([matrix], { kind: "tv", id: 603 })).toBe(false);
   });
 });
 
@@ -144,9 +186,10 @@ describe("readWatchlist / writeWatchlist", () => {
     expect(readWatchlist(storage)).toEqual([matrix]);
   });
 
-  it("never reads the v1 key", () => {
+  it("never reads the v1 or v2 keys", () => {
     const storage = new MemoryStorage();
     storage.setItem("reelbase:watchlist:v1", '["the-lantern-keepers-of-varro"]');
+    storage.setItem("reelbase:watchlist:v2", JSON.stringify([{ id: 603, slug: "the-matrix", name: "The Matrix" }]));
     expect(readWatchlist(storage)).toEqual([]);
   });
 
@@ -186,7 +229,7 @@ describe("createWatchlistStore", () => {
     const listener = vi.fn();
     const unsubscribe = store.subscribe(listener);
     store.add(matrix);
-    store.remove(603);
+    store.remove({ kind: "movie", id: 603 });
     expect(listener).toHaveBeenCalledTimes(2);
     unsubscribe();
     store.add(matrix);

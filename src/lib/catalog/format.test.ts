@@ -1,4 +1,4 @@
-import { ageOn, formatDate, formatRuntime } from "./format";
+import { ageOn, formatDate, formatRuntime, formatShortDate, truncateText } from "./format";
 
 describe("formatRuntime", () => {
   it("formats hours and minutes", () => {
@@ -15,6 +15,19 @@ describe("formatRuntime", () => {
 
   it("drops zero hours", () => {
     expect(formatRuntime(45)).toBe("45m");
+  });
+});
+
+describe("formatShortDate", () => {
+  it("formats a TMDB date as day, short month and year, in UTC", () => {
+    expect(formatShortDate("2018-03-21")).toBe("21 Mar 2018");
+    expect(formatShortDate("1992-08-07")).toBe("7 Aug 1992");
+    expect(formatShortDate("2024-09-01")).toBe("1 Sep 2024");
+    expect(formatShortDate("2024-12-31")).toBe("31 Dec 2024");
+  });
+
+  it.each(["", "2018", "2018-3-21", "2018-02-30", "not a date"])("returns undefined for %j", (date) => {
+    expect(formatShortDate(date)).toBeUndefined();
   });
 });
 
@@ -44,3 +57,24 @@ describe("ageOn", () => {
     expect(ageOn("1930-05-31", "1920-01-01")).toBeUndefined();
   });
 });
+
+describe("truncateText", () => {
+  it("keeps text within the limit as it is", () => {
+    expect(truncateText("A short synopsis.", 300)).toBe("A short synopsis.");
+    expect(truncateText("x".repeat(300), 300)).toBe("x".repeat(300));
+  });
+
+  it("cuts longer text at the last word boundary within the limit and adds an ellipsis", () => {
+    expect(truncateText("One two three four", 12)).toBe("One two…");
+    expect(truncateText("One two, three four", 9)).toBe("One two…");
+    const long = "word ".repeat(100).trim();
+    const cut = truncateText(long, 300);
+    expect(cut.length).toBeLessThanOrEqual(301);
+    expect(cut).toMatch(/word…$/);
+  });
+
+  it("cuts mid-word when the first word alone is longer than the limit", () => {
+    expect(truncateText("Supercalifragilistic", 5)).toBe("Super…");
+  });
+});
+

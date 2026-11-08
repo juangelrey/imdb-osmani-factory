@@ -1,3 +1,16 @@
+"use client";
+
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+
+/** On a TV view of browse or search (`type=tv`), a new search stays on TV. */
+function KeepKind() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const onTv = (pathname === "/" || pathname === "/search") && searchParams.get("type") === "tv";
+  return onTv ? <input type="hidden" name="type" value="tv" /> : null;
+}
+
 export function SearchBox() {
   return (
     <form role="search" action="/search" method="get" className="order-last w-full sm:order-none sm:w-auto sm:flex-1">
@@ -12,6 +25,10 @@ export function SearchBox() {
         autoComplete="off"
         className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-amber-400 focus:outline-none sm:max-w-xs"
       />
+      {/* useSearchParams needs a Suspense boundary so static pages still prerender the form. */}
+      <Suspense fallback={null}>
+        <KeepKind />
+      </Suspense>
     </form>
   );
 }

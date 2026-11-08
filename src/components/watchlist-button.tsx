@@ -5,14 +5,14 @@ import type { WatchlistEntry } from "@/lib/watchlist/watchlist";
 
 export function WatchlistButton({ entry }: { entry: WatchlistEntry }) {
   const { has, add, remove } = useWatchlist();
-  const saved = has(entry.id);
+  const saved = has(entry);
 
   return (
     <button
       type="button"
       aria-pressed={saved}
       aria-label="Save to watchlist"
-      onClick={() => (saved ? remove(entry.id) : add(entry))}
+      onClick={() => (saved ? remove(entry) : add(entry))}
       className={`inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-semibold transition ${
         saved
           ? "border-amber-400 bg-amber-400 text-zinc-950 hover:bg-amber-300"

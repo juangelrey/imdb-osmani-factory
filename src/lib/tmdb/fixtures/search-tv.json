@@ -1,0 +1,10 @@
+{
+  "page": 1,
+  "results": [
+    { "id": 1396, "name": "Breaking Bad", "first_air_date": "2008-01-20", "vote_average": 8.959, "vote_count": 19051, "poster_path": "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg", "genre_ids": [18, 80] },
+    { "id": 34541, "name": "Breaking In", "first_air_date": "2011-04-06", "vote_average": 6.6, "vote_count": 82, "poster_path": "/cDEglbhl4g6yFg203agZAOm8m3b.jpg", "genre_ids": [35] },
+    { "id": 603, "name": "Breaking Point", "first_air_date": "", "vote_average": 0, "vote_count": 0, "poster_path": null, "genre_ids": [] }
+  ],
+  "total_pages": 6,
+  "total_results": 117
+}
