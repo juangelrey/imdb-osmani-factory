@@ -9,6 +9,7 @@ import type {
   TmdbPersonCombinedCredits,
   TmdbPersonCredit,
   TmdbPersonDetails,
+  TmdbRecommendations,
   TmdbEpisode,
   TmdbSeason,
   TmdbSeasonSummary,
@@ -38,6 +39,9 @@ import type {
 export const MAX_PAGES = 500;
 
 const CAST_LIMIT = 10;
+
+/** How many recommendations a title or show page shows. */
+export const RECOMMENDATIONS_LIMIT = 12;
 
 export type PosterSize = "w92" | "w185" | "w342" | "w500";
 export type ProfileSize = "h632";
@@ -181,7 +185,23 @@ export function toTitle(movie: TmdbMovieDetails): Title {
     posterPath: movie.poster_path || undefined,
     directors: directors(movie.credits.crew),
     cast: topCast(movie.credits.cast),
+    recommendations: toRecommendations(movie.recommendations, toSummary),
   };
+}
+
+/**
+ * A title's recommendations in TMDB order, adult and softcore ones skipped, at most
+ * `RECOMMENDATIONS_LIMIT`. `map` turns an item into a summary of the page's own kind
+ * (`toSummary` for a movie, `toShowSummary` for a show). Empty when TMDB sent none.
+ */
+export function toRecommendations<T>(
+  recommendations: TmdbRecommendations<T> | undefined,
+  map: (item: T) => TitleSummary,
+): TitleSummary[] {
+  return (recommendations?.results ?? [])
+    .filter((item) => !item.adult && !item.softcore)
+    .slice(0, RECOMMENDATIONS_LIMIT)
+    .map(map);
 }
 
 /** "2008–2013" for an ended show, "2019–" while running, "2019" for a single year; undefined without a first air date. */

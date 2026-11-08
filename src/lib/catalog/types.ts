@@ -23,6 +23,8 @@ export interface Title {
   directors: PersonLink[];
   /** Top-billed cast, at most 10. */
   cast: PersonLink[];
+  /** TMDB's recommended movies, at most 12, adult ones left out; empty when there are none. */
+  recommendations: TitleSummary[];
 }
 
 /** Whether a summary is a movie (`/title`) or a TV show (`/tv`). A movie and a show can share an id. */

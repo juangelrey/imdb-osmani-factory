@@ -39,7 +39,9 @@ import {
   toEpisode,
   toGenre,
   toPaged,
+  RECOMMENDATIONS_LIMIT,
   toPerson,
+  toRecommendations,
   toSeason,
   toShow,
   toShowSummary,
@@ -604,7 +606,32 @@ describe("toTitle", () => {
         { id: 9374, slug: "matt-doran", name: "Matt Doran" },
         { id: 9361, slug: "belinda-mcclory", name: "Belinda McClory" },
       ],
+      recommendations: expect.any(Array),
     });
+  });
+
+  it("keeps the first 12 recommendations as movie summaries, skipping adult ones", () => {
+    const recommendations = toTitle(matrix).recommendations;
+    expect(recommendations).toHaveLength(12);
+    expect(recommendations[0]).toEqual({
+      kind: "movie",
+      id: 604,
+      slug: "the-matrix-reloaded",
+      name: "The Matrix Reloaded",
+      year: 2003,
+      rating: 7.0,
+      posterUrl: "https://image.tmdb.org/t/p/w342/9TGHDvWrqKBzwDxDodHYXEmOE6J.jpg",
+    });
+    expect(recommendations.map(({ id }) => id)).not.toContain(990001);
+    expect(recommendations.at(-1)?.name).toBe("Forrest Gump");
+  });
+
+  it("has no recommendations when TMDB lists none", () => {
+    expect(toTitle(sparseMovie).recommendations).toEqual([]);
+  });
+
+  it("leaves a recommendation's missing poster undefined", () => {
+    expect(toTitle(matrix).recommendations.find(({ id }) => id === 77)?.posterUrl).toBeUndefined();
   });
 
   it("keeps every Director in TMDB order, once each, and no other crew job", () => {
@@ -658,6 +685,41 @@ describe("toTitle", () => {
 
   it("ignores a malformed release date", () => {
     expect(toTitle({ ...matrix, release_date: "soon" }).year).toBeUndefined();
+  });
+});
+
+describe("toRecommendations", () => {
+  const item = (id: number, flags: { adult?: boolean; softcore?: boolean } = {}) => ({
+    id,
+    name: `Show ${id}`,
+    first_air_date: "2020-01-01",
+    vote_average: 7,
+    vote_count: 100,
+    poster_path: null,
+    ...flags,
+  });
+  const page = (results: ReturnType<typeof item>[]) => ({ page: 1, results, total_pages: 1, total_results: results.length });
+
+  it("maps each item with the given mapper, so shows become show summaries", () => {
+    expect(toRecommendations(page([item(1)]), toShowSummary)).toEqual([toShowSummary(item(1))]);
+  });
+
+  it("skips adult and softcore titles", () => {
+    const ids = toRecommendations(page([item(1, { adult: true }), item(2, { softcore: true }), item(3)]), toShowSummary).map(
+      ({ id }) => id,
+    );
+    expect(ids).toEqual([3]);
+  });
+
+  it("keeps at most 12, in TMDB order", () => {
+    const items = Array.from({ length: 20 }, (_, index) => item(index + 1));
+    const ids = toRecommendations(page(items), toShowSummary).map(({ id }) => id);
+    expect(RECOMMENDATIONS_LIMIT).toBe(12);
+    expect(ids).toEqual(items.slice(0, 12).map(({ id }) => id));
+  });
+
+  it("is empty when the response has no recommendations", () => {
+    expect(toRecommendations(undefined, toShowSummary)).toEqual([]);
   });
 });
 

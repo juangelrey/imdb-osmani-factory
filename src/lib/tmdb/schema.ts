@@ -21,6 +21,15 @@ export interface TmdbMovieListItem {
   genre_ids?: number[];
 }
 
+/** Flags TMDB puts on list items in `recommendations`; adult and softcore titles are skipped. */
+export interface TmdbAdultFlags {
+  adult?: boolean;
+  softcore?: boolean;
+}
+
+/** A title's `recommendations`, appended to its details request: one page of the same kind of title. */
+export type TmdbRecommendations<T> = TmdbPaged<T & TmdbAdultFlags>;
+
 export interface TmdbPaged<T> {
   page: number;
   results: T[];
@@ -56,6 +65,8 @@ export interface TmdbMovieDetails {
     cast: TmdbCastMember[];
     crew: TmdbCrewMember[];
   };
+  /** Present when requested through `append_to_response`. */
+  recommendations?: TmdbRecommendations<TmdbMovieListItem>;
 }
 
 /** Fields every row of a person's `combined_credits` carries, movie or TV. */

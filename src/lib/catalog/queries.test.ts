@@ -31,12 +31,20 @@ afterEach(() => {
 });
 
 describe("getTitle", () => {
-  it("fetches the movie with credits appended", async () => {
+  it("fetches the movie with credits and recommendations appended, in one request", async () => {
     const fetchMock = stubFetch(details);
     await getTitle(603);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     const url = requestedUrl(fetchMock);
     expect(url.pathname).toBe("/3/movie/603");
-    expect(url.searchParams.get("append_to_response")).toBe("credits");
+    expect(url.searchParams.get("append_to_response")).toBe("credits,recommendations");
+  });
+
+  it("maps the appended recommendations, dropping adult titles", async () => {
+    stubFetch(details);
+    const title = await getTitle(603);
+    expect(title?.recommendations).toHaveLength(12);
+    expect(title?.recommendations.map(({ id }) => id)).not.toContain(990001);
   });
 
   it("maps the response into a Title", async () => {
