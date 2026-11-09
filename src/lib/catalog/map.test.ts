@@ -23,6 +23,7 @@ import {
   careerKinds,
   defaultSeason,
   filterCareer,
+  logoUrl,
   MAX_PAGES,
   parseCreditsParam,
   parsePersonParam,
@@ -116,6 +117,16 @@ describe("personHref and parsePersonParam", () => {
 
   it("shares one parser with parseTitleParam", () => {
     expect(parsePersonParam).toBe(parseTitleParam);
+  });
+});
+
+describe("logoUrl", () => {
+  it("builds a w92 image.tmdb.org URL", () => {
+    expect(logoUrl("/abc.jpg", "w92")).toBe("https://image.tmdb.org/t/p/w92/abc.jpg");
+  });
+
+  it("returns undefined without a path", () => {
+    expect(logoUrl(null, "w92")).toBeUndefined();
   });
 });
 
