@@ -1,9 +1,13 @@
 import { render, screen, within } from "@testing-library/react";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { redirect } from "next/navigation";
+import { BrowseControls } from "@/components/browse-controls";
 import discover from "@/lib/tmdb/fixtures/discover-movie.json";
 import discoverTv from "@/lib/tmdb/fixtures/discover-tv.json";
 import genreList from "@/lib/tmdb/fixtures/genre-movie-list.json";
 import genreTvList from "@/lib/tmdb/fixtures/genre-tv-list.json";
+import watchProviderRegions from "@/lib/tmdb/fixtures/watch-provider-regions.json";
 import Home from "./page";
 
 function stubTmdb(discoverBody: unknown = discover) {
@@ -13,6 +17,7 @@ function stubTmdb(discoverBody: unknown = discover) {
     if (pathname === "/3/discover/movie") return Response.json(discoverBody);
     if (pathname === "/3/genre/tv/list") return Response.json(genreTvList);
     if (pathname === "/3/discover/tv") return Response.json(discoverTv);
+    if (pathname === "/3/watch/providers/regions") return Response.json(watchProviderRegions);
     return Response.json({}, { status: 404 });
   });
   vi.stubGlobal("fetch", fetchMock);
@@ -35,6 +40,27 @@ function gridNames() {
     .map((item) => within(item).getByRole("heading").textContent);
 }
 
+/** What the visitor's request carries: the `reelbase-region` cookie and the `Accept-Language` header. */
+const request = vi.hoisted(() => ({ regionCookie: undefined as string | undefined, acceptLanguage: undefined as string | undefined }));
+
+vi.mock("next/headers", () => ({
+  cookies: vi.fn(async () => ({
+    get: (name: string) =>
+      name === "reelbase-region" && request.regionCookie !== undefined ? { name, value: request.regionCookie } : undefined,
+  })),
+  headers: vi.fn(async () => new Headers(request.acceptLanguage === undefined ? {} : { "accept-language": request.acceptLanguage })),
+}));
+
+// Nothing shows the region yet, so the tests read the state the page hands the browse controls.
+vi.mock("@/components/browse-controls", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/components/browse-controls")>();
+  return { ...actual, BrowseControls: vi.fn(actual.BrowseControls) };
+});
+
+function browseState() {
+  return vi.mocked(BrowseControls).mock.lastCall![0].state;
+}
+
 vi.mock("next/navigation", () => ({
   redirect: vi.fn((url: string) => {
     throw new Error(`redirect ${url}`);
@@ -43,6 +69,9 @@ vi.mock("next/navigation", () => ({
 
 beforeEach(() => {
   vi.stubEnv("TMDB_READ_ACCESS_TOKEN", "test-token");
+  request.regionCookie = undefined;
+  request.acceptLanguage = undefined;
+  vi.mocked(BrowseControls).mockClear();
 });
 
 afterEach(() => {
@@ -142,7 +171,7 @@ describe("Home page", () => {
     const fetchMock = stubTmdb();
     await renderHome({ genre: "878", sort: "rating", page: "2" });
     const paths = fetchMock.mock.calls.map(([input]) => new URL(String(input)).pathname);
-    expect(paths).toEqual(["/3/genre/movie/list", "/3/discover/movie"]);
+    expect(paths).toEqual(["/3/genre/movie/list", "/3/watch/providers/regions", "/3/discover/movie"]);
     const media = screen.getByRole("navigation", { name: "Movies or TV" });
     expect(within(media).getByRole("link", { name: "Movies" })).toHaveAttribute("aria-current", "page");
     // Switching kind resets the genre (ids differ per kind) and the page, and keeps the sort.
@@ -151,11 +180,11 @@ describe("Home page", () => {
     expect(media.compareDocumentPosition(genres) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("browses TV series with the TV genres in two TMDB calls", async () => {
+  it("browses TV series with the TV genres in three TMDB calls", async () => {
     const fetchMock = stubTmdb();
     await renderHome({ type: "tv" });
     const paths = fetchMock.mock.calls.map(([input]) => new URL(String(input)).pathname);
-    expect(paths).toEqual(["/3/genre/tv/list", "/3/discover/tv"]);
+    expect(paths).toEqual(["/3/genre/tv/list", "/3/watch/providers/regions", "/3/discover/tv"]);
     expect(screen.getByRole("heading", { level: 1, name: "All series" })).toBeInTheDocument();
     expect(gridNames()).toEqual(["Breaking Bad", "Stranger Things", "Breaking Point"]);
     expect(screen.getByRole("link", { name: /Breaking Bad/ })).toHaveAttribute("href", "/tv/1396-breaking-bad");
@@ -219,5 +248,73 @@ describe("Home page", () => {
     );
     await renderHome({ type: "tv", genre: "37" });
     expect(screen.getByText("No series match this genre. Try another one, or show all series.")).toBeInTheDocument();
+  });
+});
+
+describe("Home page region", () => {
+  it("lets ?region= beat the cookie and keeps it in links", async () => {
+    stubTmdb();
+    request.regionCookie = "GB";
+    request.acceptLanguage = "de-DE";
+    await renderHome({ region: "ES", genre: "28" });
+    expect(browseState()).toMatchObject({ region: "ES", regionFromUrl: true });
+    const sort = screen.getByRole("navigation", { name: "Sort" });
+    expect(within(sort).getByRole("link", { name: "Top rated" })).toHaveAttribute("href", "/?genre=28&region=ES&sort=rating");
+    const pagination = screen.getByRole("navigation", { name: "Pagination" });
+    expect(within(pagination).getByRole("link", { name: /Next/ })).toHaveAttribute("href", "/?genre=28&region=ES&page=2");
+    const media = screen.getByRole("navigation", { name: "Movies or TV" });
+    expect(within(media).getByRole("link", { name: "TV" })).toHaveAttribute("href", "/?type=tv&region=ES");
+  });
+
+  it("uses the cookie when the URL has no region, and keeps it out of links", async () => {
+    stubTmdb();
+    request.regionCookie = "GB";
+    request.acceptLanguage = "es-ES";
+    await renderHome({ genre: "28" });
+    expect(browseState()).toMatchObject({ region: "GB", regionFromUrl: false });
+    const pagination = screen.getByRole("navigation", { name: "Pagination" });
+    expect(within(pagination).getByRole("link", { name: /Next/ })).toHaveAttribute("href", "/?genre=28&page=2");
+  });
+
+  it("falls back to the browser language's country", async () => {
+    stubTmdb();
+    request.acceptLanguage = "es-ES,es;q=0.9,en;q=0.8";
+    await renderHome();
+    expect(browseState()).toMatchObject({ region: "ES", regionFromUrl: false });
+  });
+
+  it("uses US when nothing names a region", async () => {
+    stubTmdb();
+    await renderHome();
+    expect(browseState()).toMatchObject({ region: "US", regionFromUrl: false });
+  });
+
+  it("skips an unlisted code wherever it comes from", async () => {
+    stubTmdb();
+    request.regionCookie = "GB";
+    await renderHome({ region: "ZZ", genre: "28" });
+    expect(browseState()).toMatchObject({ region: "GB", regionFromUrl: false });
+    const pagination = screen.getByRole("navigation", { name: "Pagination" });
+    expect(within(pagination).getByRole("link", { name: /Next/ })).toHaveAttribute("href", "/?genre=28&page=2");
+  });
+
+  it("skips an unlisted cookie and language country", async () => {
+    stubTmdb();
+    request.regionCookie = "XX";
+    request.acceptLanguage = "en-QQ, es-ES";
+    await renderHome({ region: "zz" });
+    expect(browseState()).toMatchObject({ region: "ES", regionFromUrl: false });
+  });
+
+  it("is read only by the home page, so other pages keep their caching", () => {
+    // Vitest runs from the project root.
+    const appDir = join(process.cwd(), "src/app");
+    const others = (readdirSync(appDir, { recursive: true }) as string[]).filter(
+      (file) => /(^|[\\/])(page|layout|template)\.tsx?$/.test(file) && file !== "page.tsx",
+    );
+    expect(others.length).toBeGreaterThan(0);
+    const readers = others.filter((file) => /next\/headers|reelbase-region|REGION_COOKIE/.test(readFileSync(join(appDir, file), "utf8")));
+    expect(readers).toEqual([]);
+    expect(readFileSync(join(appDir, "page.tsx"), "utf8")).toContain("next/headers");
   });
 });

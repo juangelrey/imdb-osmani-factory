@@ -236,7 +236,7 @@ describe("discoverTitles", () => {
 
   it("asks for a page of non-adult movies and maps the results", async () => {
     const fetchMock = stubFetch(discover);
-    const page = await discoverTitles({ kind: "movie", genres: [], sort: "popularity", page: 3 });
+    const page = await discoverTitles({ kind: "movie", genres: [], sort: "popularity", page: 3, region: "US", regionFromUrl: false });
     const url = requestedUrl(fetchMock);
     expect(url.pathname).toBe("/3/discover/movie");
     expect(url.searchParams.get("include_adult")).toBe("false");
@@ -248,13 +248,13 @@ describe("discoverTitles", () => {
 
   it("matches all of several genres, comma-joined", async () => {
     const fetchMock = stubFetch(discover);
-    await discoverTitles({ kind: "movie", genres: [28, 35], sort: "popularity", page: 1 });
+    await discoverTitles({ kind: "movie", genres: [28, 35], sort: "popularity", page: 1, region: "US", regionFromUrl: false });
     expect(requestedUrl(fetchMock).searchParams.get("with_genres")).toBe("28,35");
   });
 
   it("filters by genre", async () => {
     const fetchMock = stubFetch(discover);
-    await discoverTitles({ kind: "movie", genres: [878], sort: "popularity", page: 1 });
+    await discoverTitles({ kind: "movie", genres: [878], sort: "popularity", page: 1, region: "US", regionFromUrl: false });
     expect(requestedUrl(fetchMock).searchParams.get("with_genres")).toBe("878");
   });
 
@@ -264,7 +264,7 @@ describe("discoverTitles", () => {
     ["title", { sort_by: "title.asc" }],
   ] as const)("maps the %s sort", async (sort, expected) => {
     const fetchMock = stubFetch(discover);
-    await discoverTitles({ kind: "movie", genres: [], sort, page: 1 });
+    await discoverTitles({ kind: "movie", genres: [], sort, page: 1, region: "US", regionFromUrl: false });
     const params = requestedUrl(fetchMock).searchParams;
     for (const [key, value] of Object.entries(expected)) expect(params.get(key)).toBe(value);
     expect(params.has("primary_release_date.lte")).toBe(false);
@@ -275,7 +275,7 @@ describe("discoverTitles", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-11-07T15:00:00Z"));
     const fetchMock = stubFetch(discover);
-    await discoverTitles({ kind: "movie", genres: [], sort: "release", page: 1 });
+    await discoverTitles({ kind: "movie", genres: [], sort: "release", page: 1, region: "US", regionFromUrl: false });
     const params = requestedUrl(fetchMock).searchParams;
     expect(params.get("sort_by")).toBe("primary_release_date.desc");
     expect(params.get("primary_release_date.lte")).toBe("2026-11-07");
@@ -290,7 +290,7 @@ describe("discoverShows", () => {
 
   it("asks for a page of non-adult series and maps the results to shows", async () => {
     const fetchMock = stubFetch(discoverTv);
-    const page = await discoverShows({ kind: "tv", genres: [], sort: "popularity", page: 3 });
+    const page = await discoverShows({ kind: "tv", genres: [], sort: "popularity", page: 3, region: "US", regionFromUrl: false });
     const url = requestedUrl(fetchMock);
     expect(url.pathname).toBe("/3/discover/tv");
     expect(url.searchParams.get("include_adult")).toBe("false");
@@ -303,13 +303,13 @@ describe("discoverShows", () => {
 
   it("matches all of several TV genres", async () => {
     const fetchMock = stubFetch(discoverTv);
-    await discoverShows({ kind: "tv", genres: [18, 10765], sort: "popularity", page: 1 });
+    await discoverShows({ kind: "tv", genres: [18, 10765], sort: "popularity", page: 1, region: "US", regionFromUrl: false });
     expect(requestedUrl(fetchMock).searchParams.get("with_genres")).toBe("18,10765");
   });
 
   it("filters by a TV genre", async () => {
     const fetchMock = stubFetch(discoverTv);
-    await discoverShows({ kind: "tv", genres: [10765], sort: "popularity", page: 1 });
+    await discoverShows({ kind: "tv", genres: [10765], sort: "popularity", page: 1, region: "US", regionFromUrl: false });
     expect(requestedUrl(fetchMock).searchParams.get("with_genres")).toBe("10765");
   });
 
@@ -318,7 +318,7 @@ describe("discoverShows", () => {
     ["title", { sort_by: "name.asc" }],
   ] as const)("maps the %s sort to TV params", async (sort, expected) => {
     const fetchMock = stubFetch(discoverTv);
-    await discoverShows({ kind: "tv", genres: [], sort, page: 1 });
+    await discoverShows({ kind: "tv", genres: [], sort, page: 1, region: "US", regionFromUrl: false });
     const params = requestedUrl(fetchMock).searchParams;
     for (const [key, value] of Object.entries(expected)) expect(params.get(key)).toBe(value);
     expect(params.has("first_air_date.lte")).toBe(false);
@@ -329,7 +329,7 @@ describe("discoverShows", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-11-07T15:00:00Z"));
     const fetchMock = stubFetch(discoverTv);
-    await discoverShows({ kind: "tv", genres: [], sort: "release", page: 1 });
+    await discoverShows({ kind: "tv", genres: [], sort: "release", page: 1, region: "US", regionFromUrl: false });
     const params = requestedUrl(fetchMock).searchParams;
     expect(params.get("sort_by")).toBe("first_air_date.desc");
     expect(params.get("first_air_date.lte")).toBe("2026-11-07");
