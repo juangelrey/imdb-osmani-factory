@@ -9,7 +9,7 @@ const GENRES = [
 ];
 
 function renderControls(state: Partial<BrowseState> = {}) {
-  render(<BrowseControls genres={GENRES} state={{ kind: "movie", genres: [], sort: "popularity", page: 1, ...state }} />);
+  render(<BrowseControls genres={GENRES} state={{ kind: "movie", genres: [], sort: "popularity", page: 1, region: "US", regionFromUrl: false, ...state }} />);
   return screen.getByRole("navigation", { name: "Genre" });
 }
 
@@ -55,5 +55,11 @@ describe("BrowseControls genre pills", () => {
       "/?type=tv&genre=28&sort=rating",
       "/?type=tv&genre=18,28,35&sort=rating",
     ]);
+  });
+
+  it("keeps a region that came from the URL on the genre pills", () => {
+    const explicit = renderControls({ genres: [28], region: "ES", regionFromUrl: true });
+    expect(within(explicit).getByRole("link", { name: "All" })).toHaveAttribute("href", "/?region=ES");
+    expect(within(explicit).getByRole("link", { name: "Comedy" })).toHaveAttribute("href", "/?genre=28,35&region=ES");
   });
 });

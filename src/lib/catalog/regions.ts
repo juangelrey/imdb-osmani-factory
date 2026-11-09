@@ -9,6 +9,9 @@ type TmdbWatchProviderRegions = {
 /** A country TMDB has watch-provider data for: its ISO 3166-1 code and English name. */
 export type Region = { code: string; name: string };
 
+/** The first-party cookie that remembers the visitor's chosen region code. Only the home page reads it. */
+export const REGION_COOKIE = "reelbase-region";
+
 /** The region used when the URL, the cookie and the browser language name none TMDB lists. */
 export const DEFAULT_REGION = "US";
 

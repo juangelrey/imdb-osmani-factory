@@ -19,6 +19,13 @@ export interface BrowseState {
   genres: number[];
   sort: SortKey;
   page: number;
+  /** The watch-provider region that applies (ISO 3166-1, e.g. "ES"), from `resolveRegion`. */
+  region: string;
+  /**
+   * Whether `?region=` named the applied region. Only then do links carry `region`, so an explicit
+   * `?region=` keeps beating the cookie on later clicks, while cookie and language defaults stay out of URLs.
+   */
+  regionFromUrl: boolean;
 }
 
 export function firstParam(value: SearchParamValue): string | undefined {
@@ -54,11 +61,13 @@ export function parseGenres(value: SearchParamValue, knownGenreIds: ReadonlySet<
 
 /**
  * The browse state from the URL. `knownGenreIds` is the genre list for the kind in `type` (read it with
- * `parseKind` first), so a genre id from the other kind's list is dropped.
+ * `parseKind` first), so a genre id from the other kind's list is dropped. `region` is the region that
+ * applies, from `resolveRegion` over the `region` param, the cookie and `Accept-Language`.
  */
 export function parseBrowseParams(
   params: Record<string, SearchParamValue>,
   knownGenreIds: ReadonlySet<number>,
+  region: string,
 ): BrowseState {
   const sort = firstParam(params.sort);
   return {
@@ -66,17 +75,22 @@ export function parseBrowseParams(
     genres: parseGenres(params.genre, knownGenreIds),
     sort: isSortKey(sort) ? sort : DEFAULT_SORT,
     page: parsePage(params.page),
+    region,
+    // An unlisted `?region=` falls through to the cookie or language, so it does not count as from the URL.
+    regionFromUrl: firstParam(params.region) === region,
   };
 }
 
 /**
- * A home page URL. `type` is set only for TV, so movie links stay as they were before TV browse. List
- * separators stay literal commas (`genre=28,35`), not `%2C`, so links read as the spec writes them.
+ * A home page URL. `type` is set only for TV, so movie links stay as they were before TV browse, and
+ * `region` only when it came from the URL. List separators stay literal commas (`genre=28,35`), not
+ * `%2C`, so links read as the spec writes them.
  */
-export function browseHref({ kind, genres, sort, page }: BrowseState): string {
+export function browseHref({ kind, genres, sort, page, region, regionFromUrl }: BrowseState): string {
   const query = new URLSearchParams();
   if (kind === "tv") query.set("type", "tv");
   if (genres.length > 0) query.set("genre", genres.join(","));
+  if (regionFromUrl) query.set("region", region);
   if (sort !== DEFAULT_SORT) query.set("sort", sort);
   if (page > 1) query.set("page", String(page));
   const search = query.toString().replaceAll("%2C", ",");
