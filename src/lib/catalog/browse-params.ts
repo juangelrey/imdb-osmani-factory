@@ -75,6 +75,14 @@ export function parseProviders(value: SearchParamValue, listedProviderIds: Reado
   return parseIdList(value, listedProviderIds);
 }
 
+/**
+ * A pill's target selection: `selected` with `id` removed if present, else added. Ascending, as
+ * `BrowseState.genres` and `BrowseState.providers` are, so equal selections share a URL. Returns a new array.
+ */
+export function toggleId(selected: readonly number[], id: number): number[] {
+  return selected.includes(id) ? selected.filter((other) => other !== id) : [...selected, id].sort((a, b) => a - b);
+}
+
 const NO_PROVIDERS: ReadonlySet<number> = new Set();
 
 /**
