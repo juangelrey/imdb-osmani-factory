@@ -453,6 +453,8 @@ describe("Home page streaming services", () => {
     [{ genre: "28,35" }, "No titles match these genres. Try removing one, or show all titles."],
     [{ genre: "28", providers: "8" }, "No titles match this genre on this service. Try removing one, or show all titles."],
     [{ type: "tv", genre: "18", providers: "8,9" }, "No series match this genre on these services. Try removing one, or show all series."],
+    [{}, "No titles to show right now."],
+    [{ type: "tv" }, "No series to show right now."],
   ])("names the active filters when nothing matches %o", async (params, message) => {
     stubTmdb({ page: 1, results: [], total_pages: 0, total_results: 0 }, { "/3/discover/tv": { page: 1, results: [], total_pages: 0, total_results: 0 } });
     await renderHome(params);

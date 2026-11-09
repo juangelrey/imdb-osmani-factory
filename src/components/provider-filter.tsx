@@ -59,8 +59,6 @@ export function ProviderFilter({ providers, state }: ProviderFilterProps) {
       <p className="text-xs text-zinc-400">
         <a
           href={JUSTWATCH_URL}
-          target="_blank"
-          rel="noopener noreferrer"
           className="underline hover:text-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
         >
           Streaming data by JustWatch
