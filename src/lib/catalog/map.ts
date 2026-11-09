@@ -47,6 +47,7 @@ export const RECOMMENDATIONS_LIMIT = 12;
 
 export type PosterSize = "w92" | "w185" | "w342" | "w500";
 export type ProfileSize = "w185" | "h632";
+export type LogoSize = "w45" | "w92" | "w154" | "w185";
 
 /** URL slug for a name; `fallback` is used when nothing Latin is left, e.g. "千と千尋の神隠し". */
 export function slugify(name: string, fallback = "movie"): string {
@@ -135,6 +136,10 @@ export function posterUrl(path: string | null | undefined, size: PosterSize): st
 }
 
 export function profileUrl(path: string | null | undefined, size: ProfileSize): string | undefined {
+  return imageUrl(path, size);
+}
+
+export function logoUrl(path: string | null | undefined, size: LogoSize): string | undefined {
   return imageUrl(path, size);
 }
 
