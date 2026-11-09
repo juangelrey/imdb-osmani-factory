@@ -1,0 +1,171 @@
+{
+  "results": [
+    {
+      "provider_id": 15,
+      "provider_name": "Hulu",
+      "logo_path": "/bxBlRPEPpMVDc4jMhSrTf2339DW.jpg",
+      "display_priority": 4,
+      "display_priorities": {
+        "US": 4
+      }
+    },
+    {
+      "provider_id": 1899,
+      "provider_name": "Max",
+      "logo_path": "/fksCUZ9QDWZMUwL2LgMtLckROUN.jpg",
+      "display_priority": 5,
+      "display_priorities": {
+        "US": 5
+      }
+    },
+    {
+      "provider_id": 10,
+      "provider_name": "Amazon Video",
+      "logo_path": "/seGSXajazLMCKGB5hnRCidtjay1.jpg",
+      "display_priority": 7,
+      "display_priorities": {
+        "US": 7
+      }
+    },
+    {
+      "provider_id": 8,
+      "provider_name": "Netflix",
+      "logo_path": "/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg",
+      "display_priority": 0,
+      "display_priorities": {
+        "US": 0,
+        "ES": 0
+      }
+    },
+    {
+      "provider_id": 149,
+      "provider_name": "Movistar Plus+",
+      "logo_path": "/jse4MOi92Jgetym7nbXFZZBI6LK.jpg",
+      "display_priority": 3,
+      "display_priorities": {
+        "ES": 3
+      }
+    },
+    {
+      "provider_id": 9,
+      "provider_name": "Amazon Prime Video",
+      "logo_path": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+      "display_priority": 1,
+      "display_priorities": {
+        "US": 1,
+        "ES": 1
+      }
+    },
+    {
+      "provider_id": 2,
+      "provider_name": "Apple TV Store",
+      "logo_path": "/9ghgSC0MA082EL6HLCW3GalykFD.jpg",
+      "display_priority": 8,
+      "display_priorities": {
+        "US": 8
+      }
+    },
+    {
+      "provider_id": 350,
+      "provider_name": "Apple TV",
+      "logo_path": "/mcbz1LgtErU9p4UdbZ0rG6RTWHX.jpg",
+      "display_priority": 2,
+      "display_priorities": {
+        "US": 2,
+        "ES": 2
+      }
+    },
+    {
+      "provider_id": 337,
+      "provider_name": "Disney Plus",
+      "logo_path": "/97yvRBw1GzX7fXprcF80er19ot.jpg",
+      "display_priority": 3,
+      "display_priorities": {
+        "US": 3,
+        "ES": 4
+      }
+    },
+    {
+      "provider_id": 2285,
+      "provider_name": "JustWatch TV Free",
+      "logo_path": "/ifzYQUgXk5vJvz1r1N0oyc9mpfU.jpg",
+      "display_priority": 6,
+      "display_priorities": {
+        "US": 6
+      }
+    },
+    {
+      "provider_id": 386,
+      "provider_name": "Peacock Premium",
+      "logo_path": "/2aGrp1xw3qhwCYvNGAJZPdjfeeX.jpg",
+      "display_priority": 9,
+      "display_priorities": {
+        "US": 9
+      }
+    },
+    {
+      "provider_id": 531,
+      "provider_name": "Paramount Plus",
+      "logo_path": "/h5DcR0J2EESLitnhR8xLG1QymTE.jpg",
+      "display_priority": 10,
+      "display_priorities": {
+        "US": 10
+      }
+    },
+    {
+      "provider_id": 2784,
+      "provider_name": "JustWatch TV Store",
+      "logo_path": "/kZ5wMnTDrQnfXOjl2NEwnHr2KTp.jpg",
+      "display_priority": 11,
+      "display_priorities": {
+        "US": 11
+      }
+    },
+    {
+      "provider_id": 257,
+      "provider_name": "fuboTV",
+      "logo_path": "/9BgaNQRMDvVlji1JBZi6tcfxpKx.jpg",
+      "display_priority": 12,
+      "display_priorities": {
+        "US": 12
+      }
+    },
+    {
+      "provider_id": 3,
+      "provider_name": "Google Play Movies",
+      "logo_path": "/8z7rC8uIDaTM91X0ZfkRf04ydj2.jpg",
+      "display_priority": 13,
+      "display_priorities": {
+        "US": 13
+      }
+    },
+    {
+      "provider_id": 300,
+      "provider_name": "Pluto TV",
+      "logo_path": "/dB8G41Q6tSL5NBisrIeqByfepBc.jpg",
+      "display_priority": 9,
+      "display_priorities": {
+        "US": 14,
+        "ES": 9
+      }
+    },
+    {
+      "provider_id": 73,
+      "provider_name": "Tubi TV",
+      "logo_path": "/zLYr4fOMVFcyAKOexbLnfXg8Bqu.jpg",
+      "display_priority": 15,
+      "display_priorities": {
+        "US": 15
+      }
+    },
+    {
+      "provider_id": 43,
+      "provider_name": "Starz",
+      "logo_path": "/8GJjw3HHsAJYwIWKIPBPfqMxlEa.jpg",
+      "display_priority": 16,
+      "display_priorities": {
+        "US": 16
+      }
+    }
+  ]
+}
