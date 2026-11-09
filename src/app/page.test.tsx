@@ -7,16 +7,22 @@ import discoverTv from "@/lib/tmdb/fixtures/discover-tv.json";
 import genreList from "@/lib/tmdb/fixtures/genre-movie-list.json";
 import genreTvList from "@/lib/tmdb/fixtures/genre-tv-list.json";
 import watchProviderRegions from "@/lib/tmdb/fixtures/watch-provider-regions.json";
+import watchProvidersMovie from "@/lib/tmdb/fixtures/watch-providers-movie.json";
+import watchProvidersTv from "@/lib/tmdb/fixtures/watch-providers-tv.json";
 import Home from "./page";
 
-function stubTmdb(discoverBody: unknown = discover) {
+/** A fake TMDB. `bodies` replaces the fixture answered for a path, e.g. `{ "/3/watch/providers/tv": … }`. */
+function stubTmdb(discoverBody: unknown = discover, bodies: Record<string, unknown> = {}) {
   const fetchMock = vi.fn(async (input: URL | string) => {
     const { pathname } = new URL(String(input));
+    if (pathname in bodies) return Response.json(bodies[pathname]);
     if (pathname === "/3/genre/movie/list") return Response.json(genreList);
     if (pathname === "/3/discover/movie") return Response.json(discoverBody);
     if (pathname === "/3/genre/tv/list") return Response.json(genreTvList);
     if (pathname === "/3/discover/tv") return Response.json(discoverTv);
     if (pathname === "/3/watch/providers/regions") return Response.json(watchProviderRegions);
+    if (pathname === "/3/watch/providers/movie") return Response.json(watchProvidersMovie);
+    if (pathname === "/3/watch/providers/tv") return Response.json(watchProvidersTv);
     return Response.json({}, { status: 404 });
   });
   vi.stubGlobal("fetch", fetchMock);
@@ -164,7 +170,7 @@ describe("Home page", () => {
     const fetchMock = stubTmdb();
     await renderHome({ genre: "878", sort: "rating", page: "2" });
     const paths = fetchMock.mock.calls.map(([input]) => new URL(String(input)).pathname);
-    expect(paths).toEqual(["/3/genre/movie/list", "/3/watch/providers/regions", "/3/discover/movie"]);
+    expect(paths).toEqual(["/3/genre/movie/list", "/3/watch/providers/regions", "/3/watch/providers/movie", "/3/discover/movie"]);
     const media = screen.getByRole("navigation", { name: "Movies or TV" });
     expect(within(media).getByRole("link", { name: "Movies" })).toHaveAttribute("aria-current", "page");
     // Switching kind resets the genre (ids differ per kind) and the page, and keeps the sort.
@@ -173,11 +179,11 @@ describe("Home page", () => {
     expect(media.compareDocumentPosition(genres) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("browses TV series with the TV genres in three TMDB calls", async () => {
+  it("browses TV series with the TV genres in four TMDB calls", async () => {
     const fetchMock = stubTmdb();
     await renderHome({ type: "tv" });
     const paths = fetchMock.mock.calls.map(([input]) => new URL(String(input)).pathname);
-    expect(paths).toEqual(["/3/genre/tv/list", "/3/watch/providers/regions", "/3/discover/tv"]);
+    expect(paths).toEqual(["/3/genre/tv/list", "/3/watch/providers/regions", "/3/watch/providers/tv", "/3/discover/tv"]);
     expect(screen.getByRole("heading", { level: 1, name: "All series" })).toBeInTheDocument();
     expect(gridNames()).toEqual(["Breaking Bad", "Stranger Things", "Breaking Point"]);
     expect(screen.getByRole("link", { name: /Breaking Bad/ })).toHaveAttribute("href", "/tv/1396-breaking-bad");
@@ -325,5 +331,100 @@ describe("Home page region", () => {
     const readers = others.filter((file) => /next\/headers|reelbase-region|REGION_COOKIE/.test(readFileSync(join(appDir, file), "utf8")));
     expect(readers).toEqual([]);
     expect(readFileSync(join(appDir, "page.tsx"), "utf8")).toContain("next/headers");
+  });
+});
+
+describe("Home page streaming services", () => {
+  function pathsCalled(fetchMock: ReturnType<typeof stubTmdb>) {
+    return fetchMock.mock.calls.map(([input]) => new URL(String(input)).pathname);
+  }
+
+  it("filters by the selected services in four TMDB calls, dropping ids the region's top 12 does not list", async () => {
+    const fetchMock = stubTmdb();
+    // 149 (Movistar Plus+) streams in Spain, not among the US top 12; 99999 is no provider at all.
+    await renderHome({ providers: "337,8,149,99999,8" });
+    expect(pathsCalled(fetchMock)).toEqual([
+      "/3/genre/movie/list",
+      "/3/watch/providers/regions",
+      "/3/watch/providers/movie",
+      "/3/discover/movie",
+    ]);
+    expect(new URL(String(fetchMock.mock.calls[2][0])).searchParams.get("watch_region")).toBe("US");
+    const params = discoverUrl(fetchMock).searchParams;
+    expect(params.get("with_watch_providers")).toBe("8|337");
+    expect(params.get("watch_region")).toBe("US");
+    expect(params.get("with_watch_monetization_types")).toBe("flatrate|free|ads");
+    const pagination = screen.getByRole("navigation", { name: "Pagination" });
+    expect(within(pagination).getByRole("link", { name: /Next/ })).toHaveAttribute("href", "/?providers=8,337&page=2");
+  });
+
+  it("asks for the TV providers of the resolved region on TV browse", async () => {
+    const fetchMock = stubTmdb();
+    request.regionCookie = "ES";
+    await renderHome({ type: "tv", providers: "149" });
+    const providersUrl = new URL(String(fetchMock.mock.calls[2][0]));
+    expect(providersUrl.pathname).toBe("/3/watch/providers/tv");
+    expect(providersUrl.searchParams.get("watch_region")).toBe("ES");
+    expect(discoverUrl(fetchMock, "tv").searchParams.get("with_watch_providers")).toBe("149");
+  });
+
+  it("sends no provider params when no service is selected", async () => {
+    const fetchMock = stubTmdb();
+    await renderHome({ genre: "28" });
+    const params = discoverUrl(fetchMock).searchParams;
+    for (const name of ["with_watch_providers", "watch_region", "with_watch_monetization_types"]) expect(params.has(name)).toBe(false);
+  });
+
+  it("keeps only the services the new region lists after a region change", async () => {
+    const fetchMock = stubTmdb();
+    // Hulu (15) is in the US top 12 but not Spain's.
+    await renderHome({ providers: "8,15,337", region: "ES" });
+    const params = discoverUrl(fetchMock).searchParams;
+    expect(params.get("with_watch_providers")).toBe("8|337");
+    expect(params.get("watch_region")).toBe("ES");
+  });
+
+  it("carries every selected service through the region form and the Movies / TV switch", async () => {
+    stubTmdb();
+    await renderHome({ genre: "28", providers: "8,15", sort: "rating", page: "2" });
+    const form = screen.getByRole("form", { name: "Region" });
+    const hidden = Array.from(form.querySelectorAll<HTMLInputElement>('input[type="hidden"]')).map(({ name, value }) => [name, value]);
+    expect(hidden).toEqual([
+      ["genre", "28"],
+      ["providers", "8,15"],
+      ["sort", "rating"],
+    ]);
+    // The genres differ per kind and are cleared; the services are kept for the TV page to check.
+    const media = screen.getByRole("navigation", { name: "Movies or TV" });
+    expect(within(media).getByRole("link", { name: "TV" })).toHaveAttribute("href", "/?type=tv&providers=8,15&sort=rating");
+  });
+
+  it("keeps only the services the other kind's top 12 lists after switching kind", async () => {
+    // A TV list where only Netflix streams in the US.
+    const netflixOnly = { results: watchProvidersTv.results.filter(({ provider_id }) => provider_id === 8) };
+    const fetchMock = stubTmdb(discover, { "/3/watch/providers/tv": netflixOnly });
+    await renderHome({ type: "tv", providers: "8,15", sort: "rating" });
+    expect(discoverUrl(fetchMock, "tv").searchParams.get("with_watch_providers")).toBe("8");
+    const media = screen.getByRole("navigation", { name: "Movies or TV" });
+    expect(within(media).getByRole("link", { name: "Movies" })).toHaveAttribute("href", "/?providers=8&sort=rating");
+  });
+
+  it("combines services with genres and sort, and any change returns to page 1", async () => {
+    const fetchMock = stubTmdb();
+    await renderHome({ genre: "28,35", providers: "8,9", sort: "rating", page: "3" });
+    const params = discoverUrl(fetchMock).searchParams;
+    expect(params.get("with_genres")).toBe("28,35");
+    expect(params.get("with_watch_providers")).toBe("8|9");
+    expect(params.get("sort_by")).toBe("vote_average.desc");
+    const sort = screen.getByRole("navigation", { name: "Sort" });
+    expect(within(sort).getByRole("link", { name: "Title" })).toHaveAttribute("href", "/?genre=28,35&providers=8,9&sort=title");
+    const genres = screen.getByRole("navigation", { name: "Genre" });
+    expect(within(genres).getByRole("link", { name: "Comedy" })).toHaveAttribute("href", "/?genre=28&providers=8,9&sort=rating");
+    expect(within(genres).getByRole("link", { name: "All" })).toHaveAttribute("href", "/?providers=8,9&sort=rating");
+  });
+
+  it("sends a page past the last one back to page 1, keeping the services", async () => {
+    stubTmdb({ page: 400, results: [], total_pages: 30, total_results: 600 });
+    await expect(Home({ searchParams: Promise.resolve({ providers: "8", page: "400" }) })).rejects.toThrow("redirect /?providers=8");
   });
 });

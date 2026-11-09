@@ -9,7 +9,7 @@ const GENRES = [
 ];
 
 function renderControls(state: Partial<BrowseState> = {}) {
-  render(<BrowseControls genres={GENRES} state={{ kind: "movie", genres: [], sort: "popularity", page: 1, region: "US", regionFromUrl: false, ...state }} />);
+  render(<BrowseControls genres={GENRES} state={{ kind: "movie", genres: [], sort: "popularity", page: 1, region: "US", regionFromUrl: false, providers: [], ...state }} />);
   return screen.getByRole("navigation", { name: "Genre" });
 }
 
