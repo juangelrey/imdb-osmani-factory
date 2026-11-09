@@ -1,4 +1,4 @@
-import { DEFAULT_SORT, browseHref, parseBrowseParams, parseKind, parsePage } from "./browse-params";
+import { DEFAULT_SORT, browseHref, parseBrowseParams, parseKind, parsePage, toggleId } from "./browse-params";
 
 const known = new Set([28, 878, 18]);
 
@@ -234,5 +234,24 @@ describe("browseHref providers", () => {
     const state = { ...base, genres: [28, 35], providers: [8, 337], sort: "title" as const, page: 2 };
     const query = Object.fromEntries(new URLSearchParams(browseHref(state).slice(2)));
     expect(parseBrowseParams(query, new Set([28, 35]), "US", new Set([8, 337]))).toEqual(state);
+  });
+});
+
+describe("toggleId", () => {
+  it("adds an unselected id in ascending order", () => {
+    expect(toggleId([8, 337], 15)).toEqual([8, 15, 337]);
+    expect(toggleId([], 28)).toEqual([28]);
+  });
+
+  it("removes a selected id, down to an empty selection", () => {
+    expect(toggleId([8, 15, 337], 15)).toEqual([8, 337]);
+    expect(toggleId([28], 28)).toEqual([]);
+  });
+
+  it("leaves the selection it was given unchanged", () => {
+    const selected = [8, 337];
+    toggleId(selected, 15);
+    toggleId(selected, 8);
+    expect(selected).toEqual([8, 337]);
   });
 });

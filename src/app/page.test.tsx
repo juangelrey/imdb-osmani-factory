@@ -423,6 +423,43 @@ describe("Home page streaming services", () => {
     expect(within(genres).getByRole("link", { name: "All" })).toHaveAttribute("href", "/?providers=8,9&sort=rating");
   });
 
+  it("shows the region's 12 service pills, Netflix first, with the JustWatch credit", async () => {
+    stubTmdb();
+    await renderHome({ providers: "8" });
+    const services = screen.getByRole("navigation", { name: "Streaming service" });
+    const pills = within(services).getAllByRole("link");
+    expect(pills).toHaveLength(13);
+    expect(pills[0]).toHaveAccessibleName("Any service");
+    expect(pills[1]).toHaveAccessibleName("Netflix");
+    expect(pills[1]).toHaveAttribute("aria-current", "true");
+    // Rent and buy stores in the fixture (Apple TV Store, Amazon Video, Google Play Movies) are not pills.
+    for (const store of ["Apple TV Store", "Amazon Video", "Google Play Movies"])
+      expect(within(services).queryByRole("link", { name: store })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Streaming data by JustWatch" })).toHaveAttribute("href", "https://www.justwatch.com/");
+  });
+
+  it("shows the service pills and credit on TV browse with no service selected", async () => {
+    stubTmdb();
+    await renderHome({ type: "tv" });
+    const services = screen.getByRole("navigation", { name: "Streaming service" });
+    expect(within(services).getByRole("link", { name: "Any service" })).toHaveAttribute("aria-current", "true");
+    expect(within(services).getByRole("link", { name: "Netflix" })).toHaveAttribute("href", "/?type=tv&providers=8");
+    expect(screen.getByRole("link", { name: "Streaming data by JustWatch" })).toBeInTheDocument();
+  });
+
+  it.each([
+    [{ providers: "8" }, "No titles stream on this service. Try another one, or show all titles."],
+    [{ providers: "8,337" }, "No titles stream on these services. Try removing one, or show all titles."],
+    [{ genre: "28,35" }, "No titles match these genres. Try removing one, or show all titles."],
+    [{ genre: "28", providers: "8" }, "No titles match this genre on this service. Try removing one, or show all titles."],
+    [{ type: "tv", genre: "18", providers: "8,9" }, "No series match this genre on these services. Try removing one, or show all series."],
+  ])("names the active filters when nothing matches %o", async (params, message) => {
+    stubTmdb({ page: 1, results: [], total_pages: 0, total_results: 0 }, { "/3/discover/tv": { page: 1, results: [], total_pages: 0, total_results: 0 } });
+    await renderHome(params);
+    expect(screen.getByText(message)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Streaming data by JustWatch" })).toBeInTheDocument();
+  });
+
   it("sends a page past the last one back to page 1, keeping the services", async () => {
     stubTmdb({ page: 400, results: [], total_pages: 30, total_results: 600 });
     await expect(Home({ searchParams: Promise.resolve({ providers: "8", page: "400" }) })).rejects.toThrow("redirect /?providers=8");
