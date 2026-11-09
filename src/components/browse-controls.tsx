@@ -19,7 +19,7 @@ function Pill({ href, active, children }: { href: string; active: boolean; child
     <Link
       href={href}
       aria-current={active ? "true" : undefined}
-      className={`inline-block rounded-full border px-3 py-1 text-xs ${
+      className={`inline-block rounded-full border px-3 py-1 text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 ${
         active
           ? "border-amber-400 bg-amber-400 font-semibold text-zinc-950"
           : "border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-strong"
@@ -30,7 +30,12 @@ function Pill({ href, active, children }: { href: string; active: boolean; child
   );
 }
 
-/** Changing the genre or sort starts again from page 1. */
+/** The selection with `id` removed if present, else added; ascending, as `BrowseState.genres` is. */
+function toggleGenre(selected: readonly number[], id: number): number[] {
+  return selected.includes(id) ? selected.filter((other) => other !== id) : [...selected, id].sort((a, b) => a - b);
+}
+
+/** Genre pills toggle their genre in the selection, and "All" clears it. Any change starts again from page 1. */
 export function BrowseControls({ genres, state }: BrowseControlsProps) {
   return (
     <div className="space-y-3">
@@ -41,10 +46,12 @@ export function BrowseControls({ genres, state }: BrowseControlsProps) {
               All
             </Pill>
           </li>
-          {/* Single-select until the toggle ticket: a pill links to that genre alone. */}
           {genres.map((genre) => (
             <li key={genre.id}>
-              <Pill href={browseHref({ ...state, genres: [genre.id], page: 1 })} active={state.genres.includes(genre.id)}>
+              <Pill
+                href={browseHref({ ...state, genres: toggleGenre(state.genres, genre.id), page: 1 })}
+                active={state.genres.includes(genre.id)}
+              >
                 {genre.name}
               </Pill>
             </li>
