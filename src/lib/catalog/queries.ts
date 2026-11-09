@@ -102,10 +102,10 @@ function sortParams(sort: SortKey, kind: TitleKind): TmdbParams {
   }
 }
 
-export async function discoverTitles({ genre, sort, page }: BrowseState): Promise<Paged<TitleSummary>> {
+export async function discoverTitles({ genres, sort, page }: BrowseState): Promise<Paged<TitleSummary>> {
   const response = await tmdbFetch<TmdbPaged<TmdbMovieListItem>>("/discover/movie", {
     include_adult: false,
-    with_genres: genre,
+    with_genres: genres.length > 0 ? genres.join(",") : undefined,
     page,
     ...sortParams(sort, "movie"),
   });
@@ -113,10 +113,10 @@ export async function discoverTitles({ genre, sort, page }: BrowseState): Promis
 }
 
 /** A page of TV series by TV genre and sort. */
-export async function discoverShows({ genre, sort, page }: BrowseState): Promise<Paged<ShowSummary>> {
+export async function discoverShows({ genres, sort, page }: BrowseState): Promise<Paged<ShowSummary>> {
   const response = await tmdbFetch<TmdbPaged<TmdbTvListItem>>("/discover/tv", {
     include_adult: false,
-    with_genres: genre,
+    with_genres: genres.length > 0 ? genres.join(",") : undefined,
     page,
     ...sortParams(sort, "tv"),
   });

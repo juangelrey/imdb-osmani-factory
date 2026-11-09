@@ -73,6 +73,26 @@ describe("Home page", () => {
     expect(within(sort).getByRole("link", { name: "Title" })).toHaveAttribute("aria-current", "true");
   });
 
+  it("names every selected genre and matches all of them", async () => {
+    const fetchMock = stubTmdb();
+    await renderHome({ genre: "35,28", sort: "rating", page: "2" });
+    expect(screen.getByRole("heading", { level: 1, name: "Action + Comedy titles" })).toBeInTheDocument();
+    expect(discoverUrl(fetchMock).searchParams.get("with_genres")).toBe("28,35");
+    const media = screen.getByRole("navigation", { name: "Movies or TV" });
+    expect(within(media).getByRole("link", { name: "TV" })).toHaveAttribute("href", "/?type=tv&sort=rating");
+    const pagination = screen.getByRole("navigation", { name: "Pagination" });
+    expect(within(pagination).getByRole("link", { name: /Next/ })).toHaveAttribute("href", "/?genre=28,35&sort=rating&page=2");
+  });
+
+  it("names several TV genres as series and clears them when switching to movies", async () => {
+    const fetchMock = stubTmdb();
+    await renderHome({ type: "tv", genre: "18,35" });
+    expect(screen.getByRole("heading", { level: 1, name: "Drama + Comedy series" })).toBeInTheDocument();
+    expect(discoverUrl(fetchMock, "tv").searchParams.get("with_genres")).toBe("18,35");
+    const media = screen.getByRole("navigation", { name: "Movies or TV" });
+    expect(within(media).getByRole("link", { name: "Movies" })).toHaveAttribute("href", "/");
+  });
+
   it("keeps the genre and resets the page when changing the sort", async () => {
     stubTmdb();
     await renderHome({ genre: "18", page: "4" });
