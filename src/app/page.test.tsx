@@ -2,7 +2,6 @@ import { render, screen, within } from "@testing-library/react";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { redirect } from "next/navigation";
-import { BrowseControls } from "@/components/browse-controls";
 import discover from "@/lib/tmdb/fixtures/discover-movie.json";
 import discoverTv from "@/lib/tmdb/fixtures/discover-tv.json";
 import genreList from "@/lib/tmdb/fixtures/genre-movie-list.json";
@@ -51,14 +50,9 @@ vi.mock("next/headers", () => ({
   headers: vi.fn(async () => new Headers(request.acceptLanguage === undefined ? {} : { "accept-language": request.acceptLanguage })),
 }));
 
-// Nothing shows the region yet, so the tests read the state the page hands the browse controls.
-vi.mock("@/components/browse-controls", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/components/browse-controls")>();
-  return { ...actual, BrowseControls: vi.fn(actual.BrowseControls) };
-});
-
-function browseState() {
-  return vi.mocked(BrowseControls).mock.lastCall![0].state;
+/** The region the visible selector shows as applied. */
+function selectedRegion() {
+  return (screen.getByRole("combobox", { name: "Region" }) as HTMLSelectElement).value;
 }
 
 vi.mock("next/navigation", () => ({
@@ -71,7 +65,6 @@ beforeEach(() => {
   vi.stubEnv("TMDB_READ_ACCESS_TOKEN", "test-token");
   request.regionCookie = undefined;
   request.acceptLanguage = undefined;
-  vi.mocked(BrowseControls).mockClear();
 });
 
 afterEach(() => {
@@ -257,7 +250,7 @@ describe("Home page region", () => {
     request.regionCookie = "GB";
     request.acceptLanguage = "de-DE";
     await renderHome({ region: "ES", genre: "28" });
-    expect(browseState()).toMatchObject({ region: "ES", regionFromUrl: true });
+    expect(selectedRegion()).toBe("ES");
     const sort = screen.getByRole("navigation", { name: "Sort" });
     expect(within(sort).getByRole("link", { name: "Top rated" })).toHaveAttribute("href", "/?genre=28&region=ES&sort=rating");
     const pagination = screen.getByRole("navigation", { name: "Pagination" });
@@ -271,7 +264,7 @@ describe("Home page region", () => {
     request.regionCookie = "GB";
     request.acceptLanguage = "es-ES";
     await renderHome({ genre: "28" });
-    expect(browseState()).toMatchObject({ region: "GB", regionFromUrl: false });
+    expect(selectedRegion()).toBe("GB");
     const pagination = screen.getByRole("navigation", { name: "Pagination" });
     expect(within(pagination).getByRole("link", { name: /Next/ })).toHaveAttribute("href", "/?genre=28&page=2");
   });
@@ -280,20 +273,20 @@ describe("Home page region", () => {
     stubTmdb();
     request.acceptLanguage = "es-ES,es;q=0.9,en;q=0.8";
     await renderHome();
-    expect(browseState()).toMatchObject({ region: "ES", regionFromUrl: false });
+    expect(selectedRegion()).toBe("ES");
   });
 
   it("uses US when nothing names a region", async () => {
     stubTmdb();
     await renderHome();
-    expect(browseState()).toMatchObject({ region: "US", regionFromUrl: false });
+    expect(selectedRegion()).toBe("US");
   });
 
   it("skips an unlisted code wherever it comes from", async () => {
     stubTmdb();
     request.regionCookie = "GB";
     await renderHome({ region: "ZZ", genre: "28" });
-    expect(browseState()).toMatchObject({ region: "GB", regionFromUrl: false });
+    expect(selectedRegion()).toBe("GB");
     const pagination = screen.getByRole("navigation", { name: "Pagination" });
     expect(within(pagination).getByRole("link", { name: /Next/ })).toHaveAttribute("href", "/?genre=28&page=2");
   });
@@ -303,7 +296,23 @@ describe("Home page region", () => {
     request.regionCookie = "XX";
     request.acceptLanguage = "en-QQ, es-ES";
     await renderHome({ region: "zz" });
-    expect(browseState()).toMatchObject({ region: "ES", regionFromUrl: false });
+    expect(selectedRegion()).toBe("ES");
+  });
+
+  it.each([
+    [{ genre: "28,35", sort: "rating", page: "2" }, [["genre", "28,35"], ["sort", "rating"]]],
+    [{ type: "tv", genre: "18", region: "GB" }, [["type", "tv"], ["genre", "18"]]],
+  ])("shows the region selector on %o, carrying the browse params to /region", async (params, carried) => {
+    stubTmdb();
+    await renderHome(params);
+    const form = screen.getByRole("form", { name: "Region" });
+    expect(form).toHaveAttribute("action", "/region");
+    const options = within(form).getAllByRole("option").map((option) => option.textContent);
+    expect(options).toEqual([...options].sort((a, b) => a!.localeCompare(b!, "en")));
+    expect(options).toHaveLength(watchProviderRegions.results.length);
+    const hidden = Array.from(form.querySelectorAll<HTMLInputElement>('input[type="hidden"]')).map(({ name, value }) => [name, value]);
+    expect(hidden).toEqual(carried);
+    expect(within(form).getByRole("button", { name: "Apply" })).toBeInTheDocument();
   });
 
   it("is read only by the home page, so other pages keep their caching", () => {

@@ -4,6 +4,7 @@ import { BrowseControls } from "@/components/browse-controls";
 import { cardFromSummary } from "@/components/card-title";
 import { MediaSwitch } from "@/components/media-switch";
 import { Pagination } from "@/components/pagination";
+import { RegionSelect } from "@/components/region-select";
 import { TitleGrid } from "@/components/title-grid";
 import { browseHref, firstParam, parseBrowseParams, parseKind, type SearchParamValue } from "@/lib/catalog/browse-params";
 import { discoverShows, discoverTitles, listGenres } from "@/lib/catalog/queries";
@@ -44,6 +45,8 @@ export default async function Home({ searchParams }: HomeProps) {
       {/* Switching kind resets the genre (the lists differ) and the page, and keeps the sort and region. */}
       <MediaSwitch kinds={BROWSE_KINDS} current={state.kind} hrefForKind={(kind) => browseHref({ ...state, kind, genres: [], page: 1 })} />
       <BrowseControls genres={genres} state={state} />
+      {/* Always shown; changing region keeps the other filters and returns to page 1 (via /region). */}
+      <RegionSelect regions={regions} state={state} />
       <TitleGrid
         titles={results.map(cardFromSummary)}
         emptyMessage={`No ${noun} match this genre. Try another one, or show all ${noun}.`}
