@@ -37,13 +37,14 @@ export function BrowseControls({ genres, state }: BrowseControlsProps) {
       <nav aria-label="Genre">
         <ul className="flex flex-wrap gap-2">
           <li>
-            <Pill href={browseHref({ ...state, genre: undefined, page: 1 })} active={state.genre === undefined}>
+            <Pill href={browseHref({ ...state, genres: [], page: 1 })} active={state.genres.length === 0}>
               All
             </Pill>
           </li>
+          {/* Single-select until the toggle ticket: a pill links to that genre alone. */}
           {genres.map((genre) => (
             <li key={genre.id}>
-              <Pill href={browseHref({ ...state, genre: genre.id, page: 1 })} active={state.genre === genre.id}>
+              <Pill href={browseHref({ ...state, genres: [genre.id], page: 1 })} active={state.genres.includes(genre.id)}>
                 {genre.name}
               </Pill>
             </li>

@@ -5,13 +5,13 @@ const known = new Set([28, 878, 18]);
 describe("parseBrowseParams", () => {
   it("defaults to all genres, popularity and page 1", () => {
     expect(DEFAULT_SORT).toBe("popularity");
-    expect(parseBrowseParams({}, known)).toEqual({ kind: "movie", genre: undefined, sort: "popularity", page: 1 });
+    expect(parseBrowseParams({}, known)).toEqual({ kind: "movie", genres: [], sort: "popularity", page: 1 });
   });
 
   it("reads a known genre id, sort key and page", () => {
     expect(parseBrowseParams({ genre: "878", sort: "rating", page: "3" }, known)).toEqual({
       kind: "movie",
-      genre: 878,
+      genres: [878],
       sort: "rating",
       page: 3,
     });
@@ -22,7 +22,14 @@ describe("parseBrowseParams", () => {
   });
 
   it.each(["abc", "99999", "-28", "28.5", ""])("falls back to all genres for genre=%j", (genre) => {
-    expect(parseBrowseParams({ genre }, known).genre).toBeUndefined();
+    expect(parseBrowseParams({ genre }, known).genres).toEqual([]);
+  });
+
+  it("reads several genres sorted, dropping unknown and duplicate ids", () => {
+    const genres = new Set([28, 35, 99]);
+    expect(parseBrowseParams({ genre: "35,28,35,99999" }, genres).genres).toEqual([28, 35]);
+    expect(parseBrowseParams({ genre: "99,abc,,28" }, genres).genres).toEqual([28, 99]);
+    expect(parseBrowseParams({ genre: "1e2,0x1c,28.0" }, genres).genres).toEqual([]);
   });
 
   it("ignores old seed-era sort keys", () => {
@@ -34,7 +41,7 @@ describe("parseBrowseParams", () => {
     const tvGenres = new Set([10765, 18]);
     expect(parseBrowseParams({ type: "tv", genre: "10765", sort: "release" }, tvGenres)).toEqual({
       kind: "tv",
-      genre: 10765,
+      genres: [10765],
       sort: "release",
       page: 1,
     });
@@ -43,8 +50,8 @@ describe("parseBrowseParams", () => {
   it("drops a genre id from the other kind's list", () => {
     const tvGenres = new Set([10765, 18]);
     // 878 is the movie Science Fiction id; TV uses 10765 (Sci-Fi & Fantasy).
-    expect(parseBrowseParams({ type: "tv", genre: "878" }, tvGenres).genre).toBeUndefined();
-    expect(parseBrowseParams({ genre: "10765" }, known).genre).toBeUndefined();
+    expect(parseBrowseParams({ type: "tv", genre: "878" }, tvGenres).genres).toEqual([]);
+    expect(parseBrowseParams({ genre: "10765" }, known).genres).toEqual([]);
   });
 
   it("reads links without type, or with an unknown type, as movies", () => {
@@ -55,7 +62,7 @@ describe("parseBrowseParams", () => {
   it("uses the first value when a param repeats", () => {
     expect(parseBrowseParams({ genre: ["18", "28"], sort: ["title", "rating"], page: ["2", "9"] }, known)).toEqual({
       kind: "movie",
-      genre: 18,
+      genres: [18],
       sort: "title",
       page: 2,
     });
@@ -81,30 +88,41 @@ describe("parsePage", () => {
 
 describe("browseHref", () => {
   it("links to the bare home page for the defaults", () => {
-    expect(browseHref({ kind: "movie", genre: undefined, sort: "popularity", page: 1 })).toBe("/");
+    expect(browseHref({ kind: "movie", genres: [], sort: "popularity", page: 1 })).toBe("/");
   });
 
   it("includes the genre, a non-default sort and a page after the first", () => {
-    expect(browseHref({ kind: "movie", genre: 878, sort: "title", page: 4 })).toBe("/?genre=878&sort=title&page=4");
+    expect(browseHref({ kind: "movie", genres: [878], sort: "title", page: 4 })).toBe("/?genre=878&sort=title&page=4");
   });
 
   it("omits defaults", () => {
-    expect(browseHref({ kind: "movie", genre: 18, sort: "popularity", page: 1 })).toBe("/?genre=18");
+    expect(browseHref({ kind: "movie", genres: [18], sort: "popularity", page: 1 })).toBe("/?genre=18");
+  });
+
+  it("writes several genres ascending and comma-joined", () => {
+    expect(browseHref({ kind: "movie", genres: [28, 35], sort: "popularity", page: 1 })).toBe("/?genre=28,35");
+    expect(browseHref({ kind: "tv", genres: [18, 10765], sort: "rating", page: 2 })).toBe("/?type=tv&genre=18,10765&sort=rating&page=2");
+  });
+
+  it("round-trips several genres", () => {
+    const state = { kind: "movie" as const, genres: [28, 35], sort: "title" as const, page: 2 };
+    const query = Object.fromEntries(new URLSearchParams(browseHref(state).slice(2)));
+    expect(parseBrowseParams(query, new Set([28, 35]))).toEqual(state);
   });
 
   it("sets type=tv first for TV and leaves it off for movies", () => {
-    expect(browseHref({ kind: "tv", genre: undefined, sort: "popularity", page: 1 })).toBe("/?type=tv");
-    expect(browseHref({ kind: "tv", genre: 10765, sort: "release", page: 2 })).toBe("/?type=tv&genre=10765&sort=release&page=2");
+    expect(browseHref({ kind: "tv", genres: [], sort: "popularity", page: 1 })).toBe("/?type=tv");
+    expect(browseHref({ kind: "tv", genres: [10765], sort: "release", page: 2 })).toBe("/?type=tv&genre=10765&sort=release&page=2");
   });
 
   it("round-trips through parseBrowseParams", () => {
-    const state = { kind: "movie" as const, genre: 28, sort: "release" as const, page: 7 };
+    const state = { kind: "movie" as const, genres: [28], sort: "release" as const, page: 7 };
     const query = Object.fromEntries(new URLSearchParams(browseHref(state).slice(2)));
     expect(parseBrowseParams(query, known)).toEqual(state);
   });
 
   it("round-trips a TV state", () => {
-    const state = { kind: "tv" as const, genre: 18, sort: "title" as const, page: 3 };
+    const state = { kind: "tv" as const, genres: [18], sort: "title" as const, page: 3 };
     const query = Object.fromEntries(new URLSearchParams(browseHref(state).slice(2)));
     expect(parseBrowseParams(query, new Set([18]))).toEqual(state);
   });

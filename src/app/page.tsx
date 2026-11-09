@@ -23,14 +23,15 @@ export default async function Home({ searchParams }: HomeProps) {
   const { results, page, totalPages } = state.kind === "tv" ? await discoverShows(state) : await discoverTitles(state);
   // A page past the last one (a stale or edited link) falls back to page 1.
   if (results.length === 0 && state.page > 1) redirect(browseHref({ ...state, page: 1 }));
-  const genreName = genres.find(({ id }) => id === state.genre)?.name;
+  // Names follow the ids' order in the URL, e.g. "Action + Comedy" for genre=28,35.
+  const genreNames = state.genres.map((id) => genres.find((genre) => genre.id === id)?.name).join(" + ");
   const noun = state.kind === "tv" ? "series" : "titles";
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">{genreName ? `${genreName} ${noun}` : `All ${noun}`}</h1>
+      <h1 className="text-2xl font-bold">{genreNames ? `${genreNames} ${noun}` : `All ${noun}`}</h1>
       {/* Switching kind resets the genre (the lists differ) and the page, and keeps the sort. */}
-      <MediaSwitch kinds={BROWSE_KINDS} current={state.kind} hrefForKind={(kind) => browseHref({ kind, genre: undefined, sort: state.sort, page: 1 })} />
+      <MediaSwitch kinds={BROWSE_KINDS} current={state.kind} hrefForKind={(kind) => browseHref({ kind, genres: [], sort: state.sort, page: 1 })} />
       <BrowseControls genres={genres} state={state} />
       <TitleGrid
         titles={results.map(cardFromSummary)}
