@@ -9,3 +9,6 @@ next-env.d.ts
 
 # Agent worktrees from /as-build dark
 .claude/worktrees/
+
+# Build marker from /as-build, read by the build guard
+.claude/state/
