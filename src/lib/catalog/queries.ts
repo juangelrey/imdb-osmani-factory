@@ -102,21 +102,39 @@ function sortParams(sort: SortKey, kind: TitleKind): TmdbParams {
   }
 }
 
-export async function discoverTitles({ genres, sort, page }: BrowseState): Promise<Paged<TitleSummary>> {
+/**
+ * Discover params for the selected services: titles on any of them (`|` means "or" to TMDB) in the region,
+ * streaming by subscription, free or with ads, never rent or buy. None when no service is selected.
+ */
+function providerParams({ providers, region }: BrowseState): TmdbParams {
+  if (providers.length === 0) return {};
+  return {
+    with_watch_providers: providers.join("|"),
+    watch_region: region,
+    with_watch_monetization_types: "flatrate|free|ads",
+  };
+}
+
+/** A page of movies by genre, service and sort. */
+export async function discoverTitles(state: BrowseState): Promise<Paged<TitleSummary>> {
+  const { genres, sort, page } = state;
   const response = await tmdbFetch<TmdbPaged<TmdbMovieListItem>>("/discover/movie", {
     include_adult: false,
     with_genres: genres.length > 0 ? genres.join(",") : undefined,
+    ...providerParams(state),
     page,
     ...sortParams(sort, "movie"),
   });
   return toPaged(response, toSummary);
 }
 
-/** A page of TV series by TV genre and sort. */
-export async function discoverShows({ genres, sort, page }: BrowseState): Promise<Paged<ShowSummary>> {
+/** A page of TV series by TV genre, service and sort. */
+export async function discoverShows(state: BrowseState): Promise<Paged<ShowSummary>> {
+  const { genres, sort, page } = state;
   const response = await tmdbFetch<TmdbPaged<TmdbTvListItem>>("/discover/tv", {
     include_adult: false,
     with_genres: genres.length > 0 ? genres.join(",") : undefined,
+    ...providerParams(state),
     page,
     ...sortParams(sort, "tv"),
   });

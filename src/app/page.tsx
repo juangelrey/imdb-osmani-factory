@@ -7,6 +7,7 @@ import { Pagination } from "@/components/pagination";
 import { RegionSelect } from "@/components/region-select";
 import { TitleGrid } from "@/components/title-grid";
 import { browseHref, firstParam, parseBrowseParams, parseKind, type SearchParamValue } from "@/lib/catalog/browse-params";
+import { listProviders } from "@/lib/catalog/providers";
 import { discoverShows, discoverTitles, listGenres } from "@/lib/catalog/queries";
 import { REGION_COOKIE, listRegions, resolveRegion } from "@/lib/catalog/regions";
 
@@ -22,7 +23,8 @@ export default async function Home({ searchParams }: HomeProps) {
   // Only this page reads the region cookie and headers, so other pages keep their caching.
   const [params, cookieStore, requestHeaders] = await Promise.all([searchParams, cookies(), headers()]);
   // Movie and TV genre ids differ, so the genre is checked against the list for the chosen kind.
-  const [genres, regions] = await Promise.all([listGenres(parseKind(params.type)), listRegions()]);
+  const kind = parseKind(params.type);
+  const [genres, regions] = await Promise.all([listGenres(kind), listRegions()]);
   const region = resolveRegion(
     {
       param: firstParam(params.region),
@@ -31,7 +33,15 @@ export default async function Home({ searchParams }: HomeProps) {
     },
     regions.map(({ code }) => code),
   );
-  const state = parseBrowseParams(params, new Set(genres.map(({ id }) => id)), region);
+  // The region's top 12 services for this kind; selected ids it doesn't list (carried over from another
+  // kind or region) are dropped here, so changing kind or region needs no extra TMDB call. Four in all.
+  const providers = await listProviders(kind, region);
+  const state = parseBrowseParams(
+    params,
+    new Set(genres.map(({ id }) => id)),
+    region,
+    new Set(providers.map(({ id }) => id)),
+  );
   const { results, page, totalPages } = state.kind === "tv" ? await discoverShows(state) : await discoverTitles(state);
   // A page past the last one (a stale or edited link) falls back to page 1.
   if (results.length === 0 && state.page > 1) redirect(browseHref({ ...state, page: 1 }));
@@ -42,7 +52,7 @@ export default async function Home({ searchParams }: HomeProps) {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">{genreNames ? `${genreNames} ${noun}` : `All ${noun}`}</h1>
-      {/* Switching kind resets the genre (the lists differ) and the page, and keeps the sort and region. */}
+      {/* Switching kind resets the genre (the lists differ) and the page, and keeps the sort, region and services. */}
       <MediaSwitch kinds={BROWSE_KINDS} current={state.kind} hrefForKind={(kind) => browseHref({ ...state, kind, genres: [], page: 1 })} />
       <BrowseControls genres={genres} state={state} />
       {/* Always shown; changing region keeps the other filters and returns to page 1 (via /region). */}

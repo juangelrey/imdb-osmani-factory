@@ -10,7 +10,7 @@ const regions = [
   { code: "US", name: "United States of America" },
 ];
 
-const state: BrowseState = { kind: "movie", genres: [], region: "US", regionFromUrl: false, sort: "popularity", page: 1 };
+const state: BrowseState = { kind: "movie", genres: [], region: "US", regionFromUrl: false, providers: [], sort: "popularity", page: 1 };
 
 function form() {
   return screen.getByRole("form", { name: "Region" });
@@ -40,13 +40,21 @@ describe("RegionSelect", () => {
     render(
       <RegionSelect
         regions={regions}
-        state={{ kind: "tv", genres: [18, 35], region: "ES", regionFromUrl: true, sort: "rating", page: 4 }}
+        state={{ kind: "tv", genres: [18, 35], region: "ES", regionFromUrl: true, providers: [], sort: "rating", page: 4 }}
       />,
     );
     expect(hiddenFields()).toEqual([
       ["type", "tv"],
       ["genre", "18,35"],
       ["sort", "rating"],
+    ]);
+  });
+
+  it("carries every selected service, so the new region's page decides which to keep", () => {
+    render(<RegionSelect regions={regions} state={{ ...state, genres: [28], providers: [8, 15, 337] }} />);
+    expect(hiddenFields()).toEqual([
+      ["genre", "28"],
+      ["providers", "8,15,337"],
     ]);
   });
 
