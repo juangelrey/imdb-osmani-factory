@@ -67,7 +67,7 @@ export default async function Home({ searchParams }: HomeProps) {
   const { results, page, totalPages } = state.kind === "tv" ? await discoverShows(state) : await discoverTitles(state);
   // A page past the last one (a stale or edited link) falls back to page 1.
   if (results.length === 0 && state.page > 1) redirect(browseHref({ ...state, page: 1 }));
-  // Names follow the ids' order in the URL, e.g. "Action + Comedy" for genre=28,35.
+  // Names follow ascending id order, e.g. "Action + Comedy" for genre=35,28.
   const genreNames = state.genres.map((id) => genres.find((genre) => genre.id === id)?.name).join(" + ");
   const noun = state.kind === "tv" ? "series" : "titles";
 
