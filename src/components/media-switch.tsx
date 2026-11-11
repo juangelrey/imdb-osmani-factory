@@ -16,13 +16,15 @@ interface MediaSwitchProps<K extends SearchKind> {
   current: SearchKind;
   /** The URL for each kind. Callers decide what to keep (the query, the sort) and what to reset (the page). */
   hrefForKind: (kind: K) => string;
+  /** The home page's look: the kinds as large marquee lettering instead of a boxed switch. */
+  marquee?: boolean;
 }
 
 /** Links to each kind, the current one marked `aria-current`. Shared by search and browse. */
-export function MediaSwitch<K extends SearchKind>({ kinds, current, hrefForKind }: MediaSwitchProps<K>) {
+export function MediaSwitch<K extends SearchKind>({ kinds, current, hrefForKind, marquee = false }: MediaSwitchProps<K>) {
   return (
     <nav aria-label={navLabel(kinds)}>
-      <ul className="inline-flex rounded-md border border-zinc-700 p-0.5 text-sm">
+      <ul className={marquee ? "flex gap-5 font-marquee text-3xl uppercase" : "inline-flex rounded-md border border-zinc-700 p-0.5 text-sm"}>
         {kinds.map((kind) => {
           const selected = kind === current;
           return (
@@ -30,8 +32,12 @@ export function MediaSwitch<K extends SearchKind>({ kinds, current, hrefForKind 
               <Link
                 href={hrefForKind(kind)}
                 aria-current={selected ? "page" : undefined}
-                className={`block rounded px-3 py-1 font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 ${
-                  selected ? "bg-amber-400/15 text-amber-200" : "text-zinc-300 hover:text-amber-300"
+                className={`block rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 ${
+                  marquee
+                    ? selected
+                      ? "text-amber-300"
+                      : "text-zinc-500 hover:text-zinc-300"
+                    : `px-3 py-1 font-medium ${selected ? "bg-amber-400/15 text-amber-200" : "text-zinc-300 hover:text-amber-300"}`
                 }`}
               >
                 {LABELS[kind]}

@@ -14,6 +14,11 @@
   --color-strong: var(--color-white);
 }
 
+/* `font-marquee`: Anton, loaded in layout.tsx; a condensed system face stands in until it arrives. */
+@theme inline {
+  --font-marquee: var(--font-anton), Impact, "Arial Narrow", sans-serif;
+}
+
 :root {
   color-scheme: dark;
 }

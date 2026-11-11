@@ -13,6 +13,8 @@ const SORT_LABELS: Record<SortKey, string> = {
 interface BrowseControlsProps {
   genres: Genre[];
   state: BrowseState;
+  /** The Movies / TV switch, shown at the start of the bar's first row. */
+  children?: ReactNode;
 }
 
 interface PillProps {
@@ -23,7 +25,7 @@ interface PillProps {
   children: ReactNode;
 }
 
-/** A browse filter link, marked current while its value is selected. Shared by the genre, sort and service pills. */
+/** A browse filter link, marked current while its value is selected: the service filter uses it. */
 export function Pill({ href, active, label, children }: PillProps) {
   return (
     <Link
@@ -41,37 +43,61 @@ export function Pill({ href, active, label, children }: PillProps) {
   );
 }
 
-/** Genre pills toggle their genre in the selection, and "All" clears it. Any change starts again from page 1. */
-export function BrowseControls({ genres, state }: BrowseControlsProps) {
+const FOCUS = "rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400";
+
+/**
+ * The home page's filter bar, which stays at the top of the window while the results scroll. Its first row holds
+ * `children` (the Movies / TV switch) and the sort; under it the genres run on one line that scrolls sideways.
+ * A genre link toggles its genre in the selection, and "All" clears it. Any change starts again from page 1.
+ */
+export function BrowseControls({ genres, state, children }: BrowseControlsProps) {
+  const genreClass = (active: boolean) =>
+    `${FOCUS} ${active ? "font-semibold text-amber-300" : "text-zinc-400 hover:text-strong"}`;
   return (
-    <div className="space-y-3">
-      <nav aria-label="Genre">
-        <ul className="flex flex-wrap gap-2">
+    <div className="sticky top-0 z-10 -mx-4 space-y-2 bg-zinc-950/90 px-4 py-3 backdrop-blur">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2">
+        {children}
+        <nav aria-label="Sort">
+          <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            {SORT_KEYS.map((sort) => (
+              <li key={sort}>
+                <Link
+                  href={browseHref({ ...state, sort, page: 1 })}
+                  aria-current={state.sort === sort ? "true" : undefined}
+                  className={`${FOCUS} ${
+                    state.sort === sort
+                      ? "text-strong underline decoration-amber-400 decoration-2 underline-offset-8"
+                      : "text-zinc-400 hover:text-strong"
+                  }`}
+                >
+                  {SORT_LABELS[sort]}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+      {/* The padding keeps focus outlines inside the scroll box, which would clip them. */}
+      <nav aria-label="Genre" className="-mx-4 overflow-x-auto px-4 py-1 [scrollbar-width:none]">
+        <ul className="flex gap-5 whitespace-nowrap text-sm">
           <li>
-            <Pill href={browseHref({ ...state, genres: [], page: 1 })} active={state.genres.length === 0}>
+            <Link
+              href={browseHref({ ...state, genres: [], page: 1 })}
+              aria-current={state.genres.length === 0 ? "true" : undefined}
+              className={genreClass(state.genres.length === 0)}
+            >
               All
-            </Pill>
+            </Link>
           </li>
           {genres.map((genre) => (
             <li key={genre.id}>
-              <Pill
+              <Link
                 href={browseHref({ ...state, genres: toggleId(state.genres, genre.id), page: 1 })}
-                active={state.genres.includes(genre.id)}
+                aria-current={state.genres.includes(genre.id) ? "true" : undefined}
+                className={genreClass(state.genres.includes(genre.id))}
               >
                 {genre.name}
-              </Pill>
-            </li>
-          ))}
-        </ul>
-      </nav>
-      <nav aria-label="Sort" className="flex items-center gap-2 text-xs text-zinc-400">
-        <span>Sort by</span>
-        <ul className="flex flex-wrap gap-2">
-          {SORT_KEYS.map((sort) => (
-            <li key={sort}>
-              <Pill href={browseHref({ ...state, sort, page: 1 })} active={state.sort === sort}>
-                {SORT_LABELS[sort]}
-              </Pill>
+              </Link>
             </li>
           ))}
         </ul>

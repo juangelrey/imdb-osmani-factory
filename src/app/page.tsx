@@ -1,12 +1,13 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { BrowseControls } from "@/components/browse-controls";
+import { BrowseHero } from "@/components/browse-hero";
 import { cardFromSummary } from "@/components/card-title";
 import { MediaSwitch } from "@/components/media-switch";
 import { Pagination } from "@/components/pagination";
 import { ProviderFilter } from "@/components/provider-filter";
+import { RankedTitles } from "@/components/ranked-titles";
 import { RegionSelect } from "@/components/region-select";
-import { TitleGrid } from "@/components/title-grid";
 import {
   browseHref,
   firstParam,
@@ -18,6 +19,9 @@ import {
 import { listProviders } from "@/lib/catalog/providers";
 import { discoverShows, discoverTitles, listGenres } from "@/lib/catalog/queries";
 import { REGION_COOKIE, listRegions, resolveRegion } from "@/lib/catalog/regions";
+
+/** TMDB's discover page size, which gives each result its place in the whole sorted list. */
+const PAGE_SIZE = 20;
 
 /** Browse has no People: TMDB's discover lists only movies and shows. */
 const BROWSE_KINDS = ["movie", "tv"] as const;
@@ -70,18 +74,30 @@ export default async function Home({ searchParams }: HomeProps) {
   // Names follow ascending id order, e.g. "Action + Comedy" for genre=35,28.
   const genreNames = state.genres.map((id) => genres.find((genre) => genre.id === id)?.name).join(" + ");
   const noun = state.kind === "tv" ? "series" : "titles";
+  const heading = genreNames ? `${genreNames} ${noun}` : `All ${noun}`;
+  // The first result headlines the page; the rest follow it, numbered by their place in the sorted list.
+  const [lead, ...rest] = results.map(cardFromSummary);
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">{genreNames ? `${genreNames} ${noun}` : `All ${noun}`}</h1>
-      {/* Switching kind resets the genre (the lists differ) and the page, and keeps the sort, region and services. */}
-      <MediaSwitch kinds={BROWSE_KINDS} current={state.kind} hrefForKind={(kind) => browseHref({ ...state, kind, genres: [], page: 1 })} />
-      <BrowseControls genres={genres} state={state} />
+      {lead ? (
+        <BrowseHero heading={heading} lead={lead} sort={state.sort} page={page} />
+      ) : (
+        <h1 className="text-2xl font-bold">{heading}</h1>
+      )}
+      <BrowseControls genres={genres} state={state}>
+        {/* Switching kind resets the genre (the lists differ) and the page, and keeps the sort, region and services. */}
+        <MediaSwitch marquee kinds={BROWSE_KINDS} current={state.kind} hrefForKind={(kind) => browseHref({ ...state, kind, genres: [], page: 1 })} />
+      </BrowseControls>
       {/* Always shown; changing region keeps the other filters and returns to page 1 (via /region). */}
       <RegionSelect regions={regions} state={state} />
       {/* The region's services for this kind, with the JustWatch credit; pills keep every other filter. */}
       <ProviderFilter providers={providers} state={state} />
-      <TitleGrid titles={results.map(cardFromSummary)} emptyMessage={emptyMessage(state, noun)} />
+      {lead ? (
+        <RankedTitles titles={rest} firstRank={(page - 1) * PAGE_SIZE + 2} />
+      ) : (
+        <p className="rounded-lg border border-dashed border-zinc-700 p-8 text-center text-zinc-400">{emptyMessage(state, noun)}</p>
+      )}
       <Pagination page={page} totalPages={totalPages} hrefForPage={(n) => browseHref({ ...state, page: n })} />
     </div>
   );

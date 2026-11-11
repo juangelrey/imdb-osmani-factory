@@ -20,7 +20,7 @@ Types:   pnpm typecheck
 ```
 
 Requires Node 24 (see `.nvmrc`) and pnpm (the version in `packageManager`, `package.json`). Tests and the build
-need neither a token nor network access.
+need no token. Tests need no network access; the build downloads the Anton font from Google Fonts.
 Tests use the fixtures in `src/lib/tmdb/fixtures`, and no page calls TMDB at build time.
 
 ## TMDB token
