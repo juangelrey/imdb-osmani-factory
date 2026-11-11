@@ -50,19 +50,37 @@ function HeadingAndSwitch() {
   );
 }
 
+/**
+ * The home page: BrowseHero's poster and headline, the filter bar's two rows, then RankedTitles' grid holding
+ * the other 19 results of a TMDB page, the first four large.
+ */
 export function BrowseSkeleton() {
   return (
     <LoadingRegion className="space-y-6">
-      <HeadingAndSwitch />
-      <div aria-hidden="true" className="space-y-3">
-        <div className="flex flex-wrap gap-2">
-          {Array.from({ length: 12 }, (_, index) => (
-            <Bar key={index} className="h-6 w-20 rounded-full" />
-          ))}
+      <div aria-hidden="true" className="grid items-end gap-x-10 gap-y-6 pb-10 pt-4 sm:grid-cols-[minmax(0,240px)_1fr]">
+        <Bar className="aspect-[2/3] w-40 rounded-md sm:w-full" />
+        <div className="space-y-4">
+          <Bar className="h-5 w-56" />
+          <Bar className="h-16 w-4/5 sm:h-20" />
+          <Bar className="h-7 w-32" />
         </div>
-        <Bar className="h-6 w-72 rounded-full" />
       </div>
-      <GridSkeleton />
+      <div aria-hidden="true" className="space-y-3 py-3">
+        <div className="flex items-baseline justify-between gap-8">
+          <Bar className="h-9 w-36" />
+          <Bar className="h-5 w-64" />
+        </div>
+        <Bar className="h-5 w-full" />
+      </div>
+      <ul aria-hidden="true" className="grid grid-cols-6 gap-x-4 gap-y-8 sm:grid-cols-20 sm:gap-x-5">
+        {Array.from({ length: 19 }, (_, index) => (
+          <li key={index} data-testid="card-skeleton" className={index < 4 ? "col-span-3 sm:col-span-5" : "col-span-2 sm:col-span-4"}>
+            <Bar className="aspect-[2/3] w-full rounded-md" />
+            <Bar className="mt-2 h-[1.1875rem] w-3/4" />
+            <Bar className="mt-1 h-4 w-1/3" />
+          </li>
+        ))}
+      </ul>
     </LoadingRegion>
   );
 }

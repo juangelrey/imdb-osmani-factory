@@ -11,15 +11,17 @@ This product uses the TMDB API but is not endorsed or certified by TMDB.
 ## Commands
 
 ```
-Install: npm ci
-Dev:     npm run dev     (needs TMDB_READ_ACCESS_TOKEN, see below)
-Build:   npm run build
-Test:    npm test
-Lint:    npm run lint
-Types:   npm run typecheck
+Install: pnpm install --frozen-lockfile
+Dev:     pnpm dev        (needs TMDB_READ_ACCESS_TOKEN, see below)
+Build:   pnpm build
+Test:    pnpm test
+E2E:     pnpm e2e        (needs the token; runs against the dev server and the real TMDB API)
+Lint:    pnpm lint
+Types:   pnpm typecheck
 ```
 
-Requires Node 24 (see `.nvmrc`). Tests and the build need neither a token nor network access.
+Requires Node 24 (see `.nvmrc`) and pnpm (the version in `packageManager`, `package.json`). Tests and the build
+need no token. Tests need no network access; the build downloads the Anton font from Google Fonts.
 Tests use the fixtures in `src/lib/tmdb/fixtures`, and no page calls TMDB at build time.
 
 ## TMDB token

@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
+import { Anton } from "next/font/google";
 import { ViewTransition, type ReactNode } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { TmdbAttribution } from "@/components/tmdb-attribution";
 import { THEME_SCRIPT } from "@/lib/theme/theme";
 import "./globals.css";
+
+/** The marquee display face: the home page's headline title, ranks and Movies / TV switch (`font-marquee`). */
+const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton" });
 
 export const metadata: Metadata = {
   title: "Reelbase",
@@ -13,7 +17,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     // The inline script sets `data-theme` on <html> before first paint; React would otherwise flag that attribute.
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={anton.variable} suppressHydrationWarning>
       <head>
         {/* Static text from theme.ts: no data from the request, storage or TMDB goes into it. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />

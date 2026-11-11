@@ -25,7 +25,8 @@ describe("loading skeletons", () => {
 
   it("browse and search show a full page of placeholder cards", () => {
     const { unmount } = render(<HomeLoading />);
-    expect(screen.getAllByTestId("card-skeleton")).toHaveLength(20);
+    // The 20th result is the hero above the cards.
+    expect(screen.getAllByTestId("card-skeleton")).toHaveLength(19);
     unmount();
     render(<SearchLoading />);
     expect(screen.getAllByTestId("card-skeleton")).toHaveLength(20);

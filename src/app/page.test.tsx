@@ -83,7 +83,11 @@ describe("Home page", () => {
     const fetchMock = stubTmdb();
     await renderHome();
     expect(screen.getByRole("heading", { level: 1, name: "All titles" })).toBeInTheDocument();
-    expect(gridNames()).toEqual(["Inception", "The Matrix", "Fight Club", "Untitled Short"]);
+    // The first result headlines the page; the rest follow it, numbered from 2.
+    expect(screen.getByRole("heading", { level: 2, name: "Inception" }).querySelector("a")).toHaveAttribute("href", "/title/27205-inception");
+    expect(screen.getByText("Most popular right now")).toBeInTheDocument();
+    expect(gridNames()).toEqual(["The Matrix", "Fight Club", "Untitled Short"]);
+    expect(within(screen.getByRole("list", { name: "Titles" })).getAllByRole("listitem")[0]).toHaveTextContent(/^2The Matrix/);
     expect(discoverUrl(fetchMock).searchParams.get("sort_by")).toBe("popularity.desc");
     expect(screen.getByRole("link", { name: /The Matrix/ })).toHaveAttribute("href", "/title/603-the-matrix");
   });
@@ -141,6 +145,8 @@ describe("Home page", () => {
     expect(discoverUrl(fetchMock).searchParams.get("page")).toBe("2");
     const pagination = screen.getByRole("navigation", { name: "Pagination" });
     expect(pagination).toHaveTextContent("Page 2 of 500");
+    // Page 2 starts at the 21st result: its first title headlines, and the list carries on from 22.
+    expect(within(screen.getByRole("list", { name: "Titles" })).getAllByRole("listitem")[0]).toHaveTextContent(/^22The Matrix/);
     expect(within(pagination).getByRole("link", { name: /Previous/ })).toHaveAttribute("href", "/?genre=28&sort=rating");
     expect(within(pagination).getByRole("link", { name: /Next/ })).toHaveAttribute("href", "/?genre=28&sort=rating&page=3");
   });
@@ -185,7 +191,8 @@ describe("Home page", () => {
     const paths = fetchMock.mock.calls.map(([input]) => new URL(String(input)).pathname);
     expect(paths).toEqual(["/3/genre/tv/list", "/3/watch/providers/regions", "/3/watch/providers/tv", "/3/discover/tv"]);
     expect(screen.getByRole("heading", { level: 1, name: "All series" })).toBeInTheDocument();
-    expect(gridNames()).toEqual(["Breaking Bad", "Stranger Things", "Breaking Point"]);
+    expect(screen.getByRole("heading", { level: 2, name: "Breaking Bad" })).toBeInTheDocument();
+    expect(gridNames()).toEqual(["Stranger Things", "Breaking Point"]);
     expect(screen.getByRole("link", { name: /Breaking Bad/ })).toHaveAttribute("href", "/tv/1396-breaking-bad");
     const genres = screen.getByRole("navigation", { name: "Genre" });
     expect(within(genres).getAllByRole("link")).toHaveLength(genreTvList.genres.length + 1);
