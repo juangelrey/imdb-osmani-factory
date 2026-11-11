@@ -15,6 +15,7 @@ Install: pnpm install --frozen-lockfile
 Dev:     pnpm dev        (needs TMDB_READ_ACCESS_TOKEN, see below)
 Build:   pnpm build
 Test:    pnpm test
+E2E:     pnpm e2e        (needs the token; runs against the dev server and the real TMDB API)
 Lint:    pnpm lint
 Types:   pnpm typecheck
 ```
