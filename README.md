@@ -11,15 +11,16 @@ This product uses the TMDB API but is not endorsed or certified by TMDB.
 ## Commands
 
 ```
-Install: npm ci
-Dev:     npm run dev     (needs TMDB_READ_ACCESS_TOKEN, see below)
-Build:   npm run build
-Test:    npm test
-Lint:    npm run lint
-Types:   npm run typecheck
+Install: pnpm install --frozen-lockfile
+Dev:     pnpm dev        (needs TMDB_READ_ACCESS_TOKEN, see below)
+Build:   pnpm build
+Test:    pnpm test
+Lint:    pnpm lint
+Types:   pnpm typecheck
 ```
 
-Requires Node 24 (see `.nvmrc`). Tests and the build need neither a token nor network access.
+Requires Node 24 (see `.nvmrc`) and pnpm (the version in `packageManager`, `package.json`). Tests and the build
+need neither a token nor network access.
 Tests use the fixtures in `src/lib/tmdb/fixtures`, and no page calls TMDB at build time.
 
 ## TMDB token
