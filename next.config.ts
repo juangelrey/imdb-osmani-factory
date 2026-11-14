@@ -1,6 +1,8 @@
 import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 
+import { resolveSentryEnv } from "./src/lib/observability/sentry-env";
+
 const nextConfig: NextConfig = {
   // Keeps `next dev` from writing its agent-rules block back into AGENTS.md.
   agentRules: false,
@@ -15,6 +17,9 @@ export default withSentryConfig(nextConfig, {
   org: "juangelrey",
 
   project: "reelbase",
+
+  // Same name the SDK tags events with, so uploaded source maps match. Unset without a SHA (local, CI).
+  release: { name: resolveSentryEnv({ VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA }).release },
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
