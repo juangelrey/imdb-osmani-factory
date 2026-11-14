@@ -4,7 +4,15 @@
 
 import * as Sentry from "@sentry/nextjs";
 
+import { resolveSentryEnv } from "@/lib/observability/sentry-env";
+
 Sentry.init({
+  // Literal `NEXT_PUBLIC_` reads: Next only inlines those into the client bundle.
+  ...resolveSentryEnv({
+    VERCEL_ENV: process.env.NEXT_PUBLIC_VERCEL_ENV,
+    VERCEL_GIT_COMMIT_SHA: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
+  }),
+
   dsn: "https://d3af975c4bffa217a8d8e10c0e518304@o4512430366130176.ingest.de.sentry.io/4512430518108241",
 
   // Add optional integrations for additional features
