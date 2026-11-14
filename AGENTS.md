@@ -1,9 +1,11 @@
-<!-- BEGIN:nextjs-agent-rules -->
+# Reelbase
 
-## This is NOT the Next.js you know
+## Agent skills
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+`.claude/` holds our own skills and agents, adapted from agent-skills. Use them over any
+`agent-skills:` plugin skill or agent that does the same job, whatever its name.
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+## Cloud sessions
 
-<!-- END:nextjs-agent-rules -->
+`gh issue` and `gh pr` fail in cloud sessions because the GitHub proxy blocks GraphQL. Use the
+built-in GitHub tools, or REST through `gh api repos/juangelrey/reelbase/...`.

@@ -37,6 +37,18 @@ prefix.
 Without the token, pages that need TMDB show a friendly error page, and the server logs say the
 token is missing. Responses are cached for an hour.
 
+## Feature flags
+
+Flags come from LaunchDarkly (project `reelbase`) and are read on the server only, in
+`src/lib/flags/flags.ts`, with the server SDK key in `LAUNCHDARKLY_SDK_KEY`. Every visitor is the same
+anonymous context, so a flag is on or off for everyone.
+
+- **Local and Vercel Preview:** the **Test** environment's SDK key.
+- **Vercel Production:** the **Production** environment's SDK key.
+
+Without the key, or when LaunchDarkly can't be reached, every flag is off. `marquee-home` turns on
+the home page's marquee layout; off, the home page shows the plain grid. `pnpm e2e` expects it on.
+
 ## Deployment
 
 Vercel (Hobby plan) builds a preview for every pull request and deploys `main` to production.
