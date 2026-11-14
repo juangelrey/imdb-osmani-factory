@@ -67,8 +67,14 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
+/** The LaunchDarkly flags as this request sees them; the marquee layout is on unless a test turns it off. */
+const flags = vi.hoisted(() => ({ marqueeHome: true }));
+
+vi.mock("@/lib/flags/flags", () => ({ isMarqueeHome: vi.fn(async () => flags.marqueeHome) }));
+
 beforeEach(() => {
   vi.stubEnv("TMDB_READ_ACCESS_TOKEN", "test-token");
+  flags.marqueeHome = true;
   request.regionCookie = undefined;
   request.acceptLanguage = undefined;
 });
@@ -90,6 +96,16 @@ describe("Home page", () => {
     expect(within(screen.getByRole("list", { name: "Titles" })).getAllByRole("listitem")[0]).toHaveTextContent(/^2The Matrix/);
     expect(discoverUrl(fetchMock).searchParams.get("sort_by")).toBe("popularity.desc");
     expect(screen.getByRole("link", { name: /The Matrix/ })).toHaveAttribute("href", "/title/603-the-matrix");
+  });
+
+  it("shows every result in the plain grid while the marquee flag is off", async () => {
+    flags.marqueeHome = false;
+    stubTmdb();
+    await renderHome();
+    expect(screen.getByRole("heading", { level: 1, name: "All titles" })).toBeInTheDocument();
+    expect(gridNames()).toEqual(["Inception", "The Matrix", "Fight Club", "Untitled Short"]);
+    expect(screen.queryByText("Most popular right now")).not.toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Movies or TV" })).toBeInTheDocument();
   });
 
   it("lists TMDB genres and marks the active genre and sort", async () => {
